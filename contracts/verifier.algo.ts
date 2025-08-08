@@ -10,10 +10,7 @@ import {
   assert,
   log,
   clone,
-  type BytesCompat,
-  type BytesBacked,
 } from "@algorandfoundation/algorand-typescript";
-import { Uint256 } from "@algorandfoundation/algorand-typescript/arc4";
 
 /** Fr.w[11] precomputed by scripts/frw.ts */
 const Frw11 = BigUint(
