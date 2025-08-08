@@ -35,6 +35,11 @@ function frSub(a: bytes<32>, b: bytes<32>): bytes<32> {
   return Bytes(res).toFixed({ length: 32 });
 }
 
+function frNorm(a: bytes<32>): bytes<32> {
+  const r = BLS12_381_SCALAR_MODULUS;
+  return Bytes<32>(((BigUint(a) % r) + r) % r); // ensures [0, r)
+}
+
 export type PublicSignals = bytes<32>[];
 
 export type VerificationKey = {
@@ -118,7 +123,7 @@ export class PlonkVerifier extends Contract {
     td = op.concat(td, vk.S3);
 
     for (const signal of signals) {
-      td = op.concat(td, signal);
+      td = op.concat(td, frNorm(signal));
     }
 
     td = op.concat(td, proof.A);
