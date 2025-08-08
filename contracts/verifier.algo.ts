@@ -74,18 +74,27 @@ export class PlonkVerifier extends Contract {
     return true;
   }
 
-  computeChallenges(
-    vk: VerificationKey,
-    signals: PublicSignals,
-    proof: Proof,
-  ): Challenges {
+  private getChallenge(td: bytes): bytes<32> {
     const BLS12_381_SCALAR_MODULUS = BigUint(
       Bytes.fromHex(
         "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001",
       ),
     );
 
-    // transcript.addPolCommitment() for each VK commitment
+    let hash = op.keccak256(td);
+    return Bytes(BigUint(hash) % BLS12_381_SCALAR_MODULUS).toFixed({
+      length: 32,
+    });
+  }
+
+  computeChallenges(
+    vk: VerificationKey,
+    signals: PublicSignals,
+    proof: Proof,
+  ): Challenges {
+    /////////////////////////////////////
+    // Challenge round 2: beta and gamma
+    ////////////////////////////////////
     let td = op.concat(vk.Qm, vk.Ql);
     td = op.concat(td, vk.Qr);
     td = op.concat(td, vk.Qo);
@@ -94,34 +103,78 @@ export class PlonkVerifier extends Contract {
     td = op.concat(td, vk.S2);
     td = op.concat(td, vk.S3);
 
-    // transcript.addScalar() for each public signal
     for (const signal of signals) {
       td = op.concat(td, signal);
     }
 
-    // transcript.addPolCommitment() for wire commitments
     td = op.concat(td, proof.A);
     td = op.concat(td, proof.B);
     td = op.concat(td, proof.C);
 
-    let hash = op.keccak256(td);
-    const beta: biguint = BigUint(hash) % BLS12_381_SCALAR_MODULUS;
+    const beta = this.getChallenge(td);
+
+    // gamma
+    td = Bytes();
+    td = op.concat(td, beta);
+    const gamma = this.getChallenge(td);
+
+    ////////////////////////////
+    // Challenge round 3: alpha
+    ////////////////////////////
+    td = Bytes();
+    td = op.concat(td, beta);
+    td = op.concat(td, gamma);
+    td = op.concat(td, proof.Z);
+    const alpha = this.getChallenge(td);
+
+    ////////////////////////////
+    // Challenge round 4: xi
+    ///////////////////////////
+    td = Bytes();
+    td = op.concat(td, beta);
+    td = op.concat(td, proof.T1);
+    td = op.concat(td, proof.T2);
+    td = op.concat(td, proof.T3);
+    const xi = this.getChallenge(td);
+
+    ////////////////////////////
+    // Challenge round 5: v
+    //////////////////////////
+    td = Bytes();
+    td = op.concat(td, xi);
+    td = op.concat(td, proof.eval_a);
+    td = op.concat(td, proof.eval_b);
+    td = op.concat(td, proof.eval_c);
+    td = op.concat(td, proof.eval_s1);
+    td = op.concat(td, proof.eval_s2);
+    td = op.concat(td, proof.eval_zw);
+
+    const v = new FixedArray<bytes<32>, 6>();
+    v[1] = this.getChallenge(td);
+
+    for (let i: uint64 = 2; i < 6; i++) {
+      v[i] = op.EllipticCurve.scalarMul(
+        op.Ec.BLS12_381g1,
+        v[i - 1] as bytes<32>,
+        v[1],
+      ).toFixed({ length: 32 });
+    }
+
+    ////////////////////////////
+    // Challenge: u
+    /////////////////////////////
+    td = Bytes();
+    td = op.concat(td, proof.Wxi);
+    td = op.concat(td, proof.Wxiw);
+    const u = this.getChallenge(td);
 
     return {
-      beta: Bytes<32>(beta),
-      // TODO: Implement the rest of the challenge rounds
-      alpha: Bytes<32>(beta),
-      gamma: Bytes<32>(beta),
-      xi: Bytes<32>(beta),
-      u: Bytes<32>(beta),
-      v: new FixedArray<bytes<32>, 6>(
-        Bytes<32>(beta),
-        Bytes<32>(beta),
-        Bytes<32>(beta),
-        Bytes<32>(beta),
-        Bytes<32>(beta),
-        Bytes<32>(beta),
-      ),
+      beta,
+      gamma,
+      alpha,
+      xi,
+      v,
+      u,
     };
   }
 }
