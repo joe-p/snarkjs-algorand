@@ -10,8 +10,10 @@ import {
   assert,
   log,
   clone,
+  type BytesCompat,
+  type BytesBacked,
 } from "@algorandfoundation/algorand-typescript";
-import { EllipticCurve } from "@algorandfoundation/algorand-typescript/op";
+import { Uint256 } from "@algorandfoundation/algorand-typescript/arc4";
 
 /** Fr */
 const BLS12_381_SCALAR_MODULUS = BigUint(
@@ -20,24 +22,24 @@ const BLS12_381_SCALAR_MODULUS = BigUint(
   ),
 );
 
-function frMul(a: bytes<32>, b: bytes<32>): bytes<32> {
-  const aBig = BigUint(a);
-  const bBig = BigUint(b);
-  const result: biguint = (aBig * bBig) % BLS12_381_SCALAR_MODULUS;
-  return Bytes(result).toFixed({ length: 32 });
+function frMul(a: biguint, b: biguint): biguint {
+  return (a * b) % BLS12_381_SCALAR_MODULUS;
 }
 
-function frSub(a: bytes<32>, b: bytes<32>): bytes<32> {
+function frSub(a: biguint, b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
-  const aN: biguint = BigUint(a) % r;
-  const bN: biguint = BigUint(b) % r;
-  const res: biguint = (aN + r - bN) % r; // (a - b) mod r, guaranteed non-negative
-  return Bytes(res).toFixed({ length: 32 });
+  const aN: biguint = a % r;
+  const bN: biguint = b % r;
+  return (aN + r - bN) % r; // (a - b) mod r, guaranteed non-negative
 }
 
-function frNorm(a: bytes<32>): bytes<32> {
+function frNorm(a: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
-  return Bytes<32>(((BigUint(a) % r) + r) % r); // ensures [0, r)
+  return ((a % r) + r) % r; // ensures [0, r)
+}
+
+function b32(a: biguint): bytes<32> {
+  return Bytes(a).toFixed({ length: 32 });
 }
 
 export type PublicSignals = bytes<32>[];
@@ -123,7 +125,7 @@ export class PlonkVerifier extends Contract {
     td = op.concat(td, vk.S3);
 
     for (const signal of signals) {
-      td = op.concat(td, frNorm(signal));
+      td = op.concat(td, b32(frNorm(BigUint(signal))));
     }
 
     td = op.concat(td, proof.A);
@@ -172,7 +174,7 @@ export class PlonkVerifier extends Contract {
     v[1] = this.getChallenge(td);
 
     for (let i: uint64 = 2; i < 6; i++) {
-      v[i] = frMul(v[i - 1] as bytes<32>, v[1]);
+      v[i] = b32(frMul(BigUint(v[i - 1] as bytes<32>), BigUint(v[1])));
     }
 
     ////////////////////////////
@@ -200,7 +202,7 @@ export class PlonkVerifier extends Contract {
     vk: VerificationKey,
   ): { L: bytes<32>[]; challenges: Challenges } {
     const challenges = clone(challengesInput);
-    let xin = challenges.xi;
+    let xin = BigUint(challenges.xi);
 
     let domainSize: uint64 = 1;
     for (let i: uint64 = 0; i < vk.power; i++) {
@@ -208,8 +210,8 @@ export class PlonkVerifier extends Contract {
       domainSize *= 2;
     }
 
-    challenges.xin = xin;
-    challenges.zh = frSub(xin, Bytes<32>());
+    challenges.xin = Bytes<32>(xin);
+    challenges.zh = b32(frSub(xin, BigUint()));
 
     const L: bytes<32>[] = [];
 
