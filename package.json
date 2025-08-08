@@ -2,7 +2,8 @@
   "name": "snarkjs-algorand",
   "module": "index.ts",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "snarkjs": "^0.7.5"
   },
   "peerDependencies": {
     "typescript": "^5"
