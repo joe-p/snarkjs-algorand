@@ -2,8 +2,7 @@
   "name": "snarkjs-algorand",
   "module": "index.ts",
   "devDependencies": {
-    "@types/bun": "latest",
-    "snarkjs": "^0.7.5"
+    "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -12,6 +11,7 @@
   "type": "module",
   "dependencies": {
     "@algorandfoundation/algorand-typescript": "^1.0.0-alpha.74",
-    "@algorandfoundation/puya-ts": "^1.0.0-alpha.74"
+    "@algorandfoundation/puya-ts": "^1.0.0-alpha.74",
+    "snarkjs": "^0.7.5"
   }
 }

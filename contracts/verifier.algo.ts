@@ -15,6 +15,13 @@ import {
 } from "@algorandfoundation/algorand-typescript";
 import { Uint256 } from "@algorandfoundation/algorand-typescript/arc4";
 
+/** Fr.w[11] precomputed by scripts/frw.ts */
+const Frw11 = BigUint(
+  Bytes.fromHex(
+    "43527a8bca252472eb674a1a620890d7a534af14b61e0abe74a1f6718c130477",
+  ),
+);
+
 /** Fr */
 const BLS12_381_SCALAR_MODULUS = BigUint(
   Bytes.fromHex(
@@ -24,6 +31,41 @@ const BLS12_381_SCALAR_MODULUS = BigUint(
 
 function frMul(a: biguint, b: biguint): biguint {
   return (a * b) % BLS12_381_SCALAR_MODULUS;
+}
+
+const BLS12_381_R_MINUS_2 = BigUint(
+  Bytes.fromHex(
+    "73eda753299d7d483339d80809a1d80553bda402fffe5bfefffffffeffffffff",
+  ),
+);
+
+function modPow(base: biguint, exp: biguint, mod: biguint): biguint {
+  let result = 1n as biguint;
+  let b: biguint = base % mod;
+  let e: biguint = exp;
+  while (e > (0n as biguint)) {
+    if ((e & (1n as biguint)) !== (0n as biguint)) {
+      result = (result * b) % mod;
+    }
+    b = (b * b) % mod;
+    e = e / BigUint(2); // e >> 1
+  }
+  return result;
+}
+
+function frInv(b: biguint): biguint {
+  const r = BLS12_381_SCALAR_MODULUS;
+  const x = frNorm(BigUint(b));
+  assert(x !== (0n as biguint), "Fr inverse of zero");
+  const inv = modPow(x, BLS12_381_R_MINUS_2, r);
+  return inv;
+}
+
+function frDiv(a: biguint, b: biguint): biguint {
+  const r = BLS12_381_SCALAR_MODULUS;
+  const aN = frNorm(BigUint(a));
+  const bInv = BigUint(frInv(b)); // already reduced & padded
+  return (aN * bInv) % r;
 }
 
 function frSub(a: biguint, b: biguint): biguint {
@@ -210,11 +252,26 @@ export class PlonkVerifier extends Contract {
       domainSize *= 2;
     }
 
-    challenges.xin = Bytes<32>(xin);
-    challenges.zh = b32(frSub(xin, BigUint()));
+    challenges.xin = b32(xin);
+    challenges.zh = b32(frSub(xin, BigUint(1)));
 
     const L: bytes<32>[] = [];
 
+    const n = frNorm(BigUint(domainSize));
+
+    let w = BigUint(1);
+
+    const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
+    for (let i: uint64 = 1; i < iterations; i++) {
+      L[i] = b32(
+        frDiv(
+          frMul(w, BigUint(challenges.zh)),
+          frMul(n, frSub(BigUint(challenges.xi), w)),
+        ),
+      );
+
+      w = frMul(w, Frw11);
+    }
     return { L, challenges };
   }
 }
