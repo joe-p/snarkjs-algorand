@@ -3,24 +3,52 @@
 
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
-    intcblock 32 96 1 0
-    bytecblock 0x151f7c75
-    // contracts/verifier.algo.ts:65
+    intcblock 32 96 1 0 384
+    bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x151f7c75
+    // contracts/verifier.algo.ts:85
     // export class PlonkVerifier extends Contract {
     txn NumAppArgs
-    bz main_bare_routing@7
-    pushbytess 0x1d2ce80d 0xfee01015 // method "verify((byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint64,uint64,byte[32]),byte[32][],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[32],byte[32],byte[32],byte[32],byte[32],byte[32]))bool", method "computeChallenges((byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint64,uint64,byte[32]),byte[32][],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[32],byte[32],byte[32],byte[32],byte[32],byte[32]))(byte[32],byte[32],byte[32],byte[32],byte[32][6],byte[32])"
+    bz main_bare_routing@8
+    pushbytess 0x1d2ce80d 0x03aade66 0x055f06d6 // method "verify((byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint64,uint64,byte[32]),byte[32][],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[32],byte[32],byte[32],byte[32],byte[32],byte[32]))bool", method "computeChallenges((byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint64,uint64,byte[32]),byte[32][],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[32],byte[32],byte[32],byte[32],byte[32],byte[32]))(byte[32],byte[32],byte[32],byte[32],byte[32][6],byte[32],byte[32],byte[32])", method "calculateLagrangeEvaluations((byte[32],byte[32],byte[32],byte[32],byte[32][6],byte[32],byte[32],byte[32]),(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint64,uint64,byte[32]))(byte[32][],(byte[32],byte[32],byte[32],byte[32],byte[32][6],byte[32],byte[32],byte[32]))"
     txna ApplicationArgs 0
-    match main_verify_route@3 main_computeChallenges_route@4
+    match main_verify_route@3 main_computeChallenges_route@4 main_calculateLagrangeEvaluations_route@5
 
-main_after_if_else@11:
-    // contracts/verifier.algo.ts:65
+main_after_if_else@12:
+    // contracts/verifier.algo.ts:85
     // export class PlonkVerifier extends Contract {
     intc_3 // 0
     return
 
+main_calculateLagrangeEvaluations_route@5:
+    // contracts/verifier.algo.ts:193-196
+    // calculateLagrangeEvaluations(
+    //   challengesInput: Challenges,
+    //   vk: VerificationKey,
+    // ): { L: bytes<32>[]; challenges: Challenges } {
+    txn OnCompletion
+    !
+    assert // OnCompletion is not NoOp
+    txn ApplicationID
+    assert // can only call when not creating
+    // contracts/verifier.algo.ts:85
+    // export class PlonkVerifier extends Contract {
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    // contracts/verifier.algo.ts:193-196
+    // calculateLagrangeEvaluations(
+    //   challengesInput: Challenges,
+    //   vk: VerificationKey,
+    // ): { L: bytes<32>[]; challenges: Challenges } {
+    callsub calculateLagrangeEvaluations
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
 main_computeChallenges_route@4:
-    // contracts/verifier.algo.ts:90-94
+    // contracts/verifier.algo.ts:104-108
     // computeChallenges(
     //   vk: VerificationKey,
     //   signals: PublicSignals,
@@ -31,12 +59,12 @@ main_computeChallenges_route@4:
     assert // OnCompletion is not NoOp
     txn ApplicationID
     assert // can only call when not creating
-    // contracts/verifier.algo.ts:65
+    // contracts/verifier.algo.ts:85
     // export class PlonkVerifier extends Contract {
     txna ApplicationArgs 1
     txna ApplicationArgs 2
     txna ApplicationArgs 3
-    // contracts/verifier.algo.ts:90-94
+    // contracts/verifier.algo.ts:104-108
     // computeChallenges(
     //   vk: VerificationKey,
     //   signals: PublicSignals,
@@ -44,7 +72,7 @@ main_computeChallenges_route@4:
     // ): Challenges {
     callsub computeChallenges
     popn 3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -52,7 +80,7 @@ main_computeChallenges_route@4:
     return
 
 main_verify_route@3:
-    // contracts/verifier.algo.ts:66-70
+    // contracts/verifier.algo.ts:86-90
     // public verify(
     //   vk: VerificationKey,
     //   signals: PublicSignals,
@@ -63,12 +91,12 @@ main_verify_route@3:
     assert // OnCompletion is not NoOp
     txn ApplicationID
     assert // can only call when not creating
-    // contracts/verifier.algo.ts:65
+    // contracts/verifier.algo.ts:85
     // export class PlonkVerifier extends Contract {
     txna ApplicationArgs 1
     txna ApplicationArgs 2
     txna ApplicationArgs 3
-    // contracts/verifier.algo.ts:66-70
+    // contracts/verifier.algo.ts:86-90
     // public verify(
     //   vk: VerificationKey,
     //   signals: PublicSignals,
@@ -79,18 +107,18 @@ main_verify_route@3:
     intc_3 // 0
     uncover 2
     setbit
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_bare_routing@7:
-    // contracts/verifier.algo.ts:65
+main_bare_routing@8:
+    // contracts/verifier.algo.ts:85
     // export class PlonkVerifier extends Contract {
     txn OnCompletion
-    bnz main_after_if_else@11
+    bnz main_after_if_else@12
     txn ApplicationID
     !
     assert // can only call when creating
@@ -98,16 +126,38 @@ main_bare_routing@7:
     return
 
 
+// contracts/verifier.algo.ts::frMul(a: bytes, b: bytes) -> bytes:
+frMul:
+    // contracts/verifier.algo.ts:23
+    // function frMul(a: bytes<32>, b: bytes<32>): bytes<32> {
+    proto 2 1
+    // contracts/verifier.algo.ts:26
+    // const result: biguint = (aBig * bBig) % BLS12_381_SCALAR_MODULUS;
+    frame_dig -2
+    frame_dig -1
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:27
+    // return Bytes(result).toFixed({ length: 32 });
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // Length must be 32
+    retsub
+
+
 // contracts/verifier.algo.ts::PlonkVerifier.verify(vk: bytes, signals: bytes, proof: bytes) -> uint64:
 verify:
-    // contracts/verifier.algo.ts:66-70
+    // contracts/verifier.algo.ts:86-90
     // public verify(
     //   vk: VerificationKey,
     //   signals: PublicSignals,
     //   proof: Proof,
     // ): boolean {
     proto 3 1
-    // contracts/verifier.algo.ts:72
+    // contracts/verifier.algo.ts:92
     // const challenge = this.computeChallenges(vk, signals, proof);
     frame_dig -3
     frame_dig -2
@@ -116,11 +166,11 @@ verify:
     frame_bury -1
     frame_bury -2
     frame_bury -3
-    // contracts/verifier.algo.ts:73
+    // contracts/verifier.algo.ts:93
     // log(challenge.alpha);
     extract 64 32
     log
-    // contracts/verifier.algo.ts:74
+    // contracts/verifier.algo.ts:94
     // return true;
     intc_2 // 1
     retsub
@@ -128,18 +178,18 @@ verify:
 
 // contracts/verifier.algo.ts::PlonkVerifier.getChallenge(td: bytes) -> bytes:
 getChallenge:
-    // contracts/verifier.algo.ts:77
+    // contracts/verifier.algo.ts:97
     // private getChallenge(td: bytes): bytes<32> {
     proto 1 1
-    // contracts/verifier.algo.ts:84
+    // contracts/verifier.algo.ts:98
     // let hash = op.keccak256(td);
     frame_dig -1
     keccak256
-    // contracts/verifier.algo.ts:85
+    // contracts/verifier.algo.ts:99
     // return Bytes(BigUint(hash) % BLS12_381_SCALAR_MODULUS).toFixed({
-    pushbytes 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:85-87
+    // contracts/verifier.algo.ts:99-101
     // return Bytes(BigUint(hash) % BLS12_381_SCALAR_MODULUS).toFixed({
     //   length: 32,
     // });
@@ -153,7 +203,7 @@ getChallenge:
 
 // contracts/verifier.algo.ts::PlonkVerifier.computeChallenges(vk: bytes, signals: bytes, proof: bytes) -> bytes, bytes, bytes, bytes:
 computeChallenges:
-    // contracts/verifier.algo.ts:90-94
+    // contracts/verifier.algo.ts:104-108
     // computeChallenges(
     //   vk: VerificationKey,
     //   signals: PublicSignals,
@@ -163,54 +213,54 @@ computeChallenges:
     intc_3 // 0
     dupn 4
     pushbytes ""
-    // contracts/verifier.algo.ts:98
+    // contracts/verifier.algo.ts:112
     // let td = op.concat(vk.Qm, vk.Ql);
     frame_dig -3
     extract 0 96
     frame_dig -3
     extract 96 96
     concat
-    // contracts/verifier.algo.ts:99
+    // contracts/verifier.algo.ts:113
     // td = op.concat(td, vk.Qr);
     frame_dig -3
     extract 192 96
     concat
-    // contracts/verifier.algo.ts:100
+    // contracts/verifier.algo.ts:114
     // td = op.concat(td, vk.Qo);
     frame_dig -3
     pushint 288 // 288
     intc_1 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:101
+    // contracts/verifier.algo.ts:115
     // td = op.concat(td, vk.Qc);
     frame_dig -3
-    pushint 384 // 384
+    intc 4 // 384
     intc_1 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:102
+    // contracts/verifier.algo.ts:116
     // td = op.concat(td, vk.S1);
     frame_dig -3
     pushint 480 // 480
     intc_1 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:103
+    // contracts/verifier.algo.ts:117
     // td = op.concat(td, vk.S2);
     frame_dig -3
     pushint 576 // 576
     intc_1 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:104
+    // contracts/verifier.algo.ts:118
     // td = op.concat(td, vk.S3);
     frame_dig -3
     pushint 672 // 672
     intc_1 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:106
+    // contracts/verifier.algo.ts:120
     // for (const signal of signals) {
     frame_dig -2
     intc_3 // 0
@@ -218,7 +268,7 @@ computeChallenges:
     intc_3 // 0
 
 computeChallenges_for_header@1:
-    // contracts/verifier.algo.ts:106
+    // contracts/verifier.algo.ts:120
     // for (const signal of signals) {
     frame_dig 8
     frame_dig 7
@@ -233,7 +283,7 @@ computeChallenges_for_header@1:
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:107
+    // contracts/verifier.algo.ts:121
     // td = op.concat(td, signal);
     frame_dig 6
     swap
@@ -245,125 +295,125 @@ computeChallenges_for_header@1:
     b computeChallenges_for_header@1
 
 computeChallenges_after_for@4:
-    // contracts/verifier.algo.ts:110
+    // contracts/verifier.algo.ts:124
     // td = op.concat(td, proof.A);
     frame_dig -1
     extract 0 96
     frame_dig 6
     swap
     concat
-    // contracts/verifier.algo.ts:111
+    // contracts/verifier.algo.ts:125
     // td = op.concat(td, proof.B);
     frame_dig -1
     extract 96 96
     concat
-    // contracts/verifier.algo.ts:112
+    // contracts/verifier.algo.ts:126
     // td = op.concat(td, proof.C);
     frame_dig -1
     extract 192 96
     concat
-    // contracts/verifier.algo.ts:114
+    // contracts/verifier.algo.ts:128
     // const beta = this.getChallenge(td);
     callsub getChallenge
     dup
     frame_bury 1
-    // contracts/verifier.algo.ts:119
+    // contracts/verifier.algo.ts:133
     // const gamma = this.getChallenge(td);
     dup
     callsub getChallenge
     dup
     frame_bury 2
-    // contracts/verifier.algo.ts:126
+    // contracts/verifier.algo.ts:140
     // td = op.concat(td, gamma);
     dig 1
     swap
     concat
     dup
     frame_bury 6
-    // contracts/verifier.algo.ts:127
+    // contracts/verifier.algo.ts:141
     // td = op.concat(td, proof.Z);
     frame_dig -1
     pushint 288 // 288
     intc_1 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:128
+    // contracts/verifier.algo.ts:142
     // const alpha = this.getChallenge(td);
     callsub getChallenge
     frame_bury 0
-    // contracts/verifier.algo.ts:135
+    // contracts/verifier.algo.ts:149
     // td = op.concat(td, proof.T1);
     frame_dig -1
-    pushint 384 // 384
+    intc 4 // 384
     intc_1 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:136
+    // contracts/verifier.algo.ts:150
     // td = op.concat(td, proof.T2);
     frame_dig -1
     pushint 480 // 480
     intc_1 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:137
+    // contracts/verifier.algo.ts:151
     // td = op.concat(td, proof.T3);
     frame_dig -1
     pushint 576 // 576
     intc_1 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:138
+    // contracts/verifier.algo.ts:152
     // const xi = this.getChallenge(td);
     callsub getChallenge
     dup
     frame_bury 4
-    // contracts/verifier.algo.ts:145
+    // contracts/verifier.algo.ts:159
     // td = op.concat(td, proof.eval_a);
     frame_dig -1
     pushint 864 // 864
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:146
+    // contracts/verifier.algo.ts:160
     // td = op.concat(td, proof.eval_b);
     frame_dig -1
     pushint 896 // 896
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:161
     // td = op.concat(td, proof.eval_c);
     frame_dig -1
     pushint 928 // 928
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:162
     // td = op.concat(td, proof.eval_s1);
     frame_dig -1
     pushint 960 // 960
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:149
+    // contracts/verifier.algo.ts:163
     // td = op.concat(td, proof.eval_s2);
     frame_dig -1
     pushint 992 // 992
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:150
+    // contracts/verifier.algo.ts:164
     // td = op.concat(td, proof.eval_zw);
     frame_dig -1
     pushint 1024 // 1024
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:166
     // const v = new FixedArray<bytes<32>, 6>();
     pushint 192 // 192
     bzero
-    // contracts/verifier.algo.ts:153
+    // contracts/verifier.algo.ts:167
     // v[1] = this.getChallenge(td);
     swap
     callsub getChallenge
@@ -374,20 +424,20 @@ computeChallenges_after_for@4:
     assert // invalid size
     replace2 32
     frame_bury 3
-    // contracts/verifier.algo.ts:155
+    // contracts/verifier.algo.ts:169
     // for (let i: uint64 = 2; i < 6; i++) {
     pushint 2 // 2
     frame_bury 5
 
 computeChallenges_while_top@5:
-    // contracts/verifier.algo.ts:155
+    // contracts/verifier.algo.ts:169
     // for (let i: uint64 = 2; i < 6; i++) {
     frame_dig 5
     pushint 6 // 6
     <
     bz computeChallenges_after_while@7
-    // contracts/verifier.algo.ts:158
-    // v[i - 1] as bytes<32>,
+    // contracts/verifier.algo.ts:170
+    // v[i] = frMul(v[i - 1] as bytes<32>, v[1]);
     frame_dig 5
     dup
     intc_2 // 1
@@ -399,29 +449,21 @@ computeChallenges_while_top@5:
     uncover 2
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:159
-    // v[1],
     dig 1
     extract 32 32 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:156-160
-    // v[i] = op.EllipticCurve.scalarMul(
-    //   op.Ec.BLS12_381g1,
-    //   v[i - 1] as bytes<32>,
-    //   v[1],
-    // ).toFixed({ length: 32 });
-    ec_scalar_mul BLS12_381g1
+    callsub frMul
     dup
     len
     intc_0 // 32
     ==
-    assert // Length must be 32
+    assert // invalid size
     dig 2
     intc_0 // 32
     *
     swap
     replace3
     frame_bury 3
-    // contracts/verifier.algo.ts:155
+    // contracts/verifier.algo.ts:169
     // for (let i: uint64 = 2; i < 6; i++) {
     intc_2 // 1
     +
@@ -429,23 +471,23 @@ computeChallenges_while_top@5:
     b computeChallenges_while_top@5
 
 computeChallenges_after_while@7:
-    // contracts/verifier.algo.ts:167
+    // contracts/verifier.algo.ts:177
     // td = op.concat(td, proof.Wxi);
     frame_dig -1
     pushint 672 // 672
     intc_1 // 96
     extract3
-    // contracts/verifier.algo.ts:168
+    // contracts/verifier.algo.ts:178
     // td = op.concat(td, proof.Wxiw);
     frame_dig -1
     pushint 768 // 768
     intc_1 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:169
+    // contracts/verifier.algo.ts:179
     // const u = this.getChallenge(td);
     callsub getChallenge
-    // contracts/verifier.algo.ts:171-178
+    // contracts/verifier.algo.ts:181-190
     // return {
     //   beta,
     //   gamma,
@@ -453,6 +495,8 @@ computeChallenges_after_while@7:
     //   xi,
     //   v,
     //   u,
+    //   xin: Bytes<32>(),
+    //   zh: Bytes<32>(),
     // };
     frame_dig 1
     len
@@ -491,11 +535,112 @@ computeChallenges_after_while@7:
     assert // invalid size
     swap
     concat
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    concat
     frame_dig -3
     frame_dig -2
     frame_dig -1
     frame_bury 3
     frame_bury 2
     frame_bury 1
+    frame_bury 0
+    retsub
+
+
+// contracts/verifier.algo.ts::PlonkVerifier.calculateLagrangeEvaluations(challengesInput: bytes, vk: bytes) -> bytes:
+calculateLagrangeEvaluations:
+    // contracts/verifier.algo.ts:193-196
+    // calculateLagrangeEvaluations(
+    //   challengesInput: Challenges,
+    //   vk: VerificationKey,
+    // ): { L: bytes<32>[]; challenges: Challenges } {
+    proto 2 1
+    // contracts/verifier.algo.ts:198
+    // let xin = challenges.xi;
+    frame_dig -2
+    extract 96 32
+    // contracts/verifier.algo.ts:200
+    // let domainSize: uint64 = 1;
+    intc_2 // 1
+    // contracts/verifier.algo.ts:201
+    // for (let i: uint64 = 0; i < vk.power; i++) {
+    intc_3 // 0
+
+calculateLagrangeEvaluations_while_top@1:
+    // contracts/verifier.algo.ts:201
+    // for (let i: uint64 = 0; i < vk.power; i++) {
+    frame_dig -1
+    pushint 768 // 768
+    extract_uint64
+    frame_dig 2
+    >
+    bz calculateLagrangeEvaluations_after_while@3
+    // contracts/verifier.algo.ts:202
+    // xin = frMul(xin, xin);
+    frame_dig 0
+    dup
+    callsub frMul
+    frame_bury 0
+    // contracts/verifier.algo.ts:203
+    // domainSize *= 2;
+    frame_dig 1
+    pushint 2 // 2
+    *
+    frame_bury 1
+    // contracts/verifier.algo.ts:201
+    // for (let i: uint64 = 0; i < vk.power; i++) {
+    frame_dig 2
+    intc_2 // 1
+    +
+    frame_bury 2
+    b calculateLagrangeEvaluations_while_top@1
+
+calculateLagrangeEvaluations_after_while@3:
+    // contracts/verifier.algo.ts:206
+    // challenges.xin = xin;
+    frame_dig 0
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid size
+    frame_dig -2
+    pushint 352 // 352
+    dig 2
+    replace3
+    // contracts/verifier.algo.ts:32
+    // const aN: biguint = BigUint(a) % r;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:34
+    // const res: biguint = (aN + r - bN) % r; // (a - b) mod r, guaranteed non-negative
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b+
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:35
+    // return Bytes(res).toFixed({ length: 32 });
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // Length must be 32
+    // contracts/verifier.algo.ts:207
+    // challenges.zh = frSub(xin, Bytes<32>());
+    intc 4 // 384
+    swap
+    replace3
+    // contracts/verifier.algo.ts:211
+    // return { L, challenges };
+    pushbytes 0x01a2
+    swap
+    concat
+    // contracts/verifier.algo.ts:209
+    // const L: bytes<32>[] = [];
+    pushbytes 0x0000
+    // contracts/verifier.algo.ts:211
+    // return { L, challenges };
+    concat
     frame_bury 0
     retsub
