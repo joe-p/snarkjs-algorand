@@ -3,11 +3,17 @@ import { AlgorandClient } from "@algorandfoundation/algokit-utils";
 import {
   PlonkVerifierClient,
   PlonkVerifierFactory,
+  VerificationKeyFromTuple,
   type Proof,
   type VerificationKey,
 } from "../contracts/clients/PlonkVerifier";
 import * as snarkjs from "snarkjs";
 import { readFileSync } from "fs";
+import type { AppClient } from "@algorandfoundation/algokit-utils/types/app-client";
+import {
+  getABIEncodedValue,
+  type Arc56Contract,
+} from "@algorandfoundation/algokit-utils/types/app-arc56";
 
 const algorand = AlgorandClient.defaultLocalNet();
 
@@ -53,6 +59,28 @@ async function getVkey(path: string, curve: any): Promise<VerificationKey> {
     k2: BigInt(vkey.k2),
     x_2: vkey.x2Bytes,
   };
+}
+
+function concatBytes(...arrays: Uint8Array[]): Uint8Array {
+  const totalLength = arrays.reduce((sum, arr) => sum + arr.length, 0);
+  const result = new Uint8Array(totalLength);
+
+  let offset = 0;
+  for (const arr of arrays) {
+    result.set(arr, offset);
+    offset += arr.length;
+  }
+  return result;
+}
+
+async function getVKeyBytes(
+  path: string,
+  curve: any,
+  appSpec: Arc56Contract,
+): Promise<Uint8Array> {
+  const vkey = await getVkey(path, curve);
+
+  return getABIEncodedValue(vkey, "VerificationKey", appSpec.structs);
 }
 
 async function getProof(path: string, curve: any): Promise<Proof> {
@@ -150,13 +178,20 @@ describe("verifier", () => {
   let curve: any;
 
   beforeAll(async () => {
+    curve = await snarkjs.curves.getCurveFromName("bls12381");
     const defaultSender = await algorand.account.localNetDispenser();
     const factory = new PlonkVerifierFactory({ algorand, defaultSender });
+    const vkBytes = await getVKeyBytes(
+      "circuit/circuit_final.zkey",
+      curve,
+      factory.appSpec,
+    );
+
     const { appClient } = await factory.deploy({
       appName: Math.random().toString(16),
+      deployTimeParams: { VERIFICATION_KEY: vkBytes },
     });
     client = appClient;
-    curve = await snarkjs.curves.getCurveFromName("bls12381");
   });
 
   afterAll(async () => {
@@ -164,13 +199,12 @@ describe("verifier", () => {
   });
 
   it("works", async () => {
-    const vk = await getVkey("circuit/circuit_final.zkey", curve);
     const proof = await getProof("circuit/proof.json", curve);
     const signals =
       encodeSignals(
         15744006038856998268181219516291113434365469909648022488288672656450282844855n,
       );
-    const group = client.newGroup().verify({ args: { vk, signals, proof } });
+    const group = client.newGroup().verify({ args: { signals, proof } });
 
     // We are testing using an app so we can log, so we need to increase the opcode budget
     const lsigBudget = 20_000;
