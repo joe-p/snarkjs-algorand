@@ -142,6 +142,17 @@ export class PlonkVerifier extends Contract {
     // Implementation of the verification logic
     const challenge = this.computeChallenges(vk, signals, proof);
     namedLog("beta", challenge.beta);
+    namedLog("gamma", challenge.gamma);
+    namedLog("alpha", challenge.alpha);
+    namedLog("xi", challenge.xi);
+    namedLog("u", challenge.u);
+    namedLog("xin", challenge.xin);
+    namedLog("zh", challenge.zh);
+    namedLog("v[1]", challenge.v[1] as bytes<32>);
+    namedLog("v[2]", challenge.v[2] as bytes<32>);
+    namedLog("v[3]", challenge.v[3] as bytes<32>);
+    namedLog("v[4]", challenge.v[4] as bytes<32>);
+    namedLog("v[5]", challenge.v[5] as bytes<32>);
     return true;
   }
 
@@ -166,7 +177,6 @@ export class PlonkVerifier extends Contract {
     td = op.concat(td, vk.S2);
     td = op.concat(td, vk.S3);
 
-    namedLog("getChallenge 7", keccak256(td));
     for (const signal of signals) {
       td = op.concat(td, b32(frScalar(BigUint(signal))));
     }
