@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { AlgorandClient } from "@algorandfoundation/algokit-utils";
 import {
   PlonkVerifierClient,
@@ -23,17 +23,14 @@ function stringValuesToBigints(obj: any): any {
   }
 }
 
-async function getVkey(path: string): Promise<VerificationKey> {
-  const curve = await snarkjs.curves.getCurveFromName("bls12381");
+async function getVkey(path: string, curve: any): Promise<VerificationKey> {
   const vkey = await snarkjs.zKey.exportVerificationKey(path, console);
 
-  console.debug("JSON Ql", vkey.Ql);
   ["Ql", "Qr", "Qo", "Qm", "Qc", "S1", "S2", "S3"].forEach((p) => {
     const buffer = new Uint8Array(96);
     stringValuesToBigints(vkey[p]);
     const point = curve.G1.fromObject(vkey[p]);
     curve.G1.toRprUncompressed(buffer, 0, point);
-    console.debug(`Exported ${p} point:`, Buffer.from(buffer).toString("hex"));
     vkey[`${p}Bytes`] = buffer;
   });
 
@@ -51,8 +48,7 @@ async function getVkey(path: string): Promise<VerificationKey> {
   };
 }
 
-async function getProof(path: string): Promise<Proof> {
-  const curve = await snarkjs.curves.getCurveFromName("bls12381");
+async function getProof(path: string, curve: any): Promise<Proof> {
   const proof = JSON.parse(readFileSync(path, "utf8"));
 
   ["A", "B", "C", "Z", "T1", "T2", "T3", "Wxi", "Wxiw"].forEach((p) => {
@@ -107,6 +103,7 @@ type LogValues = {
   "v[3]"?: string;
   "v[4]"?: string;
   "v[5]"?: string;
+  "L1(xi)"?: string;
 };
 
 function parseLogs(logs: Uint8Array[]): LogValues {
@@ -128,6 +125,7 @@ function parseLogs(logs: Uint8Array[]): LogValues {
 
 describe("verifier", () => {
   let client: PlonkVerifierClient;
+  let curve: any;
 
   beforeAll(async () => {
     const defaultSender = await algorand.account.localNetDispenser();
@@ -136,18 +134,31 @@ describe("verifier", () => {
       appName: Math.random().toString(16),
     });
     client = appClient;
+    console.debug("Getting curve...");
+    curve = await snarkjs.curves.getCurveFromName("bls12381");
+    console.debug("Curve obtained");
+  });
+
+  afterAll(async () => {
+    await curve.terminate();
   });
 
   it("works", async () => {
-    const vk = await getVkey("circuit/circuit_final.zkey");
-    const proof = await getProof("circuit/proof.json");
+    const vk = await getVkey("circuit/circuit_final.zkey", curve);
+    const proof = await getProof("circuit/proof.json", curve);
     const signals =
       encodeSignals(
         15744006038856998268181219516291113434365469909648022488288672656450282844855n,
       );
     const group = client.newGroup().verify({ args: { vk, signals, proof } });
 
-    const simResult = await group.simulate({ extraOpcodeBudget: 50_000n });
+    // We are testing using an app so we can log, so we need to increase the opcode budget
+    const lsigBudget = 20_000;
+    console.debug("Starting simulation with extra opcode budget");
+    const simResult = await group.simulate({
+      extraOpcodeBudget: 2 * lsigBudget - 700,
+    });
+    console.debug("DONE with sim");
     const logs = simResult.confirmations[0]!.logs!;
 
     const logValues = parseLogs(logs);
@@ -164,7 +175,7 @@ describe("verifier", () => {
     // [DEBUG] snarkJS: v: 41872ee42918178985969341dc816357f68cedc65ba30e27edba311d4467f125
     // [DEBUG] snarkJS: u: 3c70fe64a05ab41df31da73b94fd93a1464f37c6d40a04d65a2dd2d7f2419fad
     // [DEBUG] snarkJS: L1(xi)=46dd60f8923d7d9990aff309366db4e39dc56e83bb35fa326d610da2ac5e8496
-    // [DEBUG] snarkJS: PI(xi): 7327379bca9fd93517e06c5ad56a0891962b170320bafd11010e8c5e9cdf9e56
+    // TODO: [DEBUG] snarkJS: PI(xi): 7327379bca9fd93517e06c5ad56a0891962b170320bafd11010e8c5e9cdf9e56
     // [DEBUG] snarkJS: r0: 5e47e3760437353a648d5bb09e7cc190e141ddf993d6e9d073afe5e48fa3d006
     // [DEBUG] snarkJS: D: [ dd61360e478901e6bac4c71651b849bd372671aa5d78d357c47359f4d904323557defc9dfec613f47046f451feef111, 11f88115b918b1de982e3f497c4e725db31f58e7f96a183450300ec570fb193afc770cd5824b4de0d98f0280e865c77a ]
     // [DEBUG] snarkJS: F: [ 18463acd328baa605062c9ce3cceb2982e0fc4b3031c7b75872324ce6941321b73e7c06f70d1b3f9b44d37c74c4b2b01, ebd2a44a0be8eb548ad8846225e22b06048ff7de2f78ceb51a1e86994bcb93afdaff78c20b143b7ff4b5d3a8469848 ]
@@ -201,6 +212,9 @@ describe("verifier", () => {
     );
     expect(logValues["v[5]"]).toBe(
       "41872ee42918178985969341dc816357f68cedc65ba30e27edba311d4467f125",
+    );
+    expect(logValues["L1(xi)"]).toBe(
+      "46dd60f8923d7d9990aff309366db4e39dc56e83bb35fa326d610da2ac5e8496",
     );
   });
 });

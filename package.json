@@ -5,7 +5,9 @@
     "build:contracts": "algokit compile ts contracts",
     "build:clients": "algokit generate client contracts/out --output contracts/clients/{contract_name}.ts",
     "build": "bun build:contracts && bun build:clients",
-    "verify": "cd circuit && node ~/git/other/snarkjs/cli.js plonk verify verification_key.json public.json proof.json -v"
+    "verify": "cd circuit && node ~/git/other/snarkjs/cli.js plonk verify verification_key.json public.json proof.json -v",
+    "test": "vitest run",
+    "bt": "bun run build && bun run test"
   },
   "devDependencies": {
     "@algorandfoundation/algokit-utils": "^9.1.2",

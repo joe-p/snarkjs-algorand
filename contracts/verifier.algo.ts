@@ -140,19 +140,27 @@ export class PlonkVerifier extends Contract {
     proof: Proof,
   ): boolean {
     // Implementation of the verification logic
-    const challenge = this.computeChallenges(vk, signals, proof);
-    namedLog("beta", challenge.beta);
-    namedLog("gamma", challenge.gamma);
-    namedLog("alpha", challenge.alpha);
-    namedLog("xi", challenge.xi);
-    namedLog("u", challenge.u);
-    namedLog("xin", challenge.xin);
-    namedLog("zh", challenge.zh);
-    namedLog("v[1]", challenge.v[1] as bytes<32>);
-    namedLog("v[2]", challenge.v[2] as bytes<32>);
-    namedLog("v[3]", challenge.v[3] as bytes<32>);
-    namedLog("v[4]", challenge.v[4] as bytes<32>);
-    namedLog("v[5]", challenge.v[5] as bytes<32>);
+    let challenges = this.computeChallenges(vk, signals, proof);
+    namedLog("beta", challenges.beta);
+    namedLog("gamma", challenges.gamma);
+    namedLog("alpha", challenges.alpha);
+    namedLog("xi", challenges.xi);
+    namedLog("u", challenges.u);
+    namedLog("xin", challenges.xin);
+    namedLog("zh", challenges.zh);
+    namedLog("v[1]", challenges.v[1] as bytes<32>);
+    namedLog("v[2]", challenges.v[2] as bytes<32>);
+    namedLog("v[3]", challenges.v[3] as bytes<32>);
+    namedLog("v[4]", challenges.v[4] as bytes<32>);
+    namedLog("v[5]", challenges.v[5] as bytes<32>);
+
+    const { L, challenges: updatedChallenges } =
+      this.calculateLagrangeEvaluations(challenges, vk);
+
+    namedLog("L1(xi)", L[0] as bytes<32>);
+
+    challenges = clone(updatedChallenges);
+
     return true;
   }
 
@@ -205,7 +213,7 @@ export class PlonkVerifier extends Contract {
     // Challenge round 4: xi
     ///////////////////////////
     td = Bytes();
-    td = op.concat(td, beta);
+    td = op.concat(td, alpha);
     td = op.concat(td, proof.T1);
     td = op.concat(td, proof.T2);
     td = op.concat(td, proof.T3);
@@ -266,14 +274,13 @@ export class PlonkVerifier extends Contract {
     challenges.xin = b32(xin);
     challenges.zh = b32(frSub(xin, BigUint(1)));
 
-    const L: bytes<32>[] = [];
-
     const n = frScalar(BigUint(domainSize));
 
     let w = BigUint(1);
 
+    const L: bytes<32>[] = [];
     const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
-    for (let i: uint64 = 1; i < iterations; i++) {
+    for (let i: uint64 = 0; i < iterations; i++) {
       L[i] = b32(
         frDiv(
           frMul(w, BigUint(challenges.zh)),
