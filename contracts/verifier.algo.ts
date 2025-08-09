@@ -14,6 +14,10 @@ import {
 import { Uint, Uint256 } from "@algorandfoundation/algorand-typescript/arc4";
 import { keccak256 } from "@algorandfoundation/algorand-typescript/op";
 
+const G1_ONE = Bytes.fromHex(
+  "17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1",
+);
+
 /** Fr.w[11] precomputed by scripts/frw.ts */
 const Frw11 = BigUint(
   Bytes.fromHex(
@@ -207,6 +211,9 @@ export class PlonkVerifier extends Contract {
 
     const f = this.calculateF(proof, challenges, vk, d);
     namedLog("F", f);
+
+    const e = this.calculateE(proof, challenges, r0);
+    namedLog("E", e);
 
     return true;
   }
@@ -469,6 +476,39 @@ export class PlonkVerifier extends Contract {
 
     res = g1Add(res, g1TimesFr(vk.S1, (challenges.v[4] as Uint256).native));
     res = g1Add(res, g1TimesFr(vk.S2, (challenges.v[5] as Uint256).native));
+
+    return res;
+  }
+
+  private calculateE(
+    proof: Proof,
+    challenges: Challenges,
+    r0: Uint256,
+  ): bytes<96> {
+    let e = frSub(
+      frMul((challenges.v[1] as Uint256).native, proof.eval_a.native),
+      r0.native,
+    );
+
+    e = frAdd(
+      e,
+      frMul((challenges.v[2] as Uint256).native, proof.eval_b.native),
+    );
+    e = frAdd(
+      e,
+      frMul((challenges.v[3] as Uint256).native, proof.eval_c.native),
+    );
+    e = frAdd(
+      e,
+      frMul((challenges.v[4] as Uint256).native, proof.eval_s1.native),
+    );
+    e = frAdd(
+      e,
+      frMul((challenges.v[5] as Uint256).native, proof.eval_s2.native),
+    );
+    e = frAdd(e, frMul(challenges.u.native, proof.eval_zw.native));
+
+    const res = g1TimesFr(G1_ONE.toFixed({ length: 96 }), e);
 
     return res;
   }

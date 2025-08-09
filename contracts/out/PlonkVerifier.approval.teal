@@ -5,7 +5,7 @@
 main:
     intcblock 96 32 1 0 384 352
     bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x 0x01 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
-    // contracts/verifier.algo.ts:171
+    // contracts/verifier.algo.ts:175
     // export class PlonkVerifier extends Contract {
     txn NumAppArgs
     bz main_bare_routing@6
@@ -14,13 +14,13 @@ main:
     match main_verify_route@3
 
 main_after_if_else@10:
-    // contracts/verifier.algo.ts:171
+    // contracts/verifier.algo.ts:175
     // export class PlonkVerifier extends Contract {
     intc_3 // 0
     return
 
 main_verify_route@3:
-    // contracts/verifier.algo.ts:172-176
+    // contracts/verifier.algo.ts:176-180
     // public verify(
     //   vk: VerificationKey,
     //   signals: PublicSignals,
@@ -31,12 +31,12 @@ main_verify_route@3:
     assert // OnCompletion is not NoOp
     txn ApplicationID
     assert // can only call when not creating
-    // contracts/verifier.algo.ts:171
+    // contracts/verifier.algo.ts:175
     // export class PlonkVerifier extends Contract {
     txna ApplicationArgs 1
     txna ApplicationArgs 2
     txna ApplicationArgs 3
-    // contracts/verifier.algo.ts:172-176
+    // contracts/verifier.algo.ts:176-180
     // public verify(
     //   vk: VerificationKey,
     //   signals: PublicSignals,
@@ -55,7 +55,7 @@ main_verify_route@3:
     return
 
 main_bare_routing@6:
-    // contracts/verifier.algo.ts:171
+    // contracts/verifier.algo.ts:175
     // export class PlonkVerifier extends Contract {
     txn OnCompletion
     bnz main_after_if_else@10
@@ -68,20 +68,20 @@ main_bare_routing@6:
 
 // contracts/verifier.algo.ts::frSub(a: bytes, b: bytes) -> bytes:
 frSub:
-    // contracts/verifier.algo.ts:76
+    // contracts/verifier.algo.ts:80
     // function frSub(a: biguint, b: biguint): biguint {
     proto 2 1
-    // contracts/verifier.algo.ts:78
+    // contracts/verifier.algo.ts:82
     // const aN: biguint = a % r;
     frame_dig -2
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:79
+    // contracts/verifier.algo.ts:83
     // const bN: biguint = b % r;
     frame_dig -1
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:80
+    // contracts/verifier.algo.ts:84
     // return (aN + r - bN) % r; // (a - b) mod r, guaranteed non-negative
     swap
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
@@ -95,7 +95,7 @@ frSub:
 
 // contracts/verifier.algo.ts::PlonkVerifier.verify(vk: bytes, signals: bytes, proof: bytes) -> uint64:
 verify:
-    // contracts/verifier.algo.ts:172-176
+    // contracts/verifier.algo.ts:176-180
     // public verify(
     //   vk: VerificationKey,
     //   signals: PublicSignals,
@@ -106,7 +106,7 @@ verify:
     dupn 30
     bytec_1 // ""
     dupn 4
-    // contracts/verifier.algo.ts:227
+    // contracts/verifier.algo.ts:234
     // let td = op.concat(vk.Qm, vk.Ql);
     frame_dig -3
     extract 0 96
@@ -116,14 +116,14 @@ verify:
     dup
     cover 2
     concat
-    // contracts/verifier.algo.ts:228
+    // contracts/verifier.algo.ts:235
     // td = op.concat(td, vk.Qr);
     frame_dig -3
     extract 192 96
     dup
     cover 2
     concat
-    // contracts/verifier.algo.ts:229
+    // contracts/verifier.algo.ts:236
     // td = op.concat(td, vk.Qo);
     frame_dig -3
     pushint 288 // 288
@@ -132,7 +132,7 @@ verify:
     dup
     cover 2
     concat
-    // contracts/verifier.algo.ts:230
+    // contracts/verifier.algo.ts:237
     // td = op.concat(td, vk.Qc);
     frame_dig -3
     intc 4 // 384
@@ -141,7 +141,7 @@ verify:
     dup
     cover 2
     concat
-    // contracts/verifier.algo.ts:231
+    // contracts/verifier.algo.ts:238
     // td = op.concat(td, vk.S1);
     frame_dig -3
     pushint 480 // 480
@@ -150,7 +150,7 @@ verify:
     dup
     cover 2
     concat
-    // contracts/verifier.algo.ts:232
+    // contracts/verifier.algo.ts:239
     // td = op.concat(td, vk.S2);
     frame_dig -3
     pushint 576 // 576
@@ -159,7 +159,7 @@ verify:
     dup
     cover 2
     concat
-    // contracts/verifier.algo.ts:233
+    // contracts/verifier.algo.ts:240
     // td = op.concat(td, vk.S3);
     frame_dig -3
     pushint 672 // 672
@@ -168,7 +168,7 @@ verify:
     dup
     cover 2
     concat
-    // contracts/verifier.algo.ts:235
+    // contracts/verifier.algo.ts:242
     // for (const signal of signals) {
     frame_dig -2
     intc_3 // 0
@@ -176,7 +176,7 @@ verify:
     intc_3 // 0
 
 verify_for_header@2:
-    // contracts/verifier.algo.ts:235
+    // contracts/verifier.algo.ts:242
     // for (const signal of signals) {
     frame_dig 46
     frame_dig 45
@@ -191,11 +191,11 @@ verify_for_header@2:
     *
     intc_1 // 32
     extract3 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:91
+    // contracts/verifier.algo.ts:95
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:95
+    // contracts/verifier.algo.ts:99
     // return new Uint256(a).bytes.toFixed({ length: 32 });
     dup
     len
@@ -210,7 +210,7 @@ verify_for_header@2:
     intc_1 // 32
     ==
     assert // Length must be 32
-    // contracts/verifier.algo.ts:236
+    // contracts/verifier.algo.ts:243
     // td = op.concat(td, b32(frScalar(signal.native)));
     frame_dig 44
     swap
@@ -222,7 +222,7 @@ verify_for_header@2:
     b verify_for_header@2
 
 verify_after_for@5:
-    // contracts/verifier.algo.ts:239
+    // contracts/verifier.algo.ts:246
     // td = op.concat(td, proof.A);
     frame_dig -1
     extract 0 96
@@ -231,33 +231,33 @@ verify_after_for@5:
     frame_dig 44
     swap
     concat
-    // contracts/verifier.algo.ts:240
+    // contracts/verifier.algo.ts:247
     // td = op.concat(td, proof.B);
     frame_dig -1
     extract 96 96
     dup
     frame_bury 19
     concat
-    // contracts/verifier.algo.ts:241
+    // contracts/verifier.algo.ts:248
     // td = op.concat(td, proof.C);
     frame_dig -1
     extract 192 96
     dup
     frame_bury 20
     concat
-    // contracts/verifier.algo.ts:243
+    // contracts/verifier.algo.ts:250
     // const beta = this.getChallenge(td);
     callsub getChallenge
-    // contracts/verifier.algo.ts:248
+    // contracts/verifier.algo.ts:255
     // const gamma = this.getChallenge(td);
     dup
     callsub getChallenge
-    // contracts/verifier.algo.ts:255
+    // contracts/verifier.algo.ts:262
     // td = op.concat(td, gamma.bytes);
     concat
     dup
     frame_bury 44
-    // contracts/verifier.algo.ts:256
+    // contracts/verifier.algo.ts:263
     // td = op.concat(td, proof.Z);
     frame_dig -1
     pushint 288 // 288
@@ -266,12 +266,12 @@ verify_after_for@5:
     dup
     frame_bury 21
     concat
-    // contracts/verifier.algo.ts:257
+    // contracts/verifier.algo.ts:264
     // const alpha = this.getChallenge(td);
     callsub getChallenge
     dup
     frame_bury 8
-    // contracts/verifier.algo.ts:264
+    // contracts/verifier.algo.ts:271
     // td = op.concat(td, proof.T1);
     frame_dig -1
     intc 4 // 384
@@ -280,7 +280,7 @@ verify_after_for@5:
     dup
     frame_bury 14
     concat
-    // contracts/verifier.algo.ts:265
+    // contracts/verifier.algo.ts:272
     // td = op.concat(td, proof.T2);
     frame_dig -1
     pushint 480 // 480
@@ -289,7 +289,7 @@ verify_after_for@5:
     dup
     frame_bury 22
     concat
-    // contracts/verifier.algo.ts:266
+    // contracts/verifier.algo.ts:273
     // td = op.concat(td, proof.T3);
     frame_dig -1
     pushint 576 // 576
@@ -298,12 +298,12 @@ verify_after_for@5:
     dup
     frame_bury 23
     concat
-    // contracts/verifier.algo.ts:267
+    // contracts/verifier.algo.ts:274
     // const xi = this.getChallenge(td);
     callsub getChallenge
     dup
     frame_bury 29
-    // contracts/verifier.algo.ts:274
+    // contracts/verifier.algo.ts:281
     // td = op.concat(td, proof.eval_a.bytes);
     frame_dig -1
     pushint 864 // 864
@@ -312,7 +312,7 @@ verify_after_for@5:
     dup
     frame_bury 1
     concat
-    // contracts/verifier.algo.ts:275
+    // contracts/verifier.algo.ts:282
     // td = op.concat(td, proof.eval_b.bytes);
     frame_dig -1
     pushint 896 // 896
@@ -321,7 +321,7 @@ verify_after_for@5:
     dup
     frame_bury 3
     concat
-    // contracts/verifier.algo.ts:276
+    // contracts/verifier.algo.ts:283
     // td = op.concat(td, proof.eval_c.bytes);
     frame_dig -1
     pushint 928 // 928
@@ -330,7 +330,7 @@ verify_after_for@5:
     dup
     frame_bury 2
     concat
-    // contracts/verifier.algo.ts:277
+    // contracts/verifier.algo.ts:284
     // td = op.concat(td, proof.eval_s1.bytes);
     frame_dig -1
     pushint 960 // 960
@@ -339,7 +339,7 @@ verify_after_for@5:
     dup
     frame_bury 12
     concat
-    // contracts/verifier.algo.ts:278
+    // contracts/verifier.algo.ts:285
     // td = op.concat(td, proof.eval_s2.bytes);
     frame_dig -1
     pushint 992 // 992
@@ -348,7 +348,7 @@ verify_after_for@5:
     dup
     frame_bury 10
     concat
-    // contracts/verifier.algo.ts:279
+    // contracts/verifier.algo.ts:286
     // td = op.concat(td, proof.eval_zw.bytes);
     frame_dig -1
     pushint 1024 // 1024
@@ -357,29 +357,29 @@ verify_after_for@5:
     dup
     frame_bury 11
     concat
-    // contracts/verifier.algo.ts:281
+    // contracts/verifier.algo.ts:288
     // const v = new FixedArray<Uint256, 6>();
     pushint 192 // 192
     bzero
-    // contracts/verifier.algo.ts:282
+    // contracts/verifier.algo.ts:289
     // v[1] = this.getChallenge(td);
     swap
     callsub getChallenge
     replace2 32
     frame_bury 27
-    // contracts/verifier.algo.ts:284
+    // contracts/verifier.algo.ts:291
     // for (let i: uint64 = 2; i < 6; i++) {
     pushint 2 // 2
     frame_bury 32
 
 verify_while_top@6:
-    // contracts/verifier.algo.ts:284
+    // contracts/verifier.algo.ts:291
     // for (let i: uint64 = 2; i < 6; i++) {
     frame_dig 32
     pushint 6 // 6
     <
     bz verify_after_while@8
-    // contracts/verifier.algo.ts:285
+    // contracts/verifier.algo.ts:292
     // v[i] = new Uint256(frMul((v[i - 1] as Uint256).native, v[1].native));
     frame_dig 32
     dup
@@ -394,12 +394,12 @@ verify_while_top@6:
     extract3 // on error: index access is out of bounds
     dig 1
     extract 32 32 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:285
+    // contracts/verifier.algo.ts:292
     // v[i] = new Uint256(frMul((v[i - 1] as Uint256).native, v[1].native));
     dup
     len
@@ -415,7 +415,7 @@ verify_while_top@6:
     swap
     replace3
     frame_bury 27
-    // contracts/verifier.algo.ts:284
+    // contracts/verifier.algo.ts:291
     // for (let i: uint64 = 2; i < 6; i++) {
     intc_2 // 1
     +
@@ -423,23 +423,23 @@ verify_while_top@6:
     b verify_while_top@6
 
 verify_after_while@8:
-    // contracts/verifier.algo.ts:292
+    // contracts/verifier.algo.ts:299
     // td = op.concat(td, proof.Wxi);
     frame_dig -1
     pushint 672 // 672
     intc_0 // 96
     extract3
-    // contracts/verifier.algo.ts:293
+    // contracts/verifier.algo.ts:300
     // td = op.concat(td, proof.Wxiw);
     frame_dig -1
     pushint 768 // 768
     intc_0 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:294
+    // contracts/verifier.algo.ts:301
     // const u = this.getChallenge(td);
     callsub getChallenge
-    // contracts/verifier.algo.ts:296-305
+    // contracts/verifier.algo.ts:303-312
     // return {
     //   beta,
     //   gamma,
@@ -463,161 +463,161 @@ verify_after_while@8:
     concat
     dup
     frame_bury 13
-    // contracts/verifier.algo.ts:179
+    // contracts/verifier.algo.ts:183
     // namedLog("beta", challenges.beta.bytes);
     dup
     extract 0 32
     pushbytes "beta"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:180
+    // contracts/verifier.algo.ts:184
     // namedLog("gamma", challenges.gamma.bytes);
     dup
     extract 32 32
     pushbytes "gamma"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:181
+    // contracts/verifier.algo.ts:185
     // namedLog("alpha", challenges.alpha.bytes);
     dup
     extract 64 32
     pushbytes "alpha"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:182
+    // contracts/verifier.algo.ts:186
     // namedLog("xi", challenges.xi.bytes);
     dup
     extract 96 32
     pushbytes "xi"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     dup
     log
-    // contracts/verifier.algo.ts:183
+    // contracts/verifier.algo.ts:187
     // namedLog("u", challenges.u.bytes);
     dig 1
     pushint 320 // 320
     intc_1 // 32
     extract3
     pushbytes "u"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:184
+    // contracts/verifier.algo.ts:188
     // namedLog("xin", challenges.xin.bytes);
     dig 1
     intc 5 // 352
     intc_1 // 32
     extract3
     pushbytes "xin"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:185
+    // contracts/verifier.algo.ts:189
     // namedLog("zh", challenges.zh.bytes);
     dig 1
     intc 4 // 384
     intc_1 // 32
     extract3
     pushbytes "zh"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:186
+    // contracts/verifier.algo.ts:190
     // namedLog("v[1]", (challenges.v[1] as Uint256).bytes);
     swap
     extract 128 192
     dup
     extract 32 32 // on error: index access is out of bounds
     pushbytes "v[1]"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:186-187
+    // contracts/verifier.algo.ts:190-191
     // namedLog("v[1]", (challenges.v[1] as Uint256).bytes);
     // namedLog("v[2]", (challenges.v[2] as Uint256).bytes);
     dup
     extract 64 32 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:187
+    // contracts/verifier.algo.ts:191
     // namedLog("v[2]", (challenges.v[2] as Uint256).bytes);
     pushbytes "v[2]"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:188
+    // contracts/verifier.algo.ts:192
     // namedLog("v[3]", (challenges.v[3] as Uint256).bytes);
     dup
     extract 96 32 // on error: index access is out of bounds
     pushbytes "v[3]"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:189
+    // contracts/verifier.algo.ts:193
     // namedLog("v[4]", (challenges.v[4] as Uint256).bytes);
     dup
     extract 128 32 // on error: index access is out of bounds
     pushbytes "v[4]"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:190
+    // contracts/verifier.algo.ts:194
     // namedLog("v[5]", (challenges.v[5] as Uint256).bytes);
     extract 160 32 // on error: index access is out of bounds
     pushbytes "v[5]"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:315
+    // contracts/verifier.algo.ts:322
     // let domainSize: uint64 = 1;
     intc_2 // 1
     frame_bury 31
-    // contracts/verifier.algo.ts:316
+    // contracts/verifier.algo.ts:323
     // for (let i: uint64 = 0; i < vk.power; i++) {
     intc_3 // 0
     frame_bury 32
     frame_bury 30
 
 verify_while_top@11:
-    // contracts/verifier.algo.ts:316
+    // contracts/verifier.algo.ts:323
     // for (let i: uint64 = 0; i < vk.power; i++) {
     frame_dig -3
     pushint 768 // 768
@@ -625,7 +625,7 @@ verify_while_top@11:
     frame_dig 32
     >
     bz verify_after_while@13
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     frame_dig 30
     dup
@@ -633,13 +633,13 @@ verify_while_top@11:
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
     frame_bury 30
-    // contracts/verifier.algo.ts:318
+    // contracts/verifier.algo.ts:325
     // domainSize *= 2;
     frame_dig 31
     pushint 2 // 2
     *
     frame_bury 31
-    // contracts/verifier.algo.ts:316
+    // contracts/verifier.algo.ts:323
     // for (let i: uint64 = 0; i < vk.power; i++) {
     frame_dig 32
     intc_2 // 1
@@ -648,7 +648,7 @@ verify_while_top@11:
     b verify_while_top@11
 
 verify_after_while@13:
-    // contracts/verifier.algo.ts:321
+    // contracts/verifier.algo.ts:328
     // challenges.xin = new Uint256(xin);
     frame_dig 30
     dup
@@ -666,7 +666,7 @@ verify_after_while@13:
     intc 5 // 352
     uncover 2
     replace3
-    // contracts/verifier.algo.ts:322
+    // contracts/verifier.algo.ts:329
     // challenges.zh = new Uint256(frSub(xin, BigUint(1)));
     uncover 2
     bytec_2 // 0x01
@@ -682,24 +682,24 @@ verify_after_while@13:
     swap
     replace3
     frame_bury 13
-    // contracts/verifier.algo.ts:324
+    // contracts/verifier.algo.ts:331
     // const n = frScalar(BigUint(domainSize));
     frame_dig 31
     itob
-    // contracts/verifier.algo.ts:91
+    // contracts/verifier.algo.ts:95
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
     frame_bury 17
-    // contracts/verifier.algo.ts:326
+    // contracts/verifier.algo.ts:333
     // let w = BigUint(1);
     bytec_2 // 0x01
     frame_bury 28
-    // contracts/verifier.algo.ts:328
+    // contracts/verifier.algo.ts:335
     // const L: Uint256[] = [new Uint256(), new Uint256()];
     pushbytes 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     frame_bury 0
-    // contracts/verifier.algo.ts:329
+    // contracts/verifier.algo.ts:336
     // const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
     frame_dig -3
     pushint 776 // 776
@@ -711,26 +711,26 @@ verify_after_while@13:
     frame_bury 33
 
 verify_ternary_merge@16:
-    // contracts/verifier.algo.ts:330
+    // contracts/verifier.algo.ts:337
     // for (let i: uint64 = 1; i <= iterations; i++) {
     intc_2 // 1
     frame_bury 34
 
 verify_while_top@17:
-    // contracts/verifier.algo.ts:330
+    // contracts/verifier.algo.ts:337
     // for (let i: uint64 = 1; i <= iterations; i++) {
     frame_dig 34
     frame_dig 33
     <=
     bz verify_after_while@19
-    // contracts/verifier.algo.ts:333
+    // contracts/verifier.algo.ts:340
     // frMul(w, challenges.zh.native),
     frame_dig 13
     dup
     intc 4 // 384
     intc_1 // 32
     extract3
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     frame_dig 28
     dup
@@ -738,19 +738,19 @@ verify_while_top@17:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:334
+    // contracts/verifier.algo.ts:341
     // frMul(n, frSub(challenges.xi.native, w)),
     uncover 2
     extract 96 32
     uncover 2
     callsub frSub
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     frame_dig 17
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:91
+    // contracts/verifier.algo.ts:95
     // return a % BLS12_381_SCALAR_MODULUS;
     swap
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
@@ -758,38 +758,38 @@ verify_while_top@17:
     frame_bury 4
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:64
+    // contracts/verifier.algo.ts:68
     // assert(x !== (0n as biguint), "Fr inverse of zero");
     dup
     bytec_1 // 0x
     b!=
     assert // Fr inverse of zero
-    // contracts/verifier.algo.ts:65
+    // contracts/verifier.algo.ts:69
     // const inv = modPow(x, BLS12_381_R_MINUS_2, r);
     pushbytes 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfefffffffeffffffff
-    // contracts/verifier.algo.ts:48
+    // contracts/verifier.algo.ts:52
     // let result = 1n as biguint;
     bytec_2 // 0x01
     frame_bury 25
-    // contracts/verifier.algo.ts:49
+    // contracts/verifier.algo.ts:53
     // let b: biguint = base % mod;
     swap
-    // contracts/verifier.algo.ts:65
+    // contracts/verifier.algo.ts:69
     // const inv = modPow(x, BLS12_381_R_MINUS_2, r);
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-    // contracts/verifier.algo.ts:49
+    // contracts/verifier.algo.ts:53
     // let b: biguint = base % mod;
     b%
     frame_bury 9
     frame_bury 15
 
 verify_while_top@26:
-    // contracts/verifier.algo.ts:51
+    // contracts/verifier.algo.ts:55
     // while (e > (0n as biguint)) {
     frame_dig 15
     bytec_1 // 0x
     b>
-    // contracts/verifier.algo.ts:51-57
+    // contracts/verifier.algo.ts:55-61
     // while (e > (0n as biguint)) {
     //   if ((e & (1n as biguint)) !== (0n as biguint)) {
     //     result = (result * b) % mod;
@@ -798,7 +798,7 @@ verify_while_top@26:
     //   e = e / BigUint(2); // e >> 1
     // }
     bz verify_after_while@30
-    // contracts/verifier.algo.ts:52
+    // contracts/verifier.algo.ts:56
     // if ((e & (1n as biguint)) !== (0n as biguint)) {
     frame_dig 15
     bytec_2 // 0x01
@@ -808,15 +808,15 @@ verify_while_top@26:
     frame_dig 25
     frame_bury 26
     bz verify_after_if_else@29
-    // contracts/verifier.algo.ts:53
+    // contracts/verifier.algo.ts:57
     // result = (result * b) % mod;
     frame_dig 25
     frame_dig 9
     b*
-    // contracts/verifier.algo.ts:65
+    // contracts/verifier.algo.ts:69
     // const inv = modPow(x, BLS12_381_R_MINUS_2, r);
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-    // contracts/verifier.algo.ts:53
+    // contracts/verifier.algo.ts:57
     // result = (result * b) % mod;
     b%
     frame_bury 26
@@ -824,19 +824,19 @@ verify_while_top@26:
 verify_after_if_else@29:
     frame_dig 26
     frame_bury 25
-    // contracts/verifier.algo.ts:55
+    // contracts/verifier.algo.ts:59
     // b = (b * b) % mod;
     frame_dig 9
     dup
     b*
-    // contracts/verifier.algo.ts:65
+    // contracts/verifier.algo.ts:69
     // const inv = modPow(x, BLS12_381_R_MINUS_2, r);
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-    // contracts/verifier.algo.ts:55
+    // contracts/verifier.algo.ts:59
     // b = (b * b) % mod;
     b%
     frame_bury 9
-    // contracts/verifier.algo.ts:56
+    // contracts/verifier.algo.ts:60
     // e = e / BigUint(2); // e >> 1
     frame_dig 15
     pushbytes 0x02
@@ -845,14 +845,14 @@ verify_after_if_else@29:
     b verify_while_top@26
 
 verify_after_while@30:
-    // contracts/verifier.algo.ts:73
+    // contracts/verifier.algo.ts:77
     // return (aN * bInv) % r;
     frame_dig 4
     frame_dig 25
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:331-336
+    // contracts/verifier.algo.ts:338-343
     // L[i] = new Uint256(
     //   frDiv(
     //     frMul(w, challenges.zh.native),
@@ -878,19 +878,19 @@ verify_after_while@30:
     uncover 2
     replace3
     frame_bury 0
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     frame_dig 28
-    // contracts/verifier.algo.ts:338
+    // contracts/verifier.algo.ts:345
     // w = frMul(w, Frw11);
     pushbytes 0x43527a8bca252472eb674a1a620890d7a534af14b61e0abe74a1f6718c130477
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
     frame_bury 28
-    // contracts/verifier.algo.ts:330
+    // contracts/verifier.algo.ts:337
     // for (let i: uint64 = 1; i <= iterations; i++) {
     intc_2 // 1
     +
@@ -898,7 +898,7 @@ verify_after_while@30:
     b verify_while_top@17
 
 verify_after_while@19:
-    // contracts/verifier.algo.ts:340
+    // contracts/verifier.algo.ts:347
     // return { L, challenges };
     pushbytes 0x01a2
     frame_dig 13
@@ -907,7 +907,7 @@ verify_after_while@19:
     concat
     dup
     frame_bury 7
-    // contracts/verifier.algo.ts:195
+    // contracts/verifier.algo.ts:199
     // namedLog("L1(xi)", (L[1] as Uint256).bytes);
     dup
     intc_3 // 0
@@ -922,29 +922,29 @@ verify_after_while@19:
     dup
     frame_bury 16
     pushbytes "L1(xi)"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:344
+    // contracts/verifier.algo.ts:351
     // let pi = BigUint(0);
     bytec_1 // 0x
     frame_bury 24
-    // contracts/verifier.algo.ts:345
+    // contracts/verifier.algo.ts:352
     // for (let i: uint64 = 0; i < publicSignals.length; i++) {
     intc_3 // 0
     frame_bury 32
 
 verify_while_top@22:
-    // contracts/verifier.algo.ts:345
+    // contracts/verifier.algo.ts:352
     // for (let i: uint64 = 0; i < publicSignals.length; i++) {
     frame_dig 32
     frame_dig 45
     <
     bz verify_after_while@24
-    // contracts/verifier.algo.ts:346
+    // contracts/verifier.algo.ts:353
     // const w = frScalar((publicSignals[i] as Uint256).native);
     frame_dig -2
     extract 2 0
@@ -955,11 +955,11 @@ verify_while_top@22:
     *
     intc_1 // 32
     extract3 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:91
+    // contracts/verifier.algo.ts:95
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:347
+    // contracts/verifier.algo.ts:354
     // pi = frSub(pi, frMul(w, (L[i + 1] as Uint256).native));
     swap
     intc_2 // 1
@@ -972,12 +972,12 @@ verify_while_top@22:
     swap
     intc_1 // 32
     extract3 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:347
+    // contracts/verifier.algo.ts:354
     // pi = frSub(pi, frMul(w, (L[i + 1] as Uint256).native));
     frame_dig 24
     swap
@@ -986,7 +986,7 @@ verify_while_top@22:
     b verify_while_top@22
 
 verify_after_while@24:
-    // contracts/verifier.algo.ts:349
+    // contracts/verifier.algo.ts:356
     // return new Uint256(pi);
     frame_dig 24
     dup
@@ -998,24 +998,24 @@ verify_after_while@24:
     dup
     cover 2
     b|
-    // contracts/verifier.algo.ts:200
+    // contracts/verifier.algo.ts:204
     // namedLog("PI(xi)", pi.bytes);
     pushbytes "PI(xi)"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     dup
     log
-    // contracts/verifier.algo.ts:362
+    // contracts/verifier.algo.ts:369
     // frMul(challenges.alpha.native, challenges.alpha.native),
     frame_dig 7
     pushints 2 416 // 2, 416
     extract3
     dup
     extract 64 32
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     dup
     dig 1
@@ -1026,106 +1026,110 @@ verify_after_while@24:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:367
+    // contracts/verifier.algo.ts:374
     // frMul(challenges.beta.native, proof.eval_s1.native),
     dig 2
     extract 0 32
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     dup
     frame_dig 12
+    dup
+    cover 8
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:85
+    // contracts/verifier.algo.ts:89
     // const aN: biguint = a % r;
     frame_dig 1
     dup
     cover 6
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:86
+    // contracts/verifier.algo.ts:90
     // const bN: biguint = b % r;
     swap
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
     dig 1
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:370
+    // contracts/verifier.algo.ts:377
     // e3a = frAdd(e3a, challenges.gamma.native);
     dig 5
     extract 32 32
-    // contracts/verifier.algo.ts:85
+    // contracts/verifier.algo.ts:89
     // const aN: biguint = a % r;
     swap
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:86
+    // contracts/verifier.algo.ts:90
     // const bN: biguint = b % r;
     swap
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
     swap
     dig 1
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     dig 3
     frame_dig 10
+    dup
+    cover 12
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:85
+    // contracts/verifier.algo.ts:89
     // const aN: biguint = a % r;
     frame_dig 3
     dup
     cover 4
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:86
+    // contracts/verifier.algo.ts:90
     // const bN: biguint = b % r;
     swap
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
     dig 1
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:85
+    // contracts/verifier.algo.ts:89
     // const aN: biguint = a % r;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
     dig 3
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:85
+    // contracts/verifier.algo.ts:89
     // const aN: biguint = a % r;
     frame_dig 2
     dup
     cover 8
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
     dup
     dig 5
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     uncover 4
     uncover 3
@@ -1147,14 +1151,14 @@ verify_after_while@24:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:384
+    // contracts/verifier.algo.ts:391
     // const r0 = frSub(frSub(e1, e2), e3);
     uncover 13
     dig 10
     callsub frSub
     swap
     callsub frSub
-    // contracts/verifier.algo.ts:386
+    // contracts/verifier.algo.ts:393
     // return new Uint256(r0);
     dup
     len
@@ -1163,28 +1167,29 @@ verify_after_while@24:
     assert // overflow
     uncover 14
     b|
-    // contracts/verifier.algo.ts:203
+    // contracts/verifier.algo.ts:207
     // namedLog("r0", r0.bytes);
     pushbytes "r0"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
+    dup
     log
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
-    dig 11
-    dig 5
+    dig 12
+    dig 6
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 36
     swap
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1193,12 +1198,12 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 37
-    uncover 13
+    dig 14
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1207,10 +1212,10 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1219,12 +1224,12 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 38
-    uncover 6
+    dig 7
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1233,10 +1238,10 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1245,12 +1250,12 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 39
-    uncover 8
+    dig 10
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1259,10 +1264,10 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1271,11 +1276,11 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     frame_dig 40
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1284,100 +1289,100 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:401
+    // contracts/verifier.algo.ts:408
     // const betaxi = frMul(challenges.beta.native, challenges.xi.native);
-    dig 9
+    dig 12
     extract 96 32
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
-    dig 7
+    dig 9
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:86
+    // contracts/verifier.algo.ts:90
     // const bN: biguint = b % r;
     dup
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
-    uncover 7
+    uncover 9
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:85
+    // contracts/verifier.algo.ts:89
     // const aN: biguint = a % r;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
-    dig 6
+    dig 7
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:408
+    // contracts/verifier.algo.ts:415
     // frAdd(proof.eval_b.native, frMul(betaxi, BigUint(vk.k1))),
     frame_dig -3
     pushints 784 8 // 784, 8
     extract3
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     dig 2
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:86
+    // contracts/verifier.algo.ts:90
     // const bN: biguint = b % r;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
-    uncover 6
+    uncover 7
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:85
+    // contracts/verifier.algo.ts:89
     // const aN: biguint = a % r;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
-    dig 6
+    dig 7
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:412
+    // contracts/verifier.algo.ts:419
     // frAdd(proof.eval_c.native, frMul(betaxi, BigUint(vk.k2))),
     frame_dig -3
     pushints 792 8 // 792, 8
     extract3
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     uncover 3
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:86
+    // contracts/verifier.algo.ts:90
     // const bN: biguint = b % r;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
-    uncover 5
+    uncover 6
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:85
+    // contracts/verifier.algo.ts:89
     // const aN: biguint = a % r;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
-    uncover 5
+    uncover 6
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     cover 2
     b*
@@ -1386,51 +1391,51 @@ verify_after_while@24:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    dig 5
+    dig 8
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:85
+    // contracts/verifier.algo.ts:89
     // const aN: biguint = a % r;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:86
+    // contracts/verifier.algo.ts:90
     // const bN: biguint = b % r;
-    uncover 4
+    uncover 7
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:423
+    // contracts/verifier.algo.ts:430
     // const d2 = g1TimesFr(proof.Z, frAdd(frAdd(d2a, d2b), challenges.u.native));
-    dig 5
+    dig 8
     pushint 320 // 320
     intc_1 // 32
     extract3
-    // contracts/verifier.algo.ts:85
+    // contracts/verifier.algo.ts:89
     // const aN: biguint = a % r;
     swap
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:86
+    // contracts/verifier.algo.ts:90
     // const bN: biguint = b % r;
-    swap
+    dig 1
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:87
+    // contracts/verifier.algo.ts:91
     // return (aN + bN) % r;
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 21
     swap
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1439,10 +1444,14 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
-    uncover 4
-    uncover 4
+    uncover 8
+    uncover 7
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    dig 10
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
@@ -1450,16 +1459,12 @@ verify_after_while@24:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    uncover 3
-    b*
-    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-    b%
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 43
     swap
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1468,18 +1473,18 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:447
+    // contracts/verifier.algo.ts:454
     // const d4mid = g1TimesFr(proof.T2, challenges.xin.native);
-    dig 3
+    dig 7
     intc 5 // 352
     intc_1 // 32
     extract3
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 22
     dig 1
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1488,19 +1493,19 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:32
+    // contracts/verifier.algo.ts:36
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     dig 1
     uncover 2
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 23
     swap
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1509,10 +1514,10 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1521,12 +1526,12 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     frame_dig 14
     swap
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1535,16 +1540,16 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:453
+    // contracts/verifier.algo.ts:460
     // d4 = g1TimesFr(d4, challenges.zh.native);
-    dig 4
+    dig 8
     intc 4 // 384
     intc_1 // 32
     extract3
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1553,12 +1558,12 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    uncover 3
+    uncover 4
     uncover 3
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1567,16 +1572,16 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     uncover 2
-    // contracts/verifier.algo.ts:164
+    // contracts/verifier.algo.ts:168
     // return g1TimesFr(p, R_MINUS_1);
     bytec_3 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1585,10 +1590,10 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1597,16 +1602,16 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     swap
-    // contracts/verifier.algo.ts:164
+    // contracts/verifier.algo.ts:168
     // return g1TimesFr(p, R_MINUS_1);
     bytec_3 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1615,10 +1620,10 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1627,28 +1632,28 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:206
+    // contracts/verifier.algo.ts:210
     // namedLog("D", d);
     pushbytes "D"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     dup
     log
-    // contracts/verifier.algo.ts:466
+    // contracts/verifier.algo.ts:473
     // let res = g1Add(D, g1TimesFr(proof.A, (challenges.v[1] as Uint256).native));
-    swap
+    uncover 5
     extract 128 192
     dup
     extract 32 32 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 18
-    swap
+    dig 1
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1657,12 +1662,45 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
+    // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
+    uncover 3
+    swap
+    ec_add BLS12_381g1
+    // contracts/verifier.algo.ts:162-164
+    // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
+    //   length: 96,
+    // });
+    dup
+    len
+    intc_0 // 96
+    ==
+    assert // Length must be 96
+    // contracts/verifier.algo.ts:473-474
+    // let res = g1Add(D, g1TimesFr(proof.A, (challenges.v[1] as Uint256).native));
+    // res = g1Add(res, g1TimesFr(proof.B, (challenges.v[2] as Uint256).native));
+    dig 2
+    extract 64 32 // on error: index access is out of bounds
+    // contracts/verifier.algo.ts:156
+    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
+    frame_dig 19
+    dig 1
+    ec_scalar_mul BLS12_381g1
+    // contracts/verifier.algo.ts:156-158
+    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
+    //   length: 96,
+    // });
+    dup
+    len
+    intc_0 // 96
+    ==
+    assert // Length must be 96
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     uncover 2
     swap
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1671,47 +1709,16 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:466-467
-    // let res = g1Add(D, g1TimesFr(proof.A, (challenges.v[1] as Uint256).native));
-    // res = g1Add(res, g1TimesFr(proof.B, (challenges.v[2] as Uint256).native));
-    dig 1
-    extract 64 32 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:152
-    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    frame_dig 19
-    swap
-    ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
-    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    //   length: 96,
-    // });
-    dup
-    len
-    intc_0 // 96
-    ==
-    assert // Length must be 96
-    // contracts/verifier.algo.ts:158
-    // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
-    // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    //   length: 96,
-    // });
-    dup
-    len
-    intc_0 // 96
-    ==
-    assert // Length must be 96
-    // contracts/verifier.algo.ts:468
+    // contracts/verifier.algo.ts:475
     // res = g1Add(res, g1TimesFr(proof.C, (challenges.v[3] as Uint256).native));
-    dig 1
+    dig 3
     extract 96 32 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 20
-    swap
+    dig 1
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1720,10 +1727,12 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
+    uncover 2
+    swap
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1732,16 +1741,16 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:470
+    // contracts/verifier.algo.ts:477
     // res = g1Add(res, g1TimesFr(vk.S1, (challenges.v[4] as Uint256).native));
-    dig 1
+    dig 4
     extract 128 32 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 41
-    swap
+    dig 1
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1750,10 +1759,12 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
+    uncover 2
+    swap
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1762,16 +1773,16 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:471
+    // contracts/verifier.algo.ts:478
     // res = g1Add(res, g1TimesFr(vk.S2, (challenges.v[5] as Uint256).native));
-    swap
+    uncover 5
     extract 160 32 // on error: index access is out of bounds
-    // contracts/verifier.algo.ts:152
+    // contracts/verifier.algo.ts:156
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     frame_dig 42
-    swap
+    dig 1
     ec_scalar_mul BLS12_381g1
-    // contracts/verifier.algo.ts:152-154
+    // contracts/verifier.algo.ts:156-158
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     //   length: 96,
     // });
@@ -1780,10 +1791,12 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:158
+    // contracts/verifier.algo.ts:162
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
+    uncover 2
+    swap
     ec_add BLS12_381g1
-    // contracts/verifier.algo.ts:158-160
+    // contracts/verifier.algo.ts:162-164
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     //   length: 96,
     // });
@@ -1792,16 +1805,165 @@ verify_after_while@24:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/verifier.algo.ts:209
+    // contracts/verifier.algo.ts:213
     // namedLog("F", f);
     pushbytes "F"
-    // contracts/verifier.algo.ts:147
+    // contracts/verifier.algo.ts:151
     // log(name);
     log
-    // contracts/verifier.algo.ts:148
+    // contracts/verifier.algo.ts:152
     // log(value);
     log
-    // contracts/verifier.algo.ts:211
+    // contracts/verifier.algo.ts:36
+    // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    uncover 4
+    uncover 9
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:488-491
+    // let e = frSub(
+    //   frMul((challenges.v[1] as Uint256).native, proof.eval_a.native),
+    //   r0.native,
+    // );
+    uncover 6
+    callsub frSub
+    // contracts/verifier.algo.ts:36
+    // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    uncover 4
+    uncover 6
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:89
+    // const aN: biguint = a % r;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:90
+    // const bN: biguint = b % r;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:91
+    // return (aN + bN) % r;
+    b+
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:36
+    // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    uncover 3
+    uncover 5
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:89
+    // const aN: biguint = a % r;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:90
+    // const bN: biguint = b % r;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:91
+    // return (aN + bN) % r;
+    b+
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:36
+    // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    uncover 2
+    uncover 6
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:89
+    // const aN: biguint = a % r;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:90
+    // const bN: biguint = b % r;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:91
+    // return (aN + bN) % r;
+    b+
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:36
+    // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    swap
+    uncover 4
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:89
+    // const aN: biguint = a % r;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:90
+    // const bN: biguint = b % r;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:91
+    // return (aN + bN) % r;
+    b+
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:36
+    // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    swap
+    uncover 2
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:89
+    // const aN: biguint = a % r;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:90
+    // const bN: biguint = b % r;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:91
+    // return (aN + bN) % r;
+    b+
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:511
+    // const res = g1TimesFr(G1_ONE.toFixed({ length: 96 }), e);
+    pushbytes 0x17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1
+    // contracts/verifier.algo.ts:156
+    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
+    swap
+    ec_scalar_mul BLS12_381g1
+    // contracts/verifier.algo.ts:156-158
+    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
+    //   length: 96,
+    // });
+    dup
+    len
+    intc_0 // 96
+    ==
+    assert // Length must be 96
+    // contracts/verifier.algo.ts:216
+    // namedLog("E", e);
+    pushbytes "E"
+    // contracts/verifier.algo.ts:151
+    // log(name);
+    log
+    // contracts/verifier.algo.ts:152
+    // log(value);
+    log
+    // contracts/verifier.algo.ts:218
     // return true;
     intc_2 // 1
     frame_bury 0
@@ -1815,18 +1977,18 @@ verify_ternary_false@15:
 
 // contracts/verifier.algo.ts::PlonkVerifier.getChallenge(td: bytes) -> bytes:
 getChallenge:
-    // contracts/verifier.algo.ts:214
+    // contracts/verifier.algo.ts:221
     // private getChallenge(td: bytes): Uint256 {
     proto 1 1
-    // contracts/verifier.algo.ts:215
+    // contracts/verifier.algo.ts:222
     // let hash = op.keccak256(td);
     frame_dig -1
     keccak256
-    // contracts/verifier.algo.ts:91
+    // contracts/verifier.algo.ts:95
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:216
+    // contracts/verifier.algo.ts:223
     // return new Uint256(frScalar(BigUint(hash)));
     dup
     len

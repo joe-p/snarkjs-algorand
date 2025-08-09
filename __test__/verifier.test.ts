@@ -172,7 +172,8 @@ describe("verifier", () => {
       // r0: 2
       // D: 4
       // F: 5
-      extraOpcodeBudget: 5 * lsigBudget - 700,
+      // E: 6
+      extraOpcodeBudget: 6 * lsigBudget - 700,
       allowMoreLogging: true,
     });
     const logs = simResult.confirmations[0]!.logs!;
@@ -195,7 +196,7 @@ describe("verifier", () => {
     // [DEBUG] snarkJS: r0: 5e47e3760437353a648d5bb09e7cc190e141ddf993d6e9d073afe5e48fa3d006
     // [DEBUG] snarkJS: D: [ dd61360e478901e6bac4c71651b849bd372671aa5d78d357c47359f4d904323557defc9dfec613f47046f451feef111, 11f88115b918b1de982e3f497c4e725db31f58e7f96a183450300ec570fb193afc770cd5824b4de0d98f0280e865c77a ]
     // [DEBUG] snarkJS: F: [ 18463acd328baa605062c9ce3cceb2982e0fc4b3031c7b75872324ce6941321b73e7c06f70d1b3f9b44d37c74c4b2b01, ebd2a44a0be8eb548ad8846225e22b06048ff7de2f78ceb51a1e86994bcb93afdaff78c20b143b7ff4b5d3a8469848 ]
-    // TODO: [DEBUG] snarkJS: E: [ 10be434db7820f39ab40a95a54bbc57d673fffd3bdadbef08de0e5f8bc5e206a82f63d1fb3e12892601c220b51a8ef5f, 90f264a0a62778fccb84713818c856cf1156b61c90ae5968632b902b3101c51243629cab527a6cf23fa491e8478f35d ]
+    // [DEBUG] snarkJS: E: [ 10be434db7820f39ab40a95a54bbc57d673fffd3bdadbef08de0e5f8bc5e206a82f63d1fb3e12892601c220b51a8ef5f, 90f264a0a62778fccb84713818c856cf1156b61c90ae5968632b902b3101c51243629cab527a6cf23fa491e8478f35d ]
     // [INFO]  snarkJS: OK!
 
     expect(logValues.beta).toBe(
@@ -247,6 +248,10 @@ describe("verifier", () => {
 
     expect(logValues.F).toBe(
       "18463acd328baa605062c9ce3cceb2982e0fc4b3031c7b75872324ce6941321b73e7c06f70d1b3f9b44d37c74c4b2b01ebd2a44a0be8eb548ad8846225e22b06048ff7de2f78ceb51a1e86994bcb93afdaff78c20b143b7ff4b5d3a8469848",
+    );
+
+    expect(logValues.E).toBe(
+      "10be434db7820f39ab40a95a54bbc57d673fffd3bdadbef08de0e5f8bc5e206a82f63d1fb3e12892601c220b51a8ef5f90f264a0a62778fccb84713818c856cf1156b61c90ae5968632b902b3101c51243629cab527a6cf23fa491e8478f35d",
     );
   });
 });
