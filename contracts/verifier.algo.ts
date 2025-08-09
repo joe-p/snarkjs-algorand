@@ -205,6 +205,9 @@ export class PlonkVerifier extends Contract {
     const d = this.calculateD(proof, challenges, vk, L[1] as Uint256);
     namedLog("D", d);
 
+    const f = this.calculateF(proof, challenges, vk, d);
+    namedLog("F", f);
+
     return true;
   }
 
@@ -383,45 +386,6 @@ export class PlonkVerifier extends Contract {
     return new Uint256(r0);
   }
 
-  //   function calculateD(curve, proof, challenges, vk, l1) {
-  //     const G1 = curve.G1;
-  //     const Fr = curve.Fr;
-  //
-  //     let d1 = g1TimesFr(vk.Qm, frMul(proof.eval_a, proof.eval_b));
-  //     d1 = g1Add(d1, g1TimesFr(vk.Ql, proof.eval_a));
-  //     d1 = g1Add(d1, g1TimesFr(vk.Qr, proof.eval_b));
-  //     d1 = g1Add(d1, g1TimesFr(vk.Qo, proof.eval_c));
-  //     d1 = g1Add(d1, vk.Qc);
-  //
-  //     const betaxi = frMul(challenges.beta, challenges.xi);
-  //
-  //     const d2a1 = frAdd(frAdd(proof.eval_a, betaxi), challenges.gamma);
-  //     const d2a2 = frAdd(frAdd(proof.eval_b, frMul(betaxi, vk.k1)), challenges.gamma);
-  //     const d2a3 = frAdd(frAdd(proof.eval_c, frMul(betaxi, vk.k2)), challenges.gamma);
-  //
-  //     const d2a = frMul(frMul(frMul(d2a1, d2a2), d2a3), challenges.alpha);
-  //
-  //     const d2b = frMul(l1, Fr.square(challenges.alpha));
-  //
-  //     const d2 = g1TimesFr(proof.Z, frAdd(frAdd(d2a, d2b), challenges.u));
-  //
-  //     const d3a = frAdd(frAdd(proof.eval_a, frMul(challenges.beta, proof.eval_s1)), challenges.gamma);
-  //     const d3b = frAdd(frAdd(proof.eval_b, frMul(challenges.beta, proof.eval_s2)), challenges.gamma);
-  //     const d3c = frMul(frMul(challenges.alpha, challenges.beta), proof.eval_zw);
-  //
-  //     const d3 = g1TimesFr(vk.S3, frMul(frMul(d3a, d3b), d3c));
-  //
-  //     const d4low = proof.T1;
-  //     const d4mid = g1TimesFr(proof.T2, challenges.xin);
-  //     const d4high = g1TimesFr(proof.T3, Fr.square(challenges.xin));
-  //     let d4 = g1Add(d4low, g1Add(d4mid, d4high));
-  //     d4 = g1TimesFr(d4, challenges.zh);
-  //
-  //     const d = G1.sub(G1.sub(g1Add(d1, d2), d3), d4);
-  //
-  //     return d;
-  // }
-
   private calculateD(
     proof: Proof,
     challenges: Challenges,
@@ -491,5 +455,21 @@ export class PlonkVerifier extends Contract {
     const d = g1Sub(g1Sub(g1Add(d1, d2), d3), d4);
 
     return d;
+  }
+
+  private calculateF(
+    proof: Proof,
+    challenges: Challenges,
+    vk: VerificationKey,
+    D: bytes<96>,
+  ): bytes<96> {
+    let res = g1Add(D, g1TimesFr(proof.A, (challenges.v[1] as Uint256).native));
+    res = g1Add(res, g1TimesFr(proof.B, (challenges.v[2] as Uint256).native));
+    res = g1Add(res, g1TimesFr(proof.C, (challenges.v[3] as Uint256).native));
+
+    res = g1Add(res, g1TimesFr(vk.S1, (challenges.v[4] as Uint256).native));
+    res = g1Add(res, g1TimesFr(vk.S2, (challenges.v[5] as Uint256).native));
+
+    return res;
   }
 }
