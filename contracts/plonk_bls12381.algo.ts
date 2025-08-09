@@ -1,5 +1,4 @@
 import {
-  Contract,
   type bytes,
   op,
   BigUint,
@@ -12,13 +11,7 @@ import {
   clone,
   TemplateVar,
 } from "@algorandfoundation/algorand-typescript";
-import {
-  abimethod,
-  interpretAsArc4,
-  Uint,
-  Uint256,
-} from "@algorandfoundation/algorand-typescript/arc4";
-import { keccak256 } from "@algorandfoundation/algorand-typescript/op";
+import { Uint256 } from "@algorandfoundation/algorand-typescript/arc4";
 
 const G1_ONE = Bytes.fromHex(
   "17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1",
@@ -28,7 +21,7 @@ const G2_ONE = Bytes.fromHex(
   "024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb813e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b828010606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be",
 );
 
-/** Fr.w[11] precomputed by scripts/frw.ts */
+/** Fr.w[11] precomputed by scripts/constants.ts */
 const Frw11 = BigUint(
   Bytes.fromHex(
     "43527a8bca252472eb674a1a620890d7a534af14b61e0abe74a1f6718c130477",
@@ -83,7 +76,7 @@ function frInv(b: biguint): biguint {
 function frDiv(a: biguint, b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
   const aN = frScalar(BigUint(a));
-  const bInv = BigUint(frInv(b)); // already reduced & padded
+  const bInv = BigUint(frInv(b));
   return (aN * bInv) % r;
 }
 
@@ -91,7 +84,7 @@ function frSub(a: biguint, b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
   const aN: biguint = a % r;
   const bN: biguint = b % r;
-  return (aN + r - bN) % r; // (a - b) mod r, guaranteed non-negative
+  return (aN + r - bN) % r;
 }
 
 function frAdd(a: biguint, b: biguint): biguint {
@@ -176,8 +169,8 @@ export type VerificationKey = {
   S1: bytes<96>;
   S2: bytes<96>;
   S3: bytes<96>;
-  power: uint64; // Domain size = 2^power
-  nPublic: uint64; // Number of public inputs
+  power: uint64;
+  nPublic: uint64;
   k1: uint64;
   k2: uint64;
   X_2: bytes<192>;
@@ -213,7 +206,6 @@ export function verify(
   signals: PublicSignals,
   proof: Proof,
 ): boolean {
-  // Implementation of the verification logic
   let challenges = computeChallenges(vk, signals, proof);
   namedLog("beta", challenges.beta.bytes);
   namedLog("gamma", challenges.gamma.bytes);
