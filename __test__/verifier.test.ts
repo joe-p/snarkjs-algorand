@@ -43,6 +43,8 @@ async function getVkey(path: string, curve: any): Promise<VerificationKey> {
     s1: vkey.S1Bytes,
     s2: vkey.S2Bytes,
     s3: vkey.S3Bytes,
+    k1: BigInt(vkey.k1),
+    k2: BigInt(vkey.k2),
   };
 }
 
@@ -102,6 +104,7 @@ type LogValues = {
   "L1(xi)"?: string;
   "PI(xi)"?: string;
   r0?: string;
+  D?: string;
 };
 
 function parseLogs(logs: Uint8Array[]): LogValues {
@@ -151,7 +154,11 @@ describe("verifier", () => {
     // We are testing using an app so we can log, so we need to increase the opcode budget
     const lsigBudget = 20_000;
     const simResult = await group.simulate({
-      extraOpcodeBudget: 2 * lsigBudget - 700,
+      // Keeping track of how many lsigs are needed for each step:
+      // r0: 2
+      // D: 4
+      extraOpcodeBudget: 4 * lsigBudget - 700,
+      allowMoreLogging: true,
     });
     const logs = simResult.confirmations[0]!.logs!;
 
@@ -171,8 +178,8 @@ describe("verifier", () => {
     // [DEBUG] snarkJS: L1(xi)=46dd60f8923d7d9990aff309366db4e39dc56e83bb35fa326d610da2ac5e8496
     // [DEBUG] snarkJS: PI(xi): 7327379bca9fd93517e06c5ad56a0891962b170320bafd11010e8c5e9cdf9e56
     // [DEBUG] snarkJS: r0: 5e47e3760437353a648d5bb09e7cc190e141ddf993d6e9d073afe5e48fa3d006
-    // TODO: [DEBUG] snarkJS: D: [ dd61360e478901e6bac4c71651b849bd372671aa5d78d357c47359f4d904323557defc9dfec613f47046f451feef111, 11f88115b918b1de982e3f497c4e725db31f58e7f96a183450300ec570fb193afc770cd5824b4de0d98f0280e865c77a ]
-    // [DEBUG] snarkJS: F: [ 18463acd328baa605062c9ce3cceb2982e0fc4b3031c7b75872324ce6941321b73e7c06f70d1b3f9b44d37c74c4b2b01, ebd2a44a0be8eb548ad8846225e22b06048ff7de2f78ceb51a1e86994bcb93afdaff78c20b143b7ff4b5d3a8469848 ]
+    // [DEBUG] snarkJS: D: [ dd61360e478901e6bac4c71651b849bd372671aa5d78d357c47359f4d904323557defc9dfec613f47046f451feef111, 11f88115b918b1de982e3f497c4e725db31f58e7f96a183450300ec570fb193afc770cd5824b4de0d98f0280e865c77a ]
+    // TODO: [DEBUG] snarkJS: F: [ 18463acd328baa605062c9ce3cceb2982e0fc4b3031c7b75872324ce6941321b73e7c06f70d1b3f9b44d37c74c4b2b01, ebd2a44a0be8eb548ad8846225e22b06048ff7de2f78ceb51a1e86994bcb93afdaff78c20b143b7ff4b5d3a8469848 ]
     // [DEBUG] snarkJS: E: [ 10be434db7820f39ab40a95a54bbc57d673fffd3bdadbef08de0e5f8bc5e206a82f63d1fb3e12892601c220b51a8ef5f, 90f264a0a62778fccb84713818c856cf1156b61c90ae5968632b902b3101c51243629cab527a6cf23fa491e8478f35d ]
     // [INFO]  snarkJS: OK!
 
@@ -217,6 +224,10 @@ describe("verifier", () => {
 
     expect(logValues.r0).toBe(
       "5e47e3760437353a648d5bb09e7cc190e141ddf993d6e9d073afe5e48fa3d006",
+    );
+
+    expect(logValues.D).toBe(
+      "dd61360e478901e6bac4c71651b849bd372671aa5d78d357c47359f4d904323557defc9dfec613f47046f451feef11111f88115b918b1de982e3f497c4e725db31f58e7f96a183450300ec570fb193afc770cd5824b4de0d98f0280e865c77a",
     );
   });
 });

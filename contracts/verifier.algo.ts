@@ -32,6 +32,12 @@ function frMul(a: biguint, b: biguint): biguint {
   return (a * b) % BLS12_381_SCALAR_MODULUS;
 }
 
+const R_MINUS_1 = BigUint(
+  Bytes.fromHex(
+    "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000",
+  ),
+);
+
 const BLS12_381_R_MINUS_2 = BigUint(
   Bytes.fromHex(
     "73eda753299d7d483339d80809a1d80553bda402fffe5bfefffffffeffffffff",
@@ -102,6 +108,8 @@ export type VerificationKey = {
   S3: bytes<96>;
   power: uint64; // Domain size = 2^power
   nPublic: uint64; // Number of public inputs
+  k1: uint64;
+  k2: uint64;
 };
 
 export type Proof = {
@@ -140,6 +148,26 @@ function namedLog(name: string, value: bytes): void {
   log(value);
 }
 
+function g1TimesFr(p: bytes<96>, s: biguint): bytes<96> {
+  return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
+    length: 96,
+  });
+}
+
+function g1Add(p1: bytes<96>, p2: bytes<96>): bytes<96> {
+  return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
+    length: 96,
+  });
+}
+
+function g1Neg(p: bytes<96>): bytes<96> {
+  return g1TimesFr(p, R_MINUS_1);
+}
+
+function g1Sub(p: bytes<96>, q: bytes<96>): bytes<96> {
+  return g1Add(p, g1Neg(q));
+}
+
 export class PlonkVerifier extends Contract {
   public verify(
     vk: VerificationKey,
@@ -173,6 +201,9 @@ export class PlonkVerifier extends Contract {
 
     const r0 = this.calculateR0(proof, challenges, pi, L[1] as Uint256);
     namedLog("r0", r0.bytes);
+
+    const d = this.calculateD(proof, challenges, vk, L[1] as Uint256);
+    namedLog("D", d);
 
     return true;
   }
@@ -350,5 +381,115 @@ export class PlonkVerifier extends Contract {
     const r0 = frSub(frSub(e1, e2), e3);
 
     return new Uint256(r0);
+  }
+
+  //   function calculateD(curve, proof, challenges, vk, l1) {
+  //     const G1 = curve.G1;
+  //     const Fr = curve.Fr;
+  //
+  //     let d1 = g1TimesFr(vk.Qm, frMul(proof.eval_a, proof.eval_b));
+  //     d1 = g1Add(d1, g1TimesFr(vk.Ql, proof.eval_a));
+  //     d1 = g1Add(d1, g1TimesFr(vk.Qr, proof.eval_b));
+  //     d1 = g1Add(d1, g1TimesFr(vk.Qo, proof.eval_c));
+  //     d1 = g1Add(d1, vk.Qc);
+  //
+  //     const betaxi = frMul(challenges.beta, challenges.xi);
+  //
+  //     const d2a1 = frAdd(frAdd(proof.eval_a, betaxi), challenges.gamma);
+  //     const d2a2 = frAdd(frAdd(proof.eval_b, frMul(betaxi, vk.k1)), challenges.gamma);
+  //     const d2a3 = frAdd(frAdd(proof.eval_c, frMul(betaxi, vk.k2)), challenges.gamma);
+  //
+  //     const d2a = frMul(frMul(frMul(d2a1, d2a2), d2a3), challenges.alpha);
+  //
+  //     const d2b = frMul(l1, Fr.square(challenges.alpha));
+  //
+  //     const d2 = g1TimesFr(proof.Z, frAdd(frAdd(d2a, d2b), challenges.u));
+  //
+  //     const d3a = frAdd(frAdd(proof.eval_a, frMul(challenges.beta, proof.eval_s1)), challenges.gamma);
+  //     const d3b = frAdd(frAdd(proof.eval_b, frMul(challenges.beta, proof.eval_s2)), challenges.gamma);
+  //     const d3c = frMul(frMul(challenges.alpha, challenges.beta), proof.eval_zw);
+  //
+  //     const d3 = g1TimesFr(vk.S3, frMul(frMul(d3a, d3b), d3c));
+  //
+  //     const d4low = proof.T1;
+  //     const d4mid = g1TimesFr(proof.T2, challenges.xin);
+  //     const d4high = g1TimesFr(proof.T3, Fr.square(challenges.xin));
+  //     let d4 = g1Add(d4low, g1Add(d4mid, d4high));
+  //     d4 = g1TimesFr(d4, challenges.zh);
+  //
+  //     const d = G1.sub(G1.sub(g1Add(d1, d2), d3), d4);
+  //
+  //     return d;
+  // }
+
+  private calculateD(
+    proof: Proof,
+    challenges: Challenges,
+    vk: VerificationKey,
+    l1: Uint256,
+  ): bytes<96> {
+    let d1 = g1TimesFr(vk.Qm, frMul(proof.eval_a.native, proof.eval_b.native));
+    d1 = g1Add(d1, g1TimesFr(vk.Ql, proof.eval_a.native));
+    d1 = g1Add(d1, g1TimesFr(vk.Qr, proof.eval_b.native));
+    d1 = g1Add(d1, g1TimesFr(vk.Qo, proof.eval_c.native));
+    d1 = g1Add(d1, vk.Qc);
+
+    const betaxi = frMul(challenges.beta.native, challenges.xi.native);
+
+    const d2a1 = frAdd(
+      frAdd(proof.eval_a.native, betaxi),
+      challenges.gamma.native,
+    );
+    const d2a2 = frAdd(
+      frAdd(proof.eval_b.native, frMul(betaxi, BigUint(vk.k1))),
+      challenges.gamma.native,
+    );
+    const d2a3 = frAdd(
+      frAdd(proof.eval_c.native, frMul(betaxi, BigUint(vk.k2))),
+      challenges.gamma.native,
+    );
+
+    const d2a = frMul(frMul(frMul(d2a1, d2a2), d2a3), challenges.alpha.native);
+
+    const d2b = frMul(
+      l1.native,
+      frMul(challenges.alpha.native, challenges.alpha.native),
+    );
+
+    const d2 = g1TimesFr(proof.Z, frAdd(frAdd(d2a, d2b), challenges.u.native));
+
+    const d3a = frAdd(
+      frAdd(
+        proof.eval_a.native,
+        frMul(challenges.beta.native, proof.eval_s1.native),
+      ),
+      challenges.gamma.native,
+    );
+    const d3b = frAdd(
+      frAdd(
+        proof.eval_b.native,
+        frMul(challenges.beta.native, proof.eval_s2.native),
+      ),
+      challenges.gamma.native,
+    );
+    const d3c = frMul(
+      frMul(challenges.alpha.native, challenges.beta.native),
+      proof.eval_zw.native,
+    );
+
+    const d3 = g1TimesFr(vk.S3, frMul(frMul(d3a, d3b), d3c));
+
+    const d4low = proof.T1;
+    const d4mid = g1TimesFr(proof.T2, challenges.xin.native);
+    const d4high = g1TimesFr(
+      proof.T3,
+      frMul(challenges.xin.native, challenges.xin.native),
+    );
+    let d4 = g1Add(d4low, g1Add(d4mid, d4high));
+    d4 = g1TimesFr(d4, challenges.zh.native);
+
+    const d = g1Sub(g1Sub(g1Add(d1, d2), d3), d4);
+
+    return d;
   }
 }
