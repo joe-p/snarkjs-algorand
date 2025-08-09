@@ -134,9 +134,7 @@ describe("verifier", () => {
       appName: Math.random().toString(16),
     });
     client = appClient;
-    console.debug("Getting curve...");
     curve = await snarkjs.curves.getCurveFromName("bls12381");
-    console.debug("Curve obtained");
   });
 
   afterAll(async () => {
@@ -154,11 +152,9 @@ describe("verifier", () => {
 
     // We are testing using an app so we can log, so we need to increase the opcode budget
     const lsigBudget = 20_000;
-    console.debug("Starting simulation with extra opcode budget");
     const simResult = await group.simulate({
       extraOpcodeBudget: 2 * lsigBudget - 700,
     });
-    console.debug("DONE with sim");
     const logs = simResult.confirmations[0]!.logs!;
 
     const logValues = parseLogs(logs);

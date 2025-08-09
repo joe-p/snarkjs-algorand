@@ -278,7 +278,7 @@ export class PlonkVerifier extends Contract {
 
     let w = BigUint(1);
 
-    const L: bytes<32>[] = [];
+    const L: bytes<32>[] = [Bytes<32>()];
     const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
     for (let i: uint64 = 0; i < iterations; i++) {
       L[i] = b32(

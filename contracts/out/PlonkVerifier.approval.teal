@@ -738,8 +738,8 @@ verify_after_while@13:
     bytec_2 // 0x01
     frame_bury 12
     // contracts/verifier.algo.ts:281
-    // const L: bytes<32>[] = [];
-    pushbytes 0x0000
+    // const L: bytes<32>[] = [Bytes<32>()];
+    pushbytes 0x00010000000000000000000000000000000000000000000000000000000000000000
     frame_bury 0
     // contracts/verifier.algo.ts:282
     // const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
