@@ -25,7 +25,7 @@ const G1_ONE = Bytes.fromHex(
 );
 
 const G2_ONE = Bytes.fromHex(
-  "13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb80606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b82801",
+  "024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb813e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b828010606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be",
 );
 
 /** Fr.w[11] precomputed by scripts/frw.ts */
@@ -563,7 +563,12 @@ export class PlonkVerifier extends Contract {
     B1 = g1Add(B1, F);
     B1 = g1Sub(B1, E);
 
-    // const res = await curve.pairingEq(G1.neg(A1), vk.X_2, B1, curve.G2.one);
+    namedLog("A1", A1);
+    namedLog("B1", B1);
+    namedLog("neg(A1)", g1Neg(A1));
+    namedLog("vk.X_2", vk.X_2);
+    namedLog("G2_ONE", G2_ONE);
+
     const res = op.EllipticCurve.pairingCheck(
       op.Ec.BLS12_381g1,
       op.concat(g1Neg(A1), B1), // G1 points

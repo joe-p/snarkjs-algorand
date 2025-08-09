@@ -3,17 +3,27 @@ import { AlgorandClient } from "@algorandfoundation/algokit-utils";
 import {
   PlonkVerifierClient,
   PlonkVerifierFactory,
-  VerificationKeyFromTuple,
   type Proof,
   type VerificationKey,
 } from "../contracts/clients/PlonkVerifier";
 import * as snarkjs from "snarkjs";
 import { readFileSync } from "fs";
-import type { AppClient } from "@algorandfoundation/algokit-utils/types/app-client";
 import {
   getABIEncodedValue,
   type Arc56Contract,
 } from "@algorandfoundation/algokit-utils/types/app-arc56";
+
+const LSIG_BUDGET = 20_000; // Budget for each logicsig
+const APP_BUDGET = 700; // Budget for the app call
+
+// Keeping track of how many lsigs are needed for each step:
+// r0: 2
+// D: 4
+// F: 5
+// E: 6
+// Pairing check: 8
+const LSIG_TXNS_NEEDED = 8;
+const EXTRA_OPCODE_BUDGET = LSIG_BUDGET * LSIG_TXNS_NEEDED - APP_BUDGET; // Extra budget needed for an app call
 
 const algorand = AlgorandClient.defaultLocalNet();
 
@@ -31,18 +41,25 @@ async function getVkey(path: string, curve: any): Promise<VerificationKey> {
   const vkey = await snarkjs.zKey.exportVerificationKey(path, console);
 
   ["Ql", "Qr", "Qo", "Qm", "Qc", "S1", "S2", "S3"].forEach((p) => {
-    const buffer = new Uint8Array(96);
     stringValuesToBigints(vkey[p]);
     const point = curve.G1.fromObject(vkey[p]);
-    curve.G1.toRprUncompressed(buffer, 0, point);
-    vkey[`${p}Bytes`] = buffer;
+    vkey[`${p}Bytes`] = curve.G1.toUncompressed(point);
   });
 
-  const x2Buffer = new Uint8Array(192);
   stringValuesToBigints(vkey.X_2);
   const x2Point = curve.G2.fromObject(vkey.X_2);
-  curve.G2.toRprUncompressed(x2Buffer, 0, x2Point);
-  vkey.x2Bytes = x2Buffer;
+  const x2Uncompressed = curve.G2.toUncompressed(x2Point);
+
+  const x1 = x2Uncompressed.subarray(0, 48);
+  const x0 = x2Uncompressed.subarray(48, 96);
+  const y1 = x2Uncompressed.subarray(96, 144);
+  const y0 = x2Uncompressed.subarray(144, 192);
+
+  const x2Bytes = new Uint8Array(192);
+  x2Bytes.set(x0, 0);
+  x2Bytes.set(x1, 48);
+  x2Bytes.set(y0, 96);
+  x2Bytes.set(y1, 144);
 
   return {
     power: vkey.power,
@@ -57,20 +74,8 @@ async function getVkey(path: string, curve: any): Promise<VerificationKey> {
     s3: vkey.S3Bytes,
     k1: BigInt(vkey.k1),
     k2: BigInt(vkey.k2),
-    x_2: vkey.x2Bytes,
+    x_2: x2Bytes,
   };
-}
-
-function concatBytes(...arrays: Uint8Array[]): Uint8Array {
-  const totalLength = arrays.reduce((sum, arr) => sum + arr.length, 0);
-  const result = new Uint8Array(totalLength);
-
-  let offset = 0;
-  for (const arr of arrays) {
-    result.set(arr, offset);
-    offset += arr.length;
-  }
-  return result;
 }
 
 async function getVKeyBytes(
@@ -87,11 +92,9 @@ async function getProof(path: string, curve: any): Promise<Proof> {
   const proof = JSON.parse(readFileSync(path, "utf8"));
 
   ["A", "B", "C", "Z", "T1", "T2", "T3", "Wxi", "Wxiw"].forEach((p) => {
-    const buffer = new Uint8Array(96);
     stringValuesToBigints(proof[p]);
     const point = curve.G1.fromObject(proof[p]);
-    curve.G1.toRprUncompressed(buffer, 0, point);
-    proof[`${p}Bytes`] = buffer;
+    proof[`${p}Bytes`] = curve.G1.toUncompressed(point);
   });
 
   ["eval_a", "eval_b", "eval_c", "eval_s1", "eval_s2", "eval_zw"].forEach(
@@ -198,6 +201,19 @@ describe("verifier", () => {
     await curve.terminate();
   });
 
+  it("fails with wrong signal", async () => {
+    const proof = await getProof("circuit/proof.json", curve);
+    const signals = encodeSignals(1337n);
+    const group = client.newGroup().verify({ args: { signals, proof } });
+
+    const simResult = group.simulate({
+      extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+      allowMoreLogging: true,
+    });
+
+    expect(simResult).rejects.toThrow();
+  });
+
   it("works", async () => {
     const proof = await getProof("circuit/proof.json", curve);
     const signals =
@@ -209,12 +225,7 @@ describe("verifier", () => {
     // We are testing using an app so we can log, so we need to increase the opcode budget
     const lsigBudget = 20_000;
     const simResult = await group.simulate({
-      // Keeping track of how many lsigs are needed for each step:
-      // r0: 2
-      // D: 4
-      // F: 5
-      // E: 6
-      extraOpcodeBudget: 6 * lsigBudget - 700,
+      extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
       allowMoreLogging: true,
     });
     const logs = simResult.confirmations[0]!.logs!;

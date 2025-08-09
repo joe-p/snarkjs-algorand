@@ -14,6 +14,7 @@ Fr.w.forEach((val, i) => {
 });
 
 console.debug("G1.one len", curve.G1.oneAffine.length);
+console.debug("G1.oneAffine", Buffer.from(curve.G1.oneAffine).toString("hex"));
 console.debug("G1.one", Buffer.from(curve.G1.oneAffine).toString("hex"));
 
 await curve.terminate();
