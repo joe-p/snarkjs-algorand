@@ -74,6 +74,13 @@ function frSub(a: biguint, b: biguint): biguint {
   return (aN + r - bN) % r; // (a - b) mod r, guaranteed non-negative
 }
 
+function frAdd(a: biguint, b: biguint): biguint {
+  const r = BLS12_381_SCALAR_MODULUS;
+  const aN: biguint = a % r;
+  const bN: biguint = b % r;
+  return (aN + bN) % r;
+}
+
 function frScalar(a: biguint): biguint {
   return a % BLS12_381_SCALAR_MODULUS;
 }
@@ -162,8 +169,10 @@ export class PlonkVerifier extends Contract {
     challenges = clone(updatedChallenges);
 
     const pi = this.calculatePI(signals, L);
-
     namedLog("PI(xi)", pi.bytes);
+
+    const r0 = this.calculateR0(proof, challenges, pi, L[1] as Uint256);
+    namedLog("r0", r0.bytes);
 
     return true;
   }
@@ -304,5 +313,42 @@ export class PlonkVerifier extends Contract {
       pi = frSub(pi, frMul(w, (L[i + 1] as Uint256).native));
     }
     return new Uint256(pi);
+  }
+
+  private calculateR0(
+    proof: Proof,
+    challenges: Challenges,
+    pi: Uint256,
+    l1: Uint256,
+  ): Uint256 {
+    const e1 = pi.native;
+
+    const e2 = frMul(
+      l1.native,
+      frMul(challenges.alpha.native, challenges.alpha.native),
+    );
+
+    let e3a = frAdd(
+      proof.eval_a.native,
+      frMul(challenges.beta.native, proof.eval_s1.native),
+    );
+
+    e3a = frAdd(e3a, challenges.gamma.native);
+
+    let e3b = frAdd(
+      proof.eval_b.native,
+      frMul(challenges.beta.native, proof.eval_s2.native),
+    );
+    e3b = frAdd(e3b, challenges.gamma.native);
+
+    let e3c = frAdd(proof.eval_c.native, challenges.gamma.native);
+
+    let e3 = frMul(frMul(e3a, e3b), e3c);
+    e3 = frMul(e3, proof.eval_zw.native);
+    e3 = frMul(e3, challenges.alpha.native);
+
+    const r0 = frSub(frSub(e1, e2), e3);
+
+    return new Uint256(r0);
   }
 }
