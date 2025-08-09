@@ -127,57 +127,57 @@ verify:
     // ): boolean {
     proto 3 1
     intc_3 // 0
-    dupn 14
+    dupn 16
     bytec_1 // ""
     dupn 4
-    // contracts/verifier.algo.ts:180
+    // contracts/verifier.algo.ts:184
     // let td = op.concat(vk.Qm, vk.Ql);
     frame_dig -3
     extract 0 96
     frame_dig -3
     extract 96 96
     concat
-    // contracts/verifier.algo.ts:181
+    // contracts/verifier.algo.ts:185
     // td = op.concat(td, vk.Qr);
     frame_dig -3
     extract 192 96
     concat
-    // contracts/verifier.algo.ts:182
+    // contracts/verifier.algo.ts:186
     // td = op.concat(td, vk.Qo);
     frame_dig -3
     pushint 288 // 288
     intc_2 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:183
+    // contracts/verifier.algo.ts:187
     // td = op.concat(td, vk.Qc);
     frame_dig -3
     intc 4 // 384
     intc_2 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:184
+    // contracts/verifier.algo.ts:188
     // td = op.concat(td, vk.S1);
     frame_dig -3
     pushint 480 // 480
     intc_2 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:185
+    // contracts/verifier.algo.ts:189
     // td = op.concat(td, vk.S2);
     frame_dig -3
     pushint 576 // 576
     intc_2 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:186
+    // contracts/verifier.algo.ts:190
     // td = op.concat(td, vk.S3);
     frame_dig -3
     pushint 672 // 672
     intc_2 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:188
+    // contracts/verifier.algo.ts:192
     // for (const signal of signals) {
     frame_dig -2
     intc_3 // 0
@@ -185,15 +185,15 @@ verify:
     intc_3 // 0
 
 verify_for_header@2:
-    // contracts/verifier.algo.ts:188
+    // contracts/verifier.algo.ts:192
     // for (const signal of signals) {
-    frame_dig 22
-    frame_dig 21
+    frame_dig 24
+    frame_dig 23
     <
     bz verify_after_for@5
     frame_dig -2
     extract 2 0
-    frame_dig 22
+    frame_dig 24
     dup
     cover 2
     intc_0 // 32
@@ -204,49 +204,49 @@ verify_for_header@2:
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:189
+    // contracts/verifier.algo.ts:193
     // td = op.concat(td, b32(frScalar(BigUint(signal))));
     callsub b32
-    frame_dig 20
+    frame_dig 22
     swap
     concat
-    frame_bury 20
+    frame_bury 22
     intc_1 // 1
     +
-    frame_bury 22
+    frame_bury 24
     b verify_for_header@2
 
 verify_after_for@5:
-    // contracts/verifier.algo.ts:192
+    // contracts/verifier.algo.ts:196
     // td = op.concat(td, proof.A);
     frame_dig -1
     extract 0 96
-    frame_dig 20
+    frame_dig 22
     swap
     concat
-    // contracts/verifier.algo.ts:193
+    // contracts/verifier.algo.ts:197
     // td = op.concat(td, proof.B);
     frame_dig -1
     extract 96 96
     concat
-    // contracts/verifier.algo.ts:194
+    // contracts/verifier.algo.ts:198
     // td = op.concat(td, proof.C);
     frame_dig -1
     extract 192 96
     concat
-    // contracts/verifier.algo.ts:168
+    // contracts/verifier.algo.ts:172
     // let hash = op.keccak256(td);
     keccak256
     // contracts/verifier.algo.ts:78
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:169
+    // contracts/verifier.algo.ts:173
     // return b32(frScalar(BigUint(hash)));
     callsub b32
     dup
-    frame_bury 4
-    // contracts/verifier.algo.ts:168
+    frame_bury 5
+    // contracts/verifier.algo.ts:172
     // let hash = op.keccak256(td);
     dup
     keccak256
@@ -254,115 +254,115 @@ verify_after_for@5:
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:169
+    // contracts/verifier.algo.ts:173
     // return b32(frScalar(BigUint(hash)));
     callsub b32
     dup
-    frame_bury 7
-    // contracts/verifier.algo.ts:208
+    frame_bury 8
+    // contracts/verifier.algo.ts:212
     // td = op.concat(td, gamma);
     concat
     dup
-    frame_bury 20
-    // contracts/verifier.algo.ts:209
+    frame_bury 22
+    // contracts/verifier.algo.ts:213
     // td = op.concat(td, proof.Z);
     frame_dig -1
     pushint 288 // 288
     intc_2 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:168
+    // contracts/verifier.algo.ts:172
     // let hash = op.keccak256(td);
     keccak256
     // contracts/verifier.algo.ts:78
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:169
+    // contracts/verifier.algo.ts:173
     // return b32(frScalar(BigUint(hash)));
     callsub b32
     dup
-    frame_bury 2
-    // contracts/verifier.algo.ts:217
+    frame_bury 3
+    // contracts/verifier.algo.ts:221
     // td = op.concat(td, proof.T1);
     frame_dig -1
     intc 4 // 384
     intc_2 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:218
+    // contracts/verifier.algo.ts:222
     // td = op.concat(td, proof.T2);
     frame_dig -1
     pushint 480 // 480
     intc_2 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:219
+    // contracts/verifier.algo.ts:223
     // td = op.concat(td, proof.T3);
     frame_dig -1
     pushint 576 // 576
     intc_2 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:168
+    // contracts/verifier.algo.ts:172
     // let hash = op.keccak256(td);
     keccak256
     // contracts/verifier.algo.ts:78
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:169
+    // contracts/verifier.algo.ts:173
     // return b32(frScalar(BigUint(hash)));
     callsub b32
     dup
-    frame_bury 13
-    // contracts/verifier.algo.ts:227
+    frame_bury 15
+    // contracts/verifier.algo.ts:231
     // td = op.concat(td, proof.eval_a);
     frame_dig -1
     pushint 864 // 864
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:228
+    // contracts/verifier.algo.ts:232
     // td = op.concat(td, proof.eval_b);
     frame_dig -1
     pushint 896 // 896
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:229
+    // contracts/verifier.algo.ts:233
     // td = op.concat(td, proof.eval_c);
     frame_dig -1
     pushint 928 // 928
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:230
+    // contracts/verifier.algo.ts:234
     // td = op.concat(td, proof.eval_s1);
     frame_dig -1
     pushint 960 // 960
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:231
+    // contracts/verifier.algo.ts:235
     // td = op.concat(td, proof.eval_s2);
     frame_dig -1
     pushint 992 // 992
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:232
+    // contracts/verifier.algo.ts:236
     // td = op.concat(td, proof.eval_zw);
     frame_dig -1
     pushint 1024 // 1024
     intc_0 // 32
     extract3
     concat
-    // contracts/verifier.algo.ts:234
+    // contracts/verifier.algo.ts:238
     // const v = new FixedArray<bytes<32>, 6>();
     pushint 192 // 192
     bzero
-    // contracts/verifier.algo.ts:168
+    // contracts/verifier.algo.ts:172
     // let hash = op.keccak256(td);
     swap
     keccak256
@@ -370,10 +370,10 @@ verify_after_for@5:
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:169
+    // contracts/verifier.algo.ts:173
     // return b32(frScalar(BigUint(hash)));
     callsub b32
-    // contracts/verifier.algo.ts:235
+    // contracts/verifier.algo.ts:239
     // v[1] = this.getChallenge(td);
     dup
     len
@@ -381,28 +381,28 @@ verify_after_for@5:
     ==
     assert // invalid size
     replace2 32
-    frame_bury 11
-    // contracts/verifier.algo.ts:237
+    frame_bury 13
+    // contracts/verifier.algo.ts:241
     // for (let i: uint64 = 2; i < 6; i++) {
     pushint 2 // 2
-    frame_bury 16
+    frame_bury 18
 
 verify_while_top@6:
-    // contracts/verifier.algo.ts:237
+    // contracts/verifier.algo.ts:241
     // for (let i: uint64 = 2; i < 6; i++) {
-    frame_dig 16
+    frame_dig 18
     pushint 6 // 6
     <
     bz verify_after_while@8
-    // contracts/verifier.algo.ts:238
+    // contracts/verifier.algo.ts:242
     // v[i] = b32(frMul(BigUint(v[i - 1] as bytes<32>), BigUint(v[1])));
-    frame_dig 16
+    frame_dig 18
     dup
     intc_1 // 1
     -
     intc_0 // 32
     *
-    frame_dig 11
+    frame_dig 13
     dup
     uncover 2
     intc_0 // 32
@@ -414,7 +414,7 @@ verify_while_top@6:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:238
+    // contracts/verifier.algo.ts:242
     // v[i] = b32(frMul(BigUint(v[i - 1] as bytes<32>), BigUint(v[1])));
     callsub b32
     dup
@@ -427,39 +427,39 @@ verify_while_top@6:
     *
     swap
     replace3
-    frame_bury 11
-    // contracts/verifier.algo.ts:237
+    frame_bury 13
+    // contracts/verifier.algo.ts:241
     // for (let i: uint64 = 2; i < 6; i++) {
     intc_1 // 1
     +
-    frame_bury 16
+    frame_bury 18
     b verify_while_top@6
 
 verify_after_while@8:
-    // contracts/verifier.algo.ts:245
+    // contracts/verifier.algo.ts:249
     // td = op.concat(td, proof.Wxi);
     frame_dig -1
     pushint 672 // 672
     intc_2 // 96
     extract3
-    // contracts/verifier.algo.ts:246
+    // contracts/verifier.algo.ts:250
     // td = op.concat(td, proof.Wxiw);
     frame_dig -1
     pushint 768 // 768
     intc_2 // 96
     extract3
     concat
-    // contracts/verifier.algo.ts:168
+    // contracts/verifier.algo.ts:172
     // let hash = op.keccak256(td);
     keccak256
     // contracts/verifier.algo.ts:78
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:169
+    // contracts/verifier.algo.ts:173
     // return b32(frScalar(BigUint(hash)));
     callsub b32
-    // contracts/verifier.algo.ts:249-258
+    // contracts/verifier.algo.ts:253-262
     // return {
     //   beta,
     //   gamma,
@@ -470,26 +470,26 @@ verify_after_while@8:
     //   xin: Bytes<32>(),
     //   zh: Bytes<32>(),
     // };
-    frame_dig 4
+    frame_dig 5
     len
     intc_0 // 32
     ==
     assert // invalid size
-    frame_dig 7
+    frame_dig 8
     len
     intc_0 // 32
     ==
     assert // invalid size
-    frame_dig 2
+    frame_dig 3
     dup
     len
     intc_0 // 32
     ==
     assert // invalid size
-    frame_dig 20
+    frame_dig 22
     swap
     concat
-    frame_dig 13
+    frame_dig 15
     dup
     cover 2
     len
@@ -498,7 +498,7 @@ verify_after_while@8:
     assert // invalid size
     swap
     concat
-    frame_dig 11
+    frame_dig 13
     concat
     dig 1
     len
@@ -510,7 +510,7 @@ verify_after_while@8:
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
     dup
-    frame_bury 5
+    frame_bury 6
     // contracts/verifier.algo.ts:144
     // namedLog("beta", challenges.beta);
     dup
@@ -549,7 +549,7 @@ verify_after_while@8:
     dup
     extract 96 32
     dup
-    frame_bury 14
+    frame_bury 16
     pushbytes "xi"
     // contracts/verifier.algo.ts:132
     // log(name);
@@ -654,50 +654,50 @@ verify_after_while@8:
     // contracts/verifier.algo.ts:133
     // log(value);
     log
-    // contracts/verifier.algo.ts:268
+    // contracts/verifier.algo.ts:272
     // let domainSize: uint64 = 1;
     intc_1 // 1
-    frame_bury 15
-    // contracts/verifier.algo.ts:269
+    frame_bury 17
+    // contracts/verifier.algo.ts:273
     // for (let i: uint64 = 0; i < vk.power; i++) {
     intc_3 // 0
-    frame_bury 16
+    frame_bury 18
 
 verify_while_top@11:
-    // contracts/verifier.algo.ts:269
+    // contracts/verifier.algo.ts:273
     // for (let i: uint64 = 0; i < vk.power; i++) {
     frame_dig -3
     pushint 768 // 768
     extract_uint64
-    frame_dig 16
+    frame_dig 18
     >
     bz verify_after_while@13
     // contracts/verifier.algo.ts:32
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
-    frame_dig 14
+    frame_dig 16
     dup
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    frame_bury 14
-    // contracts/verifier.algo.ts:271
+    frame_bury 16
+    // contracts/verifier.algo.ts:275
     // domainSize *= 2;
-    frame_dig 15
+    frame_dig 17
     pushint 2 // 2
     *
-    frame_bury 15
-    // contracts/verifier.algo.ts:269
+    frame_bury 17
+    // contracts/verifier.algo.ts:273
     // for (let i: uint64 = 0; i < vk.power; i++) {
-    frame_dig 16
+    frame_dig 18
     intc_1 // 1
     +
-    frame_bury 16
+    frame_bury 18
     b verify_while_top@11
 
 verify_after_while@13:
-    // contracts/verifier.algo.ts:274
+    // contracts/verifier.algo.ts:278
     // challenges.xin = b32(xin);
-    frame_dig 14
+    frame_dig 16
     dup
     callsub b32
     dup
@@ -705,11 +705,11 @@ verify_after_while@13:
     intc_0 // 32
     ==
     assert // invalid size
-    frame_dig 5
+    frame_dig 6
     pushint 352 // 352
     uncover 2
     replace3
-    // contracts/verifier.algo.ts:275
+    // contracts/verifier.algo.ts:279
     // challenges.zh = b32(frSub(xin, BigUint(1)));
     swap
     bytec_2 // 0x01
@@ -723,64 +723,64 @@ verify_after_while@13:
     intc 4 // 384
     swap
     replace3
-    frame_bury 5
-    // contracts/verifier.algo.ts:277
+    frame_bury 6
+    // contracts/verifier.algo.ts:281
     // const n = frScalar(BigUint(domainSize));
-    frame_dig 15
+    frame_dig 17
     itob
     // contracts/verifier.algo.ts:78
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    frame_bury 8
-    // contracts/verifier.algo.ts:279
+    frame_bury 9
+    // contracts/verifier.algo.ts:283
     // let w = BigUint(1);
     bytec_2 // 0x01
-    frame_bury 12
-    // contracts/verifier.algo.ts:281
+    frame_bury 14
+    // contracts/verifier.algo.ts:285
     // const L: bytes<32>[] = [Bytes<32>(), Bytes<32>()];
     pushbytes 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     frame_bury 0
-    // contracts/verifier.algo.ts:282
+    // contracts/verifier.algo.ts:286
     // const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
     frame_dig -3
     pushint 776 // 776
     extract_uint64
     dup
-    frame_bury 19
+    frame_bury 21
     bnz verify_ternary_false@15
     intc_1 // 1
-    frame_bury 17
+    frame_bury 19
 
 verify_ternary_merge@16:
-    // contracts/verifier.algo.ts:283
+    // contracts/verifier.algo.ts:287
     // for (let i: uint64 = 1; i <= iterations; i++) {
     intc_1 // 1
-    frame_bury 18
+    frame_bury 20
 
 verify_while_top@17:
-    // contracts/verifier.algo.ts:283
+    // contracts/verifier.algo.ts:287
     // for (let i: uint64 = 1; i <= iterations; i++) {
-    frame_dig 18
-    frame_dig 17
+    frame_dig 20
+    frame_dig 19
     <=
     bz verify_after_while@19
-    // contracts/verifier.algo.ts:286
+    // contracts/verifier.algo.ts:290
     // frMul(w, BigUint(challenges.zh)),
-    frame_dig 5
+    frame_dig 6
     dup
     intc 4 // 384
     intc_0 // 32
     extract3
     // contracts/verifier.algo.ts:32
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
-    frame_dig 12
+    frame_dig 14
     dup
     uncover 2
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:287
+    // contracts/verifier.algo.ts:291
     // frMul(n, frSub(BigUint(challenges.xi), w)),
     uncover 2
     extract 96 32
@@ -788,7 +788,7 @@ verify_while_top@17:
     callsub frSub
     // contracts/verifier.algo.ts:32
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
-    frame_dig 8
+    frame_dig 9
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
@@ -812,7 +812,7 @@ verify_while_top@17:
     // contracts/verifier.algo.ts:42
     // let result = 1n as biguint;
     bytec_2 // 0x01
-    frame_bury 9
+    frame_bury 11
     // contracts/verifier.algo.ts:43
     // let b: biguint = base % mod;
     swap
@@ -822,13 +822,13 @@ verify_while_top@17:
     // contracts/verifier.algo.ts:43
     // let b: biguint = base % mod;
     b%
-    frame_bury 3
-    frame_bury 6
+    frame_bury 4
+    frame_bury 7
 
-verify_while_top@21:
+verify_while_top@26:
     // contracts/verifier.algo.ts:45
     // while (e > (0n as biguint)) {
-    frame_dig 6
+    frame_dig 7
     bytec_1 // 0x
     b>
     // contracts/verifier.algo.ts:45-51
@@ -839,21 +839,21 @@ verify_while_top@21:
     //   b = (b * b) % mod;
     //   e = e / BigUint(2); // e >> 1
     // }
-    bz verify_after_while@25
+    bz verify_after_while@30
     // contracts/verifier.algo.ts:46
     // if ((e & (1n as biguint)) !== (0n as biguint)) {
-    frame_dig 6
+    frame_dig 7
     bytec_2 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    frame_dig 9
-    frame_bury 10
-    bz verify_after_if_else@24
+    frame_dig 11
+    frame_bury 12
+    bz verify_after_if_else@29
     // contracts/verifier.algo.ts:47
     // result = (result * b) % mod;
-    frame_dig 9
-    frame_dig 3
+    frame_dig 11
+    frame_dig 4
     b*
     // contracts/verifier.algo.ts:59
     // const inv = modPow(x, BLS12_381_R_MINUS_2, r);
@@ -861,14 +861,14 @@ verify_while_top@21:
     // contracts/verifier.algo.ts:47
     // result = (result * b) % mod;
     b%
-    frame_bury 10
+    frame_bury 12
 
-verify_after_if_else@24:
-    frame_dig 10
-    frame_bury 9
+verify_after_if_else@29:
+    frame_dig 12
+    frame_bury 11
     // contracts/verifier.algo.ts:49
     // b = (b * b) % mod;
-    frame_dig 3
+    frame_dig 4
     dup
     b*
     // contracts/verifier.algo.ts:59
@@ -877,24 +877,24 @@ verify_after_if_else@24:
     // contracts/verifier.algo.ts:49
     // b = (b * b) % mod;
     b%
-    frame_bury 3
+    frame_bury 4
     // contracts/verifier.algo.ts:50
     // e = e / BigUint(2); // e >> 1
-    frame_dig 6
+    frame_dig 7
     pushbytes 0x02
     b/
-    frame_bury 6
-    b verify_while_top@21
+    frame_bury 7
+    b verify_while_top@26
 
-verify_after_while@25:
+verify_after_while@30:
     // contracts/verifier.algo.ts:67
     // return (aN * bInv) % r;
     frame_dig 1
-    frame_dig 9
+    frame_dig 11
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/verifier.algo.ts:284-289
+    // contracts/verifier.algo.ts:288-293
     // L[i] = b32(
     //   frDiv(
     //     frMul(w, BigUint(challenges.zh)),
@@ -907,7 +907,7 @@ verify_after_while@25:
     intc_0 // 32
     ==
     assert // invalid size
-    frame_dig 18
+    frame_dig 20
     dup
     cover 2
     intc_0 // 32
@@ -921,8 +921,8 @@ verify_after_while@25:
     frame_bury 0
     // contracts/verifier.algo.ts:32
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
-    frame_dig 12
-    // contracts/verifier.algo.ts:291
+    frame_dig 14
+    // contracts/verifier.algo.ts:295
     // w = frMul(w, Frw11);
     pushbytes 0x43527a8bca252472eb674a1a620890d7a534af14b61e0abe74a1f6718c130477
     // contracts/verifier.algo.ts:32
@@ -930,19 +930,19 @@ verify_after_while@25:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    frame_bury 12
-    // contracts/verifier.algo.ts:283
+    frame_bury 14
+    // contracts/verifier.algo.ts:287
     // for (let i: uint64 = 1; i <= iterations; i++) {
     intc_1 // 1
     +
-    frame_bury 18
+    frame_bury 20
     b verify_while_top@17
 
 verify_after_while@19:
-    // contracts/verifier.algo.ts:293
+    // contracts/verifier.algo.ts:297
     // return { L, challenges };
     pushbytes 0x01a2
-    frame_dig 5
+    frame_dig 6
     concat
     frame_dig 0
     concat
@@ -954,6 +954,9 @@ verify_after_while@19:
     dig 1
     len
     substring3
+    dup
+    extract 2 0
+    frame_bury 2
     extract 34 32
     pushbytes "L1(xi)"
     // contracts/verifier.algo.ts:132
@@ -962,13 +965,84 @@ verify_after_while@19:
     // contracts/verifier.algo.ts:133
     // log(value);
     log
-    // contracts/verifier.algo.ts:164
+    // contracts/verifier.algo.ts:301
+    // let pi = BigUint(0);
+    bytec_1 // 0x
+    frame_bury 10
+    // contracts/verifier.algo.ts:302
+    // for (let i: uint64 = 0; i < publicSignals.length; i++) {
+    intc_3 // 0
+    frame_bury 18
+
+verify_while_top@22:
+    // contracts/verifier.algo.ts:302
+    // for (let i: uint64 = 0; i < publicSignals.length; i++) {
+    frame_dig 18
+    frame_dig 23
+    <
+    bz verify_after_while@24
+    // contracts/verifier.algo.ts:303
+    // const w = frScalar(BigUint(publicSignals[i] as bytes<32>));
+    frame_dig -2
+    extract 2 0
+    frame_dig 18
+    dup
+    cover 2
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    // contracts/verifier.algo.ts:78
+    // return a % BLS12_381_SCALAR_MODULUS;
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:304
+    // pi = frSub(pi, frMul(w, BigUint(L[i + 1] as bytes<32>)));
+    swap
+    intc_1 // 1
+    +
+    dup
+    frame_bury 18
+    intc_0 // 32
+    *
+    frame_dig 2
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    // contracts/verifier.algo.ts:32
+    // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/verifier.algo.ts:304
+    // pi = frSub(pi, frMul(w, BigUint(L[i + 1] as bytes<32>)));
+    frame_dig 10
+    swap
+    callsub frSub
+    frame_bury 10
+    b verify_while_top@22
+
+verify_after_while@24:
+    // contracts/verifier.algo.ts:306
+    // return b32(pi);
+    frame_dig 10
+    callsub b32
+    // contracts/verifier.algo.ts:166
+    // namedLog("PI(xi)", pi);
+    pushbytes "PI(xi)"
+    // contracts/verifier.algo.ts:132
+    // log(name);
+    log
+    // contracts/verifier.algo.ts:133
+    // log(value);
+    log
+    // contracts/verifier.algo.ts:168
     // return true;
     intc_1 // 1
     frame_bury 0
     retsub
 
 verify_ternary_false@15:
-    frame_dig 19
-    frame_bury 17
+    frame_dig 21
+    frame_bury 19
     b verify_ternary_merge@16

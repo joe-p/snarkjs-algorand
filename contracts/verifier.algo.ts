@@ -161,6 +161,10 @@ export class PlonkVerifier extends Contract {
 
     challenges = clone(updatedChallenges);
 
+    const pi = this.calculatePI(signals, L);
+
+    namedLog("PI(xi)", pi);
+
     return true;
   }
 
@@ -291,5 +295,14 @@ export class PlonkVerifier extends Contract {
       w = frMul(w, Frw11);
     }
     return { L, challenges };
+  }
+
+  private calculatePI(publicSignals: PublicSignals, L: bytes<32>[]): bytes<32> {
+    let pi = BigUint(0);
+    for (let i: uint64 = 0; i < publicSignals.length; i++) {
+      const w = frScalar(BigUint(publicSignals[i] as bytes<32>));
+      pi = frSub(pi, frMul(w, BigUint(L[i + 1] as bytes<32>)));
+    }
+    return b32(pi);
   }
 }
