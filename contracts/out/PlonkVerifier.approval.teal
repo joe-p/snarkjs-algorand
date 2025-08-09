@@ -3,7 +3,7 @@
 
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
-    intcblock 32 96 1 0 384
+    intcblock 32 1 96 0 384
     bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x 0x01
     // contracts/verifier.algo.ts:136
     // export class PlonkVerifier extends Contract {
@@ -51,7 +51,7 @@ main_verify_route@3:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_bare_routing@6:
@@ -62,7 +62,7 @@ main_bare_routing@6:
     txn ApplicationID
     !
     assert // can only call when creating
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -146,35 +146,35 @@ verify:
     // td = op.concat(td, vk.Qo);
     frame_dig -3
     pushint 288 // 288
-    intc_1 // 96
+    intc_2 // 96
     extract3
     concat
     // contracts/verifier.algo.ts:183
     // td = op.concat(td, vk.Qc);
     frame_dig -3
     intc 4 // 384
-    intc_1 // 96
+    intc_2 // 96
     extract3
     concat
     // contracts/verifier.algo.ts:184
     // td = op.concat(td, vk.S1);
     frame_dig -3
     pushint 480 // 480
-    intc_1 // 96
+    intc_2 // 96
     extract3
     concat
     // contracts/verifier.algo.ts:185
     // td = op.concat(td, vk.S2);
     frame_dig -3
     pushint 576 // 576
-    intc_1 // 96
+    intc_2 // 96
     extract3
     concat
     // contracts/verifier.algo.ts:186
     // td = op.concat(td, vk.S3);
     frame_dig -3
     pushint 672 // 672
-    intc_1 // 96
+    intc_2 // 96
     extract3
     concat
     // contracts/verifier.algo.ts:188
@@ -211,7 +211,7 @@ verify_for_header@2:
     swap
     concat
     frame_bury 20
-    intc_2 // 1
+    intc_1 // 1
     +
     frame_bury 22
     b verify_for_header@2
@@ -268,7 +268,7 @@ verify_after_for@5:
     // td = op.concat(td, proof.Z);
     frame_dig -1
     pushint 288 // 288
-    intc_1 // 96
+    intc_2 // 96
     extract3
     concat
     // contracts/verifier.algo.ts:168
@@ -287,21 +287,21 @@ verify_after_for@5:
     // td = op.concat(td, proof.T1);
     frame_dig -1
     intc 4 // 384
-    intc_1 // 96
+    intc_2 // 96
     extract3
     concat
     // contracts/verifier.algo.ts:218
     // td = op.concat(td, proof.T2);
     frame_dig -1
     pushint 480 // 480
-    intc_1 // 96
+    intc_2 // 96
     extract3
     concat
     // contracts/verifier.algo.ts:219
     // td = op.concat(td, proof.T3);
     frame_dig -1
     pushint 576 // 576
-    intc_1 // 96
+    intc_2 // 96
     extract3
     concat
     // contracts/verifier.algo.ts:168
@@ -398,7 +398,7 @@ verify_while_top@6:
     // v[i] = b32(frMul(BigUint(v[i - 1] as bytes<32>), BigUint(v[1])));
     frame_dig 16
     dup
-    intc_2 // 1
+    intc_1 // 1
     -
     intc_0 // 32
     *
@@ -430,7 +430,7 @@ verify_while_top@6:
     frame_bury 11
     // contracts/verifier.algo.ts:237
     // for (let i: uint64 = 2; i < 6; i++) {
-    intc_2 // 1
+    intc_1 // 1
     +
     frame_bury 16
     b verify_while_top@6
@@ -440,13 +440,13 @@ verify_after_while@8:
     // td = op.concat(td, proof.Wxi);
     frame_dig -1
     pushint 672 // 672
-    intc_1 // 96
+    intc_2 // 96
     extract3
     // contracts/verifier.algo.ts:246
     // td = op.concat(td, proof.Wxiw);
     frame_dig -1
     pushint 768 // 768
-    intc_1 // 96
+    intc_2 // 96
     extract3
     concat
     // contracts/verifier.algo.ts:168
@@ -656,7 +656,7 @@ verify_after_while@8:
     log
     // contracts/verifier.algo.ts:268
     // let domainSize: uint64 = 1;
-    intc_2 // 1
+    intc_1 // 1
     frame_bury 15
     // contracts/verifier.algo.ts:269
     // for (let i: uint64 = 0; i < vk.power; i++) {
@@ -689,7 +689,7 @@ verify_while_top@11:
     // contracts/verifier.algo.ts:269
     // for (let i: uint64 = 0; i < vk.power; i++) {
     frame_dig 16
-    intc_2 // 1
+    intc_1 // 1
     +
     frame_bury 16
     b verify_while_top@11
@@ -738,8 +738,8 @@ verify_after_while@13:
     bytec_2 // 0x01
     frame_bury 12
     // contracts/verifier.algo.ts:281
-    // const L: bytes<32>[] = [Bytes<32>()];
-    pushbytes 0x00010000000000000000000000000000000000000000000000000000000000000000
+    // const L: bytes<32>[] = [Bytes<32>(), Bytes<32>()];
+    pushbytes 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     frame_bury 0
     // contracts/verifier.algo.ts:282
     // const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
@@ -749,21 +749,21 @@ verify_after_while@13:
     dup
     frame_bury 19
     bnz verify_ternary_false@15
-    intc_2 // 1
+    intc_1 // 1
     frame_bury 17
 
 verify_ternary_merge@16:
     // contracts/verifier.algo.ts:283
-    // for (let i: uint64 = 0; i < iterations; i++) {
-    intc_3 // 0
+    // for (let i: uint64 = 1; i <= iterations; i++) {
+    intc_1 // 1
     frame_bury 18
 
 verify_while_top@17:
     // contracts/verifier.algo.ts:283
-    // for (let i: uint64 = 0; i < iterations; i++) {
+    // for (let i: uint64 = 1; i <= iterations; i++) {
     frame_dig 18
     frame_dig 17
-    <
+    <=
     bz verify_after_while@19
     // contracts/verifier.algo.ts:286
     // frMul(w, BigUint(challenges.zh)),
@@ -932,8 +932,8 @@ verify_after_while@25:
     b%
     frame_bury 12
     // contracts/verifier.algo.ts:283
-    // for (let i: uint64 = 0; i < iterations; i++) {
-    intc_2 // 1
+    // for (let i: uint64 = 1; i <= iterations; i++) {
+    intc_1 // 1
     +
     frame_bury 18
     b verify_while_top@17
@@ -947,14 +947,14 @@ verify_after_while@19:
     frame_dig 0
     concat
     // contracts/verifier.algo.ts:160
-    // namedLog("L1(xi)", L[0] as bytes<32>);
+    // namedLog("L1(xi)", L[1] as bytes<32>);
     dup
     intc_3 // 0
     extract_uint16
     dig 1
     len
     substring3
-    extract 2 32
+    extract 34 32
     pushbytes "L1(xi)"
     // contracts/verifier.algo.ts:132
     // log(name);
@@ -964,7 +964,7 @@ verify_after_while@19:
     log
     // contracts/verifier.algo.ts:164
     // return true;
-    intc_2 // 1
+    intc_1 // 1
     frame_bury 0
     retsub
 

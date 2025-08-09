@@ -157,7 +157,7 @@ export class PlonkVerifier extends Contract {
     const { L, challenges: updatedChallenges } =
       this.calculateLagrangeEvaluations(challenges, vk);
 
-    namedLog("L1(xi)", L[0] as bytes<32>);
+    namedLog("L1(xi)", L[1] as bytes<32>);
 
     challenges = clone(updatedChallenges);
 
@@ -278,9 +278,9 @@ export class PlonkVerifier extends Contract {
 
     let w = BigUint(1);
 
-    const L: bytes<32>[] = [Bytes<32>()];
+    const L: bytes<32>[] = [Bytes<32>(), Bytes<32>()];
     const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
-    for (let i: uint64 = 0; i < iterations; i++) {
+    for (let i: uint64 = 1; i <= iterations; i++) {
       L[i] = b32(
         frDiv(
           frMul(w, BigUint(challenges.zh)),
