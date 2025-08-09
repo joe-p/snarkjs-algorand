@@ -18,6 +18,10 @@ const G1_ONE = Bytes.fromHex(
   "17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1",
 );
 
+const G2_ONE = Bytes.fromHex(
+  "13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb80606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b82801",
+);
+
 /** Fr.w[11] precomputed by scripts/frw.ts */
 const Frw11 = BigUint(
   Bytes.fromHex(
@@ -114,6 +118,7 @@ export type VerificationKey = {
   nPublic: uint64; // Number of public inputs
   k1: uint64;
   k2: uint64;
+  X_2: bytes<192>;
 };
 
 export type Proof = {
@@ -214,6 +219,11 @@ export class PlonkVerifier extends Contract {
 
     const e = this.calculateE(proof, challenges, r0);
     namedLog("E", e);
+
+    assert(
+      this.isValidPairing(proof, challenges, vk, e, f),
+      "Pairing check failed",
+    );
 
     return true;
   }
@@ -509,6 +519,32 @@ export class PlonkVerifier extends Contract {
     e = frAdd(e, frMul(challenges.u.native, proof.eval_zw.native));
 
     const res = g1TimesFr(G1_ONE.toFixed({ length: 96 }), e);
+
+    return res;
+  }
+
+  private isValidPairing(
+    proof: Proof,
+    challenges: Challenges,
+    vk: VerificationKey,
+    E: bytes<96>,
+    F: bytes<96>,
+  ): boolean {
+    let A1 = proof.Wxi;
+    A1 = g1Add(A1, g1TimesFr(proof.Wxiw, challenges.u.native));
+
+    let B1 = g1TimesFr(proof.Wxi, challenges.xi.native);
+    const s = frMul(frMul(challenges.u.native, challenges.xi.native), Frw11);
+    B1 = g1Add(B1, g1TimesFr(proof.Wxiw, s));
+    B1 = g1Add(B1, F);
+    B1 = g1Sub(B1, E);
+
+    // const res = await curve.pairingEq(G1.neg(A1), vk.X_2, B1, curve.G2.one);
+    const res = op.EllipticCurve.pairingCheck(
+      op.Ec.BLS12_381g1,
+      op.concat(g1Neg(A1), B1), // G1 points
+      op.concat(vk.X_2, G2_ONE), // G2 points
+    );
 
     return res;
   }

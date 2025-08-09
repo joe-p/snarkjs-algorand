@@ -32,6 +32,12 @@ async function getVkey(path: string, curve: any): Promise<VerificationKey> {
     vkey[`${p}Bytes`] = buffer;
   });
 
+  const x2Buffer = new Uint8Array(192);
+  stringValuesToBigints(vkey.X_2);
+  const x2Point = curve.G2.fromObject(vkey.X_2);
+  curve.G2.toRprUncompressed(x2Buffer, 0, x2Point);
+  vkey.x2Bytes = x2Buffer;
+
   return {
     power: vkey.power,
     nPublic: vkey.nPublic,
@@ -45,6 +51,7 @@ async function getVkey(path: string, curve: any): Promise<VerificationKey> {
     s3: vkey.S3Bytes,
     k1: BigInt(vkey.k1),
     k2: BigInt(vkey.k2),
+    x_2: vkey.x2Bytes,
   };
 }
 
