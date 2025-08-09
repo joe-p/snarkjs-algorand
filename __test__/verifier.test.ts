@@ -7,9 +7,7 @@ import {
   type VerificationKey,
 } from "../contracts/clients/PlonkVerifier";
 import * as snarkjs from "snarkjs";
-import { ABIType } from "algosdk";
 import { readFileSync } from "fs";
-import type { Uint } from "@algorandfoundation/algorand-typescript/arc4";
 
 const algorand = AlgorandClient.defaultLocalNet();
 
@@ -61,8 +59,7 @@ async function getProof(path: string, curve: any): Promise<Proof> {
 
   ["eval_a", "eval_b", "eval_c", "eval_s1", "eval_s2", "eval_zw"].forEach(
     (p) => {
-      const encoder = ABIType.from("uint256");
-      proof[`${p}Bytes`] = encoder.encode(BigInt(proof[p]));
+      proof[`${p}BigInt`] = BigInt(proof[p]);
     },
   );
 
@@ -76,19 +73,18 @@ async function getProof(path: string, curve: any): Promise<Proof> {
     t3: proof.T3Bytes,
     wxi: proof.WxiBytes,
     wxiw: proof.WxiwBytes,
-    evalA: proof.eval_aBytes,
-    evalB: proof.eval_bBytes,
-    evalC: proof.eval_cBytes,
-    evalS1: proof.eval_s1Bytes,
-    evalS2: proof.eval_s2Bytes,
-    evalZw: proof.eval_zwBytes,
+    evalA: proof.eval_aBigInt,
+    evalB: proof.eval_bBigInt,
+    evalC: proof.eval_cBigInt,
+    evalS1: proof.eval_s1BigInt,
+    evalS2: proof.eval_s2BigInt,
+    evalZw: proof.eval_zwBigInt,
   };
 }
 
 function encodeSignals(...inputs: bigint[]) {
-  const encoder = ABIType.from("uint256");
   return inputs.map((input) => {
-    return encoder.encode(input);
+    return BigInt(input);
   });
 }
 
