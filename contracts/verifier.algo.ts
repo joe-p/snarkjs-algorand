@@ -11,6 +11,8 @@ import {
   log,
   clone,
 } from "@algorandfoundation/algorand-typescript";
+import { Uint256 } from "@algorandfoundation/algorand-typescript/arc4";
+import { keccak256 } from "@algorandfoundation/algorand-typescript/op";
 
 /** Fr.w[11] precomputed by scripts/frw.ts */
 const Frw11 = BigUint(
@@ -52,7 +54,7 @@ function modPow(base: biguint, exp: biguint, mod: biguint): biguint {
 
 function frInv(b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
-  const x = frNorm(BigUint(b));
+  const x = frScalar(BigUint(b));
   assert(x !== (0n as biguint), "Fr inverse of zero");
   const inv = modPow(x, BLS12_381_R_MINUS_2, r);
   return inv;
@@ -60,7 +62,7 @@ function frInv(b: biguint): biguint {
 
 function frDiv(a: biguint, b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
-  const aN = frNorm(BigUint(a));
+  const aN = frScalar(BigUint(a));
   const bInv = BigUint(frInv(b)); // already reduced & padded
   return (aN * bInv) % r;
 }
@@ -72,13 +74,12 @@ function frSub(a: biguint, b: biguint): biguint {
   return (aN + r - bN) % r; // (a - b) mod r, guaranteed non-negative
 }
 
-function frNorm(a: biguint): biguint {
-  const r = BLS12_381_SCALAR_MODULUS;
-  return ((a % r) + r) % r; // ensures [0, r)
+function frScalar(a: biguint): biguint {
+  return a % BLS12_381_SCALAR_MODULUS;
 }
 
 function b32(a: biguint): bytes<32> {
-  return Bytes(a).toFixed({ length: 32 });
+  return new Uint256(a).bytes.toFixed({ length: 32 });
 }
 
 export type PublicSignals = bytes<32>[];
@@ -94,7 +95,6 @@ export type VerificationKey = {
   S3: bytes<96>;
   power: uint64; // Domain size = 2^power
   nPublic: uint64; // Number of public inputs
-  omega: bytes<32>; // Primitive root of unity
 };
 
 export type Proof = {
@@ -128,6 +128,11 @@ export type Challenges = {
   zh: bytes<32>;
 };
 
+function namedLog(name: string, value: bytes): void {
+  log(name);
+  log(value);
+}
+
 export class PlonkVerifier extends Contract {
   public verify(
     vk: VerificationKey,
@@ -136,18 +141,16 @@ export class PlonkVerifier extends Contract {
   ): boolean {
     // Implementation of the verification logic
     const challenge = this.computeChallenges(vk, signals, proof);
-    log(challenge.alpha);
+    namedLog("beta", challenge.beta);
     return true;
   }
 
   private getChallenge(td: bytes): bytes<32> {
     let hash = op.keccak256(td);
-    return Bytes(BigUint(hash) % BLS12_381_SCALAR_MODULUS).toFixed({
-      length: 32,
-    });
+    return b32(frScalar(BigUint(hash)));
   }
 
-  computeChallenges(
+  private computeChallenges(
     vk: VerificationKey,
     signals: PublicSignals,
     proof: Proof,
@@ -163,8 +166,9 @@ export class PlonkVerifier extends Contract {
     td = op.concat(td, vk.S2);
     td = op.concat(td, vk.S3);
 
+    namedLog("getChallenge 7", keccak256(td));
     for (const signal of signals) {
-      td = op.concat(td, b32(frNorm(BigUint(signal))));
+      td = op.concat(td, b32(frScalar(BigUint(signal))));
     }
 
     td = op.concat(td, proof.A);
@@ -236,7 +240,7 @@ export class PlonkVerifier extends Contract {
     };
   }
 
-  calculateLagrangeEvaluations(
+  private calculateLagrangeEvaluations(
     challengesInput: Challenges,
     vk: VerificationKey,
   ): { L: bytes<32>[]; challenges: Challenges } {
@@ -254,7 +258,7 @@ export class PlonkVerifier extends Contract {
 
     const L: bytes<32>[] = [];
 
-    const n = frNorm(BigUint(domainSize));
+    const n = frScalar(BigUint(domainSize));
 
     let w = BigUint(1);
 
