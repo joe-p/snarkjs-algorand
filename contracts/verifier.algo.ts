@@ -244,10 +244,10 @@ export class PlonkVerifier extends Contract {
     const e = this.calculateE(proof, challenges, r0);
     namedLog("E", e);
 
-    // assert(
-    //   this.isValidPairing(proof, challenges, vk, e, f),
-    //   "Pairing check failed",
-    // );
+    assert(
+      this.isValidPairing(proof, challenges, vk, e, f),
+      "Pairing check failed",
+    );
 
     return true;
   }
