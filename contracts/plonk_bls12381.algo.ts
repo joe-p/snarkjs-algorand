@@ -48,8 +48,11 @@ const G2_ONE = Bytes.fromHex(
  * This is ω where ω^(2^11) = 1 and ω^k ≠ 1 for 0 < k < 2^11.
  * Used for domain evaluation in circuits with n = 2048 = 2^11 constraints.
  * For circuits with different sizes, a different root of unity would be needed.
+ *
+ * The plan is to make this a template variable, but trying to do so right now
+ * leads to a compiler error during bytecblock construction.
  */
-const Frw11 = BigUint(
+const ROOT_OF_UNITY = BigUint(
   Bytes.fromHex(
     "43527a8bca252472eb674a1a620890d7a534af14b61e0abe74a1f6718c130477",
   ),
@@ -526,7 +529,7 @@ export function calculateLagrangeEvaluations(
         frMul(n, frSub(challenges.xi.native, w)),
       ),
     );
-    w = frMul(w, Frw11); // Next root of unity step (ω^i)
+    w = frMul(w, ROOT_OF_UNITY); // Next root of unity step (ω^i)
   }
   return { L, challenges };
 }
@@ -749,7 +752,10 @@ export function isValidPairing(
 
   // B1 = xi*Wxi + u*xi*ω*Wxiw + F - E
   let B1 = g1TimesFr(proof.Wxi, challenges.xi.native);
-  const s = frMul(frMul(challenges.u.native, challenges.xi.native), Frw11);
+  const s = frMul(
+    frMul(challenges.u.native, challenges.xi.native),
+    ROOT_OF_UNITY,
+  );
   B1 = g1Add(B1, g1TimesFr(proof.Wxiw, s));
   B1 = g1Add(B1, F);
   B1 = g1Sub(B1, E);
