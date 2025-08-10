@@ -366,12 +366,9 @@ export function verify(
   const r0 = calculateR0(proof, challenges, pi, L[1] as Uint256);
   namedLog("r0", r0.bytes);
 
-  // 5) Linearization commitment D
-  const d = calculateD(proof, challenges, vk, L[1] as Uint256);
+  // 5) Linearization commitment D and batch opening commitment F (optimized)
+  const { D: d, F: f } = calculateDF(proof, challenges, vk, L[1] as Uint256);
   namedLog("D", d);
-
-  // 6) Batch opening commitment F
-  const f = calculateF(proof, challenges, vk, d);
   namedLog("F", f);
 
   // 7) Batched evaluation commitment E (on [1]_1)
@@ -596,132 +593,94 @@ export function calculateR0(
 }
 
 /**
- * Calculate linearization polynomial commitment D.
+ * Calculate linearization polynomial commitment D and batch opening commitment F
+ * with optimized multi-scalar operations.
  *
  * D = d1 + d2 - d3 - d4, where:
  * - d1: Gate constraints Qm*a*b + Ql*a + Qr*b + Qo*c + Qc
  * - d2: Permutation argument numerator folded into Z
  * - d3: Permutation argument denominator folded into S3
  * - d4: Quotient reconstruction T(ξ) * Z_H(ξ), where T(ξ)=T1 + ξ^n*T2 + ξ^{2n}*T3
+ *
+ * F = D + v1*A + v2*B + v3*C + v4*S1 + v5*S2, with v[i] = v1^i
  */
-export function calculateD(
+export function calculateDF(
   proof: Proof,
   challenges: Challenges,
   vk: VerificationKey,
   l1: Uint256,
-): bytes<96> {
-  // d1: Gate constraints
-  // Concatenate points: Qm || Ql || Qr || Qo
-  let gatePoints = op.concat(vk.Qm, vk.Ql);
-  gatePoints = op.concat(gatePoints, vk.Qr);
-  gatePoints = op.concat(gatePoints, vk.Qo);
+): { D: bytes<96>; F: bytes<96> } {
+  // Combine gate constraints and quotient terms in single multi-scalar operation
+  // Points: [Qm, Ql, Qr, Qo, T1, T2, T3]
+  let dPoints = op.concat(vk.Qm, vk.Ql);
+  dPoints = op.concat(dPoints, vk.Qr);
+  dPoints = op.concat(dPoints, vk.Qo);
+  dPoints = op.concat(dPoints, proof.T1);
+  dPoints = op.concat(dPoints, proof.T2);
+  dPoints = op.concat(dPoints, proof.T3);
 
-  // Concatenate scalars: (eval_a * eval_b) || eval_a || eval_b || eval_c
-  let gateScalars = op.concat(
-    b32(frMul(proof.eval_a.native, proof.eval_b.native)),
-    proof.eval_a.bytes
-  );
-  gateScalars = op.concat(gateScalars, proof.eval_b.bytes);
-  gateScalars = op.concat(gateScalars, proof.eval_c.bytes);
+  // Gate constraint scalars
+  const gateScalar1 = frMul(proof.eval_a.native, proof.eval_b.native); // Qm coefficient
+  const gateScalar2 = proof.eval_a.native; // Ql coefficient
+  const gateScalar3 = proof.eval_b.native; // Qr coefficient
+  const gateScalar4 = proof.eval_c.native; // Qo coefficient
+  
+  // Quotient scalars (negated for subtraction: -T(ξ) * Z_H(ξ))
+  const quotientScalar1 = frSub(BigUint(0), frMul(BigUint(1), challenges.zh.native)); // -T1*zh
+  const quotientScalar2 = frSub(BigUint(0), frMul(challenges.xin.native, challenges.zh.native)); // -T2*xin*zh
+  const quotientScalar3 = frSub(BigUint(0), frMul(frMul(challenges.xin.native, challenges.xin.native), challenges.zh.native)); // -T3*xin²*zh
 
-  const d1Multi = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, gatePoints, gateScalars);
-  const d1 = g1Add(d1Multi.toFixed({ length: 96 }), vk.Qc);
+  // Scalars: [gate scalars, quotient scalars]
+  let dScalars = op.concat(b32(gateScalar1), b32(gateScalar2));
+  dScalars = op.concat(dScalars, b32(gateScalar3));
+  dScalars = op.concat(dScalars, b32(gateScalar4));
+  dScalars = op.concat(dScalars, b32(quotientScalar1));
+  dScalars = op.concat(dScalars, b32(quotientScalar2));
+  dScalars = op.concat(dScalars, b32(quotientScalar3));
 
+  // Single multi-scalar operation for D components
+  const dBatched = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, dPoints, dScalars);
+  let D = g1Add(dBatched.toFixed({ length: 96 }), vk.Qc); // Add Qc constant term
+  
+  // Add Z component to D (complex scalar calculation)
   const betaxi = frMul(challenges.beta.native, challenges.xi.native);
-
-  // d2: Permutation numerator (grand product Z part) plus boundary term
-  const d2a1 = frAdd(
-    frAdd(proof.eval_a.native, betaxi),
-    challenges.gamma.native,
-  );
-  const d2a2 = frAdd(
-    frAdd(proof.eval_b.native, frMul(betaxi, BigUint(vk.k1))),
-    challenges.gamma.native,
-  );
-  const d2a3 = frAdd(
-    frAdd(proof.eval_c.native, frMul(betaxi, BigUint(vk.k2))),
-    challenges.gamma.native,
-  );
-
+  const d2a1 = frAdd(frAdd(proof.eval_a.native, betaxi), challenges.gamma.native);
+  const d2a2 = frAdd(frAdd(proof.eval_b.native, frMul(betaxi, BigUint(vk.k1))), challenges.gamma.native);
+  const d2a3 = frAdd(frAdd(proof.eval_c.native, frMul(betaxi, BigUint(vk.k2))), challenges.gamma.native);
   const d2a = frMul(frMul(frMul(d2a1, d2a2), d2a3), challenges.alpha.native);
+  const d2b = frMul(l1.native, frMul(challenges.alpha.native, challenges.alpha.native));
+  const zScalar = frAdd(frAdd(d2a, d2b), challenges.u.native);
+  
+  D = g1Add(D, g1TimesFr(proof.Z, zScalar));
+  
+  // Subtract S3 component from D (permutation denominator)
+  const d3a = frAdd(frAdd(proof.eval_a.native, frMul(challenges.beta.native, proof.eval_s1.native)), challenges.gamma.native);
+  const d3b = frAdd(frAdd(proof.eval_b.native, frMul(challenges.beta.native, proof.eval_s2.native)), challenges.gamma.native);
+  const d3c = frMul(frMul(challenges.alpha.native, challenges.beta.native), proof.eval_zw.native);
+  const s3Scalar = frMul(frMul(d3a, d3b), d3c);
+  
+  D = g1Sub(D, g1TimesFr(vk.S3, s3Scalar));
+  
+  // Calculate F = D + v*[A,B,C,S1,S2] using single multi-scalar operation
+  // Points: [A, B, C, S1, S2]
+  let fPoints = op.concat(proof.A, proof.B);
+  fPoints = op.concat(fPoints, proof.C);
+  fPoints = op.concat(fPoints, vk.S1);
+  fPoints = op.concat(fPoints, vk.S2);
 
-  const d2b = frMul(
-    l1.native,
-    frMul(challenges.alpha.native, challenges.alpha.native),
-  ); // boundary term L1(ξ)*α²
-
-  const d2 = g1TimesFr(proof.Z, frAdd(frAdd(d2a, d2b), challenges.u.native));
-
-  // d3: Permutation denominator (sigma S3 part)
-  const d3a = frAdd(
-    frAdd(
-      proof.eval_a.native,
-      frMul(challenges.beta.native, proof.eval_s1.native),
-    ),
-    challenges.gamma.native,
-  );
-  const d3b = frAdd(
-    frAdd(
-      proof.eval_b.native,
-      frMul(challenges.beta.native, proof.eval_s2.native),
-    ),
-    challenges.gamma.native,
-  );
-  const d3c = frMul(
-    frMul(challenges.alpha.native, challenges.beta.native),
-    proof.eval_zw.native,
-  );
-
-  const d3 = g1TimesFr(vk.S3, frMul(frMul(d3a, d3b), d3c));
-
-  // d4: Quotient reconstruction T(ξ) multiplied by Z_H(ξ)
-  // Concatenate points: T1 || T2 || T3
-  let quotientPoints = op.concat(proof.T1, proof.T2);
-  quotientPoints = op.concat(quotientPoints, proof.T3);
-
-  // Concatenate scalars: 1 || xin || xin²
-  let quotientScalars = op.concat(
-    b32(BigUint(1)),
-    challenges.xin.bytes
-  );
-  quotientScalars = op.concat(quotientScalars, b32(frMul(challenges.xin.native, challenges.xin.native)));
-
-  const d4Temp = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, quotientPoints, quotientScalars);
-  const d4 = g1TimesFr(d4Temp.toFixed({ length: 96 }), challenges.zh.native);
-
-  // Final linearization: D = d1 + d2 - d3 - d4
-  const d = g1Sub(g1Sub(g1Add(d1, d2), d3), d4);
-  return d;
-}
-
-/**
- * Calculate batch opening commitment F.
- *
- * F = D + v1*A + v2*B + v3*C + v4*S1 + v5*S2, with v[i] = v1^i
- */
-export function calculateF(
-  proof: Proof,
-  challenges: Challenges,
-  vk: VerificationKey,
-  D: bytes<96>,
-): bytes<96> {
-  // Concatenate points: A || B || C || S1 || S2
-  let points = op.concat(proof.A, proof.B);
-  points = op.concat(points, proof.C);
-  points = op.concat(points, vk.S1);
-  points = op.concat(points, vk.S2);
-
-  // Concatenate scalars (each already 32 bytes)
-  let scalars = op.concat(
+  // Scalars: [v1, v2, v3, v4, v5]
+  let fScalars = op.concat(
     (challenges.v[1] as Uint256).bytes,
     (challenges.v[2] as Uint256).bytes
   );
-  scalars = op.concat(scalars, (challenges.v[3] as Uint256).bytes);
-  scalars = op.concat(scalars, (challenges.v[4] as Uint256).bytes);
-  scalars = op.concat(scalars, (challenges.v[5] as Uint256).bytes);
+  fScalars = op.concat(fScalars, (challenges.v[3] as Uint256).bytes);
+  fScalars = op.concat(fScalars, (challenges.v[4] as Uint256).bytes);
+  fScalars = op.concat(fScalars, (challenges.v[5] as Uint256).bytes);
 
-  const multiScalarResult = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, points, scalars);
-  return g1Add(D, multiScalarResult.toFixed({ length: 96 }));
+  const fBatched = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, fPoints, fScalars);
+  const F = g1Add(D, fBatched.toFixed({ length: 96 }));
+  
+  return { D, F };
 }
 
 /**
