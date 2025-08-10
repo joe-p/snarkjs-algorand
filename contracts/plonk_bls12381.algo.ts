@@ -14,44 +14,46 @@ import {
 import { Uint256 } from "@algorandfoundation/algorand-typescript/arc4";
 
 /**
- * PLONK Zero-Knowledge Proof Verifier for BLS12-381 Elliptic Curve
+ * PLONK verifier for BLS12-381 (SNARKJS-compatible)
  *
- * This implementation follows the PLONK protocol for verifying zero-knowledge proofs:
- * 1. Compute Fiat-Shamir challenges from the proof transcript
- * 2. Calculate Lagrange polynomial evaluations for public inputs
- * 3. Verify the linearization polynomial (gate constraints + permutation argument)
- * 4. Perform batch opening proof verification using polynomial commitments
- * 5. Execute final pairing check to confirm proof validity
+ * This verifier mirrors SNARKJS’s transcript layout and linearization:
+ * 1) Derive Fiat–Shamir challenges from a *chained* transcript (each round hashes
+ *    the previous challenge(s) and new material, not the entire history).
+ * 2) Evaluate Lagrange basis terms for public inputs and the L₁(ξ) boundary term.
+ * 3) Build the linearization commitment D (gates + permutation constraints + quotient parts).
+ * 4) Batch openings via powers of a single random challenge v.
+ * 5) Single pairing check with (Wξ, Wξω) openings.
  *
- * The verifier operates over the BLS12-381 scalar field Fr and uses elliptic curve
- * operations on G1 and G2 groups for polynomial commitment verification.
+ * Field operations are over BLS12-381 Fr; commitments are on G1; the SRS element [x]₂ is on G2.
  */
 
-// Generator point for BLS12-381 G1 group (uncompressed format)
+// Generator point for BLS12-381 G1 group (uncompressed format, big-endian)
+// 96 bytes = x(48) || y(48)
 const G1_ONE = Bytes.fromHex(
   "17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1",
 );
 
-// Generator point for BLS12-381 G2 group (uncompressed format)
+// Generator point for BLS12-381 G2 group (uncompressed format, big-endian)
+// 192 bytes = x.c0(48) || x.c1(48) || y.c0(48) || y.c1(48)
 const G2_ONE = Bytes.fromHex(
   "024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb813e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b828010606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be",
 );
 
-/** Fr.w[11] precomputed by scripts/constants.ts */
+/** Fr.w[11] primitive 2^11-th root of unity in Fr (matches n=2048 circuits) */
 const Frw11 = BigUint(
   Bytes.fromHex(
     "43527a8bca252472eb674a1a620890d7a534af14b61e0abe74a1f6718c130477",
   ),
 );
 
-/** BLS12-381 scalar field modulus (Fr) */
+/** BLS12-381 scalar field modulus (Fr), 32-byte big-endian */
 const BLS12_381_SCALAR_MODULUS = BigUint(
   Bytes.fromHex(
     "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001",
   ),
 );
 
-// Multiplication in the scalar field Fr
+// Multiplication in the scalar field Fr (canonical representative)
 function frMul(a: biguint, b: biguint): biguint {
   return (a * b) % BLS12_381_SCALAR_MODULUS;
 }
@@ -64,7 +66,6 @@ const R_MINUS_1 = BigUint(
 );
 
 // BLS12_381_SCALAR_MODULUS - 2, used for modular inverse via Fermat's little theorem
-// For prime p, Fermat's little theorem states: a^(p-2) ≡ a^(-1) (mod p) when gcd(a,p) = 1
 const BLS12_381_R_MINUS_2 = BigUint(
   Bytes.fromHex(
     "73eda753299d7d483339d80809a1d80553bda402fffe5bfefffffffeffffffff",
@@ -72,18 +73,8 @@ const BLS12_381_R_MINUS_2 = BigUint(
 );
 
 /**
- * Fast modular exponentiation using binary method (square-and-multiply)
- * Computes base^exp mod mod efficiently in O(log exp) time
- *
- * Algorithm:
- * 1. Initialize result = 1, b = base mod mod
- * 2. For each bit in exp (from LSB to MSB):
- *    - If bit is 1: result = (result * b) mod mod
- *    - Square b: b = (b * b) mod mod
- *    - Shift exp right by 1 bit
- * 3. Return result
- *
- * This avoids computing base^exp directly, which would be astronomically large
+ * Fast modular exponentiation using binary square-and-multiply.
+ * Computes base^exp mod mod efficiently in O(log exp) time.
  */
 function modPow(base: biguint, exp: biguint, mod: biguint): biguint {
   let result = 1n as biguint;
@@ -99,7 +90,7 @@ function modPow(base: biguint, exp: biguint, mod: biguint): biguint {
   return result;
 }
 
-// Modular inverse in Fr using Fermat's little theorem: a^(p-2) ≡ a^(-1) (mod p)
+// Modular inverse in Fr via Fermat: a^(r-2) mod r, with assert(a != 0)
 function frInv(b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
   const x = frScalar(BigUint(b));
@@ -116,7 +107,7 @@ function frDiv(a: biguint, b: biguint): biguint {
   return (aN * bInv) % r;
 }
 
-// Subtraction in Fr with proper modular arithmetic
+// Subtraction in Fr (canonical form)
 function frSub(a: biguint, b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
   const aN: biguint = a % r;
@@ -124,7 +115,7 @@ function frSub(a: biguint, b: biguint): biguint {
   return (aN + r - bN) % r;
 }
 
-// Addition in Fr
+// Addition in Fr (canonical form)
 function frAdd(a: biguint, b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
   const aN: biguint = a % r;
@@ -137,14 +128,14 @@ function frScalar(a: biguint): biguint {
   return a % BLS12_381_SCALAR_MODULUS;
 }
 
-// Convert biguint to 32-byte representation
+// Convert biguint to 32-byte big-endian representation
 function b32(a: biguint): bytes<32> {
   return new Uint256(a).bytes.toFixed({ length: 32 });
 }
 
 export type PublicSignals = Uint256[];
 
-// PLONK proof structure containing G1 points and field evaluations
+// PLONK proof structure: G1 points (96B BE) and field evals (32B BE)
 export type Proof = {
   // Uncompressed G1 points
   A: bytes<96>;
@@ -156,7 +147,7 @@ export type Proof = {
   T3: bytes<96>;
   Wxi: bytes<96>;
   Wxiw: bytes<96>;
-  // Field evaluations are 32 bytes (SnarkJS internal representation)
+  // Field evaluations are 32 bytes (SNARKJS internal representation, BE)
   eval_a: Uint256;
   eval_b: Uint256;
   eval_c: Uint256;
@@ -165,13 +156,13 @@ export type Proof = {
   eval_zw: Uint256;
 };
 
-// Fiat-Shamir challenges derived during verification
+// Fiat–Shamir challenges (SNARKJS chaining)
 export type Challenges = {
   beta: Uint256;
   gamma: Uint256;
   alpha: Uint256;
   xi: Uint256;
-  v: FixedArray<Uint256, 6>;
+  v: FixedArray<Uint256, 6>; // v[i] = v1^i for batching
   u: Uint256;
   xin: Uint256;
   zh: Uint256;
@@ -183,7 +174,7 @@ function namedLog(name: string, value: bytes): void {
   log(value);
 }
 
-// Scalar multiplication on G1: p * s
+// Scalar multiplication on G1
 function g1TimesFr(p: bytes<96>, s: biguint): bytes<96> {
   return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     length: 96,
@@ -202,12 +193,12 @@ function g1Neg(p: bytes<96>): bytes<96> {
   return g1TimesFr(p, R_MINUS_1);
 }
 
-// Point subtraction on G1: p - q
+// Point subtraction on G1
 function g1Sub(p: bytes<96>, q: bytes<96>): bytes<96> {
   return g1Add(p, g1Neg(q));
 }
 
-// PLONK verification key containing circuit-specific parameters
+// Verification key (BE encodings; see verifyFromTemplate layout)
 export type VerificationKey = {
   Qm: bytes<96>; // Multiplication gate selector
   Ql: bytes<96>; // Left wire selector
@@ -219,9 +210,9 @@ export type VerificationKey = {
   S3: bytes<96>; // Permutation polynomial S_σ(3)
   power: uint64; // Circuit size as power of 2
   nPublic: uint64; // Number of public inputs
-  k1: uint64; // Permutation parameter
-  k2: uint64; // Permutation parameter
-  X_2: bytes<192>; // Trusted setup parameter in G2
+  k1: uint64; // Permutation coset scalar (small integer in Fr)
+  k2: uint64; // Permutation coset scalar (small integer in Fr)
+  X_2: bytes<192>; // SRS element [x]_2 in G2, uncompressed BE
 };
 
 // Verify proof using verification key from template variable
@@ -231,7 +222,8 @@ export function verifyFromTemplate(
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  // Parse verification key from serialized bytes
+  // Serialized VK layout (BE):
+  // Qm||Ql||Qr||Qo||Qc||S1||S2||S3||power||nPublic||k1||k2||X_2
   const vk: VerificationKey = {
     Qm: vkBytes.slice(0, 96).toFixed({ length: 96 }),
     Ql: vkBytes.slice(96, 192).toFixed({ length: 96 }),
@@ -257,7 +249,7 @@ export function verify(
   signals: PublicSignals,
   proof: Proof,
 ): boolean {
-  // Compute Fiat-Shamir challenges from transcript
+  // 1) Fiat–Shamir challenges from transcript (SNARKJS chaining)
   let challenges = computeChallenges(vk, signals, proof);
   namedLog("beta", challenges.beta.bytes);
   namedLog("gamma", challenges.gamma.bytes);
@@ -272,47 +264,45 @@ export function verify(
   namedLog("v[4]", (challenges.v[4] as Uint256).bytes);
   namedLog("v[5]", (challenges.v[5] as Uint256).bytes);
 
-  // Calculate Lagrange polynomial evaluations at xi
+  // 2) Lagrange evaluations used by PI(ξ) and L1(ξ)
   const { L, challenges: updatedChallenges } = calculateLagrangeEvaluations(
     challenges,
     vk,
   );
-
   namedLog("L1(xi)", (L[1] as Uint256).bytes);
-
   challenges = clone(updatedChallenges);
 
-  // Calculate public input polynomial evaluation
+  // 3) Public input polynomial at ξ
   const pi = calculatePI(signals, L);
   namedLog("PI(xi)", pi.bytes);
 
-  // Calculate linearization polynomial constant term
+  // 4) Linearization polynomial constant term r0
   const r0 = calculateR0(proof, challenges, pi, L[1] as Uint256);
   namedLog("r0", r0.bytes);
 
-  // Calculate linearization polynomial commitment
+  // 5) Linearization commitment D
   const d = calculateD(proof, challenges, vk, L[1] as Uint256);
   namedLog("D", d);
 
-  // Batch opening proof verification - compute F
+  // 6) Batch opening commitment F
   const f = calculateF(proof, challenges, vk, d);
   namedLog("F", f);
 
-  // Batch opening proof verification - compute E
+  // 7) Batched evaluation commitment E (on [1]_1)
   const e = calculateE(proof, challenges, r0);
   namedLog("E", e);
 
-  // Final pairing check
+  // 8) Final pairing check
   return isValidPairing(proof, challenges, vk, e, f);
 }
 
-// Generate Fiat-Shamir challenge by hashing transcript data
+// Derive a challenge by hashing the current transcript chunk, reduced to Fr
 export function getChallenge(td: bytes): Uint256 {
   let hash = op.keccak256(td);
   return new Uint256(frScalar(BigUint(hash)));
 }
 
-// Compute all Fiat-Shamir challenges following PLONK protocol
+// Compute all Fiat–Shamir challenges following SNARKJS transcript chaining
 export function computeChallenges(
   vk: VerificationKey,
   signals: PublicSignals,
@@ -320,8 +310,8 @@ export function computeChallenges(
 ): Challenges {
   /////////////////////////////////////
   // Challenge round 2: beta and gamma
-  ////////////////////////////////////
-  // Build transcript with verification key and public inputs
+  /////////////////////////////////////
+  // Build transcript with verification key commitments and public inputs
   let td = op.concat(vk.Qm, vk.Ql);
   td = op.concat(td, vk.Qr);
   td = op.concat(td, vk.Qo);
@@ -341,7 +331,7 @@ export function computeChallenges(
 
   const beta = getChallenge(td);
 
-  // gamma challenge
+  // gamma challenge (chaining): gamma = H(beta)
   td = Bytes();
   td = op.concat(td, beta.bytes);
   const gamma = getChallenge(td);
@@ -366,7 +356,7 @@ export function computeChallenges(
   const xi = getChallenge(td);
 
   ////////////////////////////
-  // Challenge round 5: v
+  // Challenge round 5: v (powers of v1)
   //////////////////////////
   td = Bytes();
   td = op.concat(td, xi.bytes);
@@ -377,12 +367,10 @@ export function computeChallenges(
   td = op.concat(td, proof.eval_s2.bytes);
   td = op.concat(td, proof.eval_zw.bytes);
 
-  // Generate batch opening challenges v[1], v[2], ..., v[5]
   const v = new FixedArray<Uint256, 6>();
-  v[1] = getChallenge(td);
-
+  v[1] = getChallenge(td); // v1
   for (let i: uint64 = 2; i < 6; i++) {
-    v[i] = new Uint256(frMul((v[i - 1] as Uint256).native, v[1].native));
+    v[i] = new Uint256(frMul((v[i - 1] as Uint256).native, v[1].native)); // v[i] = v1^i
   }
 
   ////////////////////////////
@@ -405,7 +393,7 @@ export function computeChallenges(
   };
 }
 
-// Calculate Lagrange polynomial evaluations L_i(xi) for public inputs
+// Evaluate Lagrange terms used by PI and boundary
 export function calculateLagrangeEvaluations(
   challengesInput: Challenges,
   vk: VerificationKey,
@@ -421,15 +409,21 @@ export function calculateLagrangeEvaluations(
   }
 
   challenges.xin = new Uint256(xin);
-  challenges.zh = new Uint256(frSub(xin, BigUint(1))); // Vanishing polynomial Z_H(xi)
+  challenges.zh = new Uint256(frSub(xin, BigUint(1))); // Vanishing polynomial Z_H(ξ) = ξ^n - 1
 
   const n = frScalar(BigUint(domainSize));
 
-  let w = BigUint(1); // Root of unity
+  // Root-of-unity stepping: this constant matches power=11 (n=2048) circuits.
+  // For other powers, ω must match the circuit domain root used in SNARKJS.
+  let w = BigUint(1);
 
-  // Calculate Lagrange basis polynomials L_i(xi) = ω^(i-1) * Z_H(xi) / (n * (xi - ω^(i-1)))
-  // where ω is the primitive nth root of unity, Z_H(xi) is the vanishing polynomial,
-  // and n is the domain size. These polynomials interpolate public inputs.
+  /*
+   * Lagrange basis polynomials (SNARKJS form used here):
+   *   With w enumerating ω^0, ω^1, ... , we use
+   *     L[i] = ( w * Z_H(ξ) ) / ( n * ( ξ - w ) )
+   * This matches how the terms are consumed in this verifier.
+   * Assumes ξ ≠ w and Z_H(ξ) ≠ 0 for valid proofs.
+   */
   const L: Uint256[] = [new Uint256(), new Uint256()];
   const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
   for (let i: uint64 = 1; i <= iterations; i++) {
@@ -439,13 +433,12 @@ export function calculateLagrangeEvaluations(
         frMul(n, frSub(challenges.xi.native, w)),
       ),
     );
-
-    w = frMul(w, Frw11); // Next root of unity: ω^i
+    w = frMul(w, Frw11); // Next root of unity step (ω^i)
   }
   return { L, challenges };
 }
 
-// Calculate public input polynomial evaluation PI(xi) = -∑(w_i * L_i(xi))
+// Public input polynomial evaluation: PI(ξ) = -∑ public[i] * L[i]
 export function calculatePI(
   publicSignals: PublicSignals,
   L: Uint256[],
@@ -459,17 +452,10 @@ export function calculatePI(
 }
 
 /**
- * Calculate linearization polynomial constant term r0
+ * Calculate linearization polynomial constant term r0.
  *
- * The linearization polynomial r(X) represents the PLONK relation at the challenge point xi.
- * r0 is the constant term when r(X) is written as r(X) = r0 + r1*X + ... + rn*X^n.
- *
- * r0 = PI(xi) - L1(xi)*α² - α*Z(xi*ω)*[(a+β*s1+γ)(b+β*s2+γ)(c+γ)]
- *
- * Components:
- * - e1: Public input polynomial evaluation PI(xi)
- * - e2: Boundary constraint L1(xi)*α² (ensures Z(1) = 1 for permutation polynomial)
- * - e3: Permutation argument contribution from the grand product polynomial Z(x)
+ * r0 is the constant term when evaluating the PLONK relation at ξ, folded as:
+ *   r0 = PI(ξ) - L1(ξ)*α² - α*Z(ξ·ω)*(a+β*s1+γ)(b+β*s2+γ)(c+γ)
  */
 export function calculateR0(
   proof: Proof,
@@ -477,18 +463,17 @@ export function calculateR0(
   pi: Uint256,
   l1: Uint256,
 ): Uint256 {
-  // e1: Public input polynomial evaluation PI(xi)
+  // e1: Public input polynomial evaluation PI(ξ)
   const e1 = pi.native;
 
-  // e2: Boundary constraint L1(xi) * α² (ensures Z(1) = 1)
+  // e2: Boundary constraint L1(ξ) * α² (enforces Z(1) = 1)
   const e2 = frMul(
     l1.native,
     frMul(challenges.alpha.native, challenges.alpha.native),
   );
 
-  // e3: Permutation check contribution
-  // Computes α * Z(xi*ω) * [(a + β*s1 + γ)(b + β*s2 + γ)(c + γ)]
-  // This represents the "numerator" of the permutation argument
+  // e3: Permutation check contribution (numerator part)
+  // α * Z(ξ·ω) * [(a + β*s1 + γ)(b + β*s2 + γ)(c + γ)]
   let e3a = frAdd(
     proof.eval_a.native,
     frMul(challenges.beta.native, proof.eval_s1.native),
@@ -509,23 +494,17 @@ export function calculateR0(
 
   // r0 = e1 - e2 - e3
   const r0 = frSub(frSub(e1, e2), e3);
-
   return new Uint256(r0);
 }
 
 /**
- * Calculate linearization polynomial commitment D
- *
- * The linearization polynomial D represents the PLONK relation as a polynomial commitment.
- * It combines four main components that must sum to zero for a valid proof:
+ * Calculate linearization polynomial commitment D.
  *
  * D = d1 + d2 - d3 - d4, where:
- * - d1: Gate constraints (arithmetic gates)
- * - d2: Permutation argument "numerator" (grand product polynomial Z)
- * - d3: Permutation argument "denominator" (sigma polynomial S3)
- * - d4: Quotient polynomial contribution (ensures degree bounds)
- *
- * This commitment will be opened at the challenge point xi to verify the relation holds.
+ * - d1: Gate constraints Qm*a*b + Ql*a + Qr*b + Qo*c + Qc
+ * - d2: Permutation argument numerator folded into Z
+ * - d3: Permutation argument denominator folded into S3
+ * - d4: Quotient reconstruction T(ξ) * Z_H(ξ), where T(ξ)=T1 + ξ^n*T2 + ξ^{2n}*T3
  */
 export function calculateD(
   proof: Proof,
@@ -533,8 +512,7 @@ export function calculateD(
   vk: VerificationKey,
   l1: Uint256,
 ): bytes<96> {
-  // d1: Gate constraints - evaluates arithmetic circuit gates
-  // Computes: Qm*a*b + Ql*a + Qr*b + Qo*c + Qc
+  // d1: Gate constraints
   let d1 = g1TimesFr(vk.Qm, frMul(proof.eval_a.native, proof.eval_b.native));
   d1 = g1Add(d1, g1TimesFr(vk.Ql, proof.eval_a.native));
   d1 = g1Add(d1, g1TimesFr(vk.Qr, proof.eval_b.native));
@@ -543,8 +521,7 @@ export function calculateD(
 
   const betaxi = frMul(challenges.beta.native, challenges.xi.native);
 
-  // d2: Permutation argument "numerator" from grand product polynomial Z(x)
-  // Represents the accumulating product that enforces copy constraints
+  // d2: Permutation numerator (grand product Z part) plus boundary term
   const d2a1 = frAdd(
     frAdd(proof.eval_a.native, betaxi),
     challenges.gamma.native,
@@ -563,12 +540,11 @@ export function calculateD(
   const d2b = frMul(
     l1.native,
     frMul(challenges.alpha.native, challenges.alpha.native),
-  );
+  ); // boundary term L1(ξ)*α²
 
   const d2 = g1TimesFr(proof.Z, frAdd(frAdd(d2a, d2b), challenges.u.native));
 
-  // d3: Permutation argument "denominator" from sigma polynomial S3(x)
-  // Represents the expected permutation structure
+  // d3: Permutation denominator (sigma S3 part)
   const d3a = frAdd(
     frAdd(
       proof.eval_a.native,
@@ -590,8 +566,7 @@ export function calculateD(
 
   const d3 = g1TimesFr(vk.S3, frMul(frMul(d3a, d3b), d3c));
 
-  // d4: Quotient polynomial contribution - ensures the relation has correct degree
-  // Reconstructs T(xi) = T1(xi) + xi^n*T2(xi) + xi^(2n)*T3(xi), then multiplies by Z_H(xi)
+  // d4: Quotient reconstruction T(ξ) multiplied by Z_H(ξ)
   const d4low = proof.T1;
   const d4mid = g1TimesFr(proof.T2, challenges.xin.native);
   const d4high = g1TimesFr(
@@ -603,22 +578,13 @@ export function calculateD(
 
   // Final linearization: D = d1 + d2 - d3 - d4
   const d = g1Sub(g1Sub(g1Add(d1, d2), d3), d4);
-
   return d;
 }
 
 /**
- * Calculate batch opening proof F for polynomial commitments
+ * Calculate batch opening commitment F.
  *
- * F represents a linear combination of all polynomial commitments that need to be
- * opened at the challenge point xi. This batching technique allows verifying
- * multiple polynomial evaluations with a single pairing check.
- *
- * F = D + v1*A + v2*B + v3*C + v4*S1 + v5*S2
- *
- * where v1, v2, ..., v5 are random challenges that ensure the batch opening
- * is sound (if any individual opening is incorrect, F will be incorrect with
- * overwhelming probability).
+ * F = D + v1*A + v2*B + v3*C + v4*S1 + v5*S2, with v[i] = v1^i
  */
 export function calculateF(
   proof: Proof,
@@ -629,28 +595,16 @@ export function calculateF(
   let res = g1Add(D, g1TimesFr(proof.A, (challenges.v[1] as Uint256).native));
   res = g1Add(res, g1TimesFr(proof.B, (challenges.v[2] as Uint256).native));
   res = g1Add(res, g1TimesFr(proof.C, (challenges.v[3] as Uint256).native));
-
   res = g1Add(res, g1TimesFr(vk.S1, (challenges.v[4] as Uint256).native));
   res = g1Add(res, g1TimesFr(vk.S2, (challenges.v[5] as Uint256).native));
-
   return res;
 }
 
 /**
- * Calculate batch opening proof E for polynomial evaluations
+ * Calculate batched evaluation commitment E on the base [1]_1.
  *
- * E represents the expected value when all polynomials in F are evaluated at xi.
- * This is the "right-hand side" of the batch opening equation.
- *
- * E = (v1*a + v2*b + v3*c + v4*s1 + v5*s2 + u*zw - r0) * G1
- *
- * Components:
- * - v1*a, v2*b, v3*c: Batched evaluations of witness polynomials A, B, C at xi
- * - v4*s1, v5*s2: Batched evaluations of permutation polynomials S1, S2 at xi
- * - u*zw: Evaluation of grand product polynomial Z at xi*ω (shifted point)
- * - r0: Linearization polynomial constant term (subtracted)
- *
- * The final pairing check will verify: e(F - E, [1]_2) = e(Wxi + u*Wxiw, [x]_2)
+ * E = (v1*a + v2*b + v3*c + v4*s1 + v5*s2 + u*zw - r0) * [1]_1
+ * All field scalars are 32-byte big-endian; [1]_1 is G1_ONE.
  */
 export function calculateE(
   proof: Proof,
@@ -661,7 +615,6 @@ export function calculateE(
     frMul((challenges.v[1] as Uint256).native, proof.eval_a.native),
     r0.native,
   );
-
   e = frAdd(e, frMul((challenges.v[2] as Uint256).native, proof.eval_b.native));
   e = frAdd(e, frMul((challenges.v[3] as Uint256).native, proof.eval_c.native));
   e = frAdd(
@@ -675,29 +628,18 @@ export function calculateE(
   e = frAdd(e, frMul(challenges.u.native, proof.eval_zw.native));
 
   const res = g1TimesFr(G1_ONE.toFixed({ length: 96 }), e);
-
   return res;
 }
 
 /**
- * Final pairing check: e(-A1, X_2) * e(B1, [1]_2) = 1
+ * Final pairing check (SNARKJS batching):
  *
- * This is the core cryptographic verification that proves the polynomial commitments
- * are correctly opened. The pairing equation verifies that:
+ * A1 = Wξ + u·Wξω
+ * B1 = ξ·Wξ + u·ξ·ω·Wξω + F − E
+ * Check: e(−A1, [x]_2) * e(B1, [1]_2) = 1
  *
- * (F - E) = (Wxi + u*Wxiw) * x
- *
- * where:
- * - F: Batch of polynomial commitments
- * - E: Batch of claimed evaluations
- * - Wxi: Opening proof for evaluations at xi
- * - Wxiw: Opening proof for evaluations at xi*ω
- * - x: Trusted setup parameter (secret evaluation point)
- *
- * The equation is rearranged as: e(-(Wxi + u*Wxiw), [x]_2) * e(F - E + xi*Wxi + u*xi*ω*Wxiw, [1]_2) = 1
- *
- * If this pairing equation holds, it cryptographically proves that all polynomial
- * evaluations are consistent with their commitments, completing the PLONK verification.
+ * Encoding: G1 points are 96B uncompressed; G2 are 192B uncompressed (BE).
+ * Assumes inputs are valid subgroup points produced by SNARKJS; AVM enforces encoding.
  */
 export function isValidPairing(
   proof: Proof,
@@ -711,7 +653,6 @@ export function isValidPairing(
   A1 = g1Add(A1, g1TimesFr(proof.Wxiw, challenges.u.native));
 
   // B1 = xi*Wxi + u*xi*ω*Wxiw + F - E
-  // This represents the "quotient" side of the opening equation
   let B1 = g1TimesFr(proof.Wxi, challenges.xi.native);
   const s = frMul(frMul(challenges.u.native, challenges.xi.native), Frw11);
   B1 = g1Add(B1, g1TimesFr(proof.Wxiw, s));
@@ -725,7 +666,6 @@ export function isValidPairing(
   namedLog("G2_ONE", G2_ONE);
 
   // Final pairing check: e(-A1, [x]_2) * e(B1, [1]_2) = 1
-  // This verifies the polynomial opening equation holds
   const res = op.EllipticCurve.pairingCheck(
     op.Ec.BLS12_381g1,
     op.concat(g1Neg(A1), B1), // G1 points
@@ -734,3 +674,11 @@ export function isValidPairing(
 
   return res;
 }
+
+/**
+ * Encoding & Endianness summary
+ * - Field elements: 32-byte big-endian
+ * - G1: 96-byte uncompressed x||y (BE)
+ * - G2: 192-byte uncompressed x.c0||x.c1||y.c0||y.c1 (each 48-byte BE)
+ * - Transcript concatenation order is documented in computeChallenges()
+ */
