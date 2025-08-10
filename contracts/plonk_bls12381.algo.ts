@@ -39,7 +39,12 @@ const G2_ONE = Bytes.fromHex(
   "024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb813e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b828010606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be",
 );
 
-/** Fr.w[11] primitive 2^11-th root of unity in Fr (matches n=2048 circuits) */
+/**
+ * Primitive 2^11-th root of unity in the BLS12-381 scalar field Fr.
+ * This is ω where ω^(2^11) = 1 and ω^k ≠ 1 for 0 < k < 2^11.
+ * Used for domain evaluation in circuits with n = 2048 = 2^11 constraints.
+ * For circuits with different sizes, a different root of unity would be needed.
+ */
 const Frw11 = BigUint(
   Bytes.fromHex(
     "43527a8bca252472eb674a1a620890d7a534af14b61e0abe74a1f6718c130477",
@@ -53,7 +58,11 @@ const BLS12_381_SCALAR_MODULUS = BigUint(
   ),
 );
 
-// Multiplication in the scalar field Fr (canonical representative)
+/**
+ * Multiplication in the scalar field Fr.
+ * Computes (a * b) mod r where r is the BLS12-381 scalar field modulus.
+ * Returns the canonical representative in [0, r-1].
+ */
 function frMul(a: biguint, b: biguint): biguint {
   return (a * b) % BLS12_381_SCALAR_MODULUS;
 }
@@ -90,7 +99,11 @@ function modPow(base: biguint, exp: biguint, mod: biguint): biguint {
   return result;
 }
 
-// Modular inverse in Fr via Fermat: a^(r-2) mod r, with assert(a != 0)
+/**
+ * Modular inverse in the scalar field Fr using Fermat's little theorem.
+ * For prime p, computes a^(p-2) mod p = a^(-1) mod p.
+ * Requires a ≠ 0 in Fr (enforced by assertion).
+ */
 function frInv(b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
   const x = frScalar(BigUint(b));
@@ -99,7 +112,11 @@ function frInv(b: biguint): biguint {
   return inv;
 }
 
-// Division in Fr: a / b = a * b^(-1)
+/**
+ * Division in the scalar field Fr.
+ * Computes a / b = a * b^(-1) mod r where r is the BLS12-381 scalar field modulus.
+ * Requires b ≠ 0 (enforced by frInv).
+ */
 function frDiv(a: biguint, b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
   const aN = frScalar(BigUint(a));
@@ -107,7 +124,11 @@ function frDiv(a: biguint, b: biguint): biguint {
   return (aN * bInv) % r;
 }
 
-// Subtraction in Fr (canonical form)
+/**
+ * Subtraction in the scalar field Fr.
+ * Computes (a - b) mod r where r is the BLS12-381 scalar field modulus.
+ * Uses (a + r - b) mod r to handle negative results correctly.
+ */
 function frSub(a: biguint, b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
   const aN: biguint = a % r;
@@ -115,7 +136,11 @@ function frSub(a: biguint, b: biguint): biguint {
   return (aN + r - bN) % r;
 }
 
-// Addition in Fr (canonical form)
+/**
+ * Addition in the scalar field Fr.
+ * Computes (a + b) mod r where r is the BLS12-381 scalar field modulus.
+ * Returns the canonical representative in [0, r-1].
+ */
 function frAdd(a: biguint, b: biguint): biguint {
   const r = BLS12_381_SCALAR_MODULUS;
   const aN: biguint = a % r;
@@ -123,12 +148,19 @@ function frAdd(a: biguint, b: biguint): biguint {
   return (aN + bN) % r;
 }
 
-// Reduce to canonical form in Fr
+/**
+ * Reduce to canonical form in the scalar field Fr.
+ * Computes a mod r where r is the BLS12-381 scalar field modulus.
+ * Ensures the result is in the range [0, r-1].
+ */
 function frScalar(a: biguint): biguint {
   return a % BLS12_381_SCALAR_MODULUS;
 }
 
-// Convert biguint to 32-byte big-endian representation
+/**
+ * Convert a big unsigned integer to 32-byte big-endian representation.
+ * Used for serializing field elements in the Fiat-Shamir transcript.
+ */
 function b32(a: biguint): bytes<32> {
   return new Uint256(a).bytes.toFixed({ length: 32 });
 }
@@ -174,45 +206,64 @@ function namedLog(name: string, value: bytes): void {
   log(value);
 }
 
-// Scalar multiplication on G1
+/**
+ * Scalar multiplication on the BLS12-381 G1 group.
+ * Computes s * P where P is a G1 point and s is a scalar in Fr.
+ * Returns the result as a 96-byte uncompressed G1 point.
+ */
 function g1TimesFr(p: bytes<96>, s: biguint): bytes<96> {
   return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     length: 96,
   });
 }
 
-// Point addition on G1
+/**
+ * Point addition on the BLS12-381 G1 group.
+ * Computes P1 + P2 where P1 and P2 are G1 points.
+ * Returns the result as a 96-byte uncompressed G1 point.
+ */
 function g1Add(p1: bytes<96>, p2: bytes<96>): bytes<96> {
   return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     length: 96,
   });
 }
 
-// Point negation on G1
+/**
+ * Point negation on the BLS12-381 G1 group.
+ * Computes -P where P is a G1 point by multiplying by (r-1) where r is the scalar field modulus.
+ * This is equivalent to negating the y-coordinate in affine representation.
+ */
 function g1Neg(p: bytes<96>): bytes<96> {
   return g1TimesFr(p, R_MINUS_1);
 }
 
-// Point subtraction on G1
+/**
+ * Point subtraction on the BLS12-381 G1 group.
+ * Computes P - Q = P + (-Q) where P and Q are G1 points.
+ * Returns the result as a 96-byte uncompressed G1 point.
+ */
 function g1Sub(p: bytes<96>, q: bytes<96>): bytes<96> {
   return g1Add(p, g1Neg(q));
 }
 
-// Verification key (BE encodings; see verifyFromTemplate layout)
+/**
+ * PLONK verification key structure with big-endian encodings.
+ * Contains all the preprocessed circuit information needed for verification.
+ */
 export type VerificationKey = {
-  Qm: bytes<96>; // Multiplication gate selector
-  Ql: bytes<96>; // Left wire selector
-  Qr: bytes<96>; // Right wire selector
-  Qo: bytes<96>; // Output wire selector
-  Qc: bytes<96>; // Constant selector
-  S1: bytes<96>; // Permutation polynomial S_σ(1)
-  S2: bytes<96>; // Permutation polynomial S_σ(2)
-  S3: bytes<96>; // Permutation polynomial S_σ(3)
-  power: uint64; // Circuit size as power of 2
-  nPublic: uint64; // Number of public inputs
-  k1: uint64; // Permutation coset scalar (small integer in Fr)
-  k2: uint64; // Permutation coset scalar (small integer in Fr)
-  X_2: bytes<192>; // SRS element [x]_2 in G2, uncompressed BE
+  Qm: bytes<96>; // Multiplication gate selector polynomial commitment [Qm(x)]_1
+  Ql: bytes<96>; // Left wire selector polynomial commitment [Ql(x)]_1
+  Qr: bytes<96>; // Right wire selector polynomial commitment [Qr(x)]_1
+  Qo: bytes<96>; // Output wire selector polynomial commitment [Qo(x)]_1
+  Qc: bytes<96>; // Constant selector polynomial commitment [Qc(x)]_1
+  S1: bytes<96>; // First permutation polynomial commitment [S_σ(1)(x)]_1
+  S2: bytes<96>; // Second permutation polynomial commitment [S_σ(2)(x)]_1
+  S3: bytes<96>; // Third permutation polynomial commitment [S_σ(3)(x)]_1
+  power: uint64; // Circuit size as power of 2 (i.e., n = 2^power)
+  nPublic: uint64; // Number of public inputs to the circuit
+  k1: uint64; // First permutation coset generator (multiplicative offset for wire 2)
+  k2: uint64; // Second permutation coset generator (multiplicative offset for wire 3)
+  X_2: bytes<192>; // SRS element [x]_2 in G2 for pairing check, uncompressed BE
 };
 
 // Verify proof using verification key from template variable
@@ -413,8 +464,10 @@ export function calculateLagrangeEvaluations(
 
   const n = frScalar(BigUint(domainSize));
 
-  // Root-of-unity stepping: this constant matches power=11 (n=2048) circuits.
-  // For other powers, ω must match the circuit domain root used in SNARKJS.
+  // Root-of-unity stepping: starts at ω^0 = 1, then steps through ω^1, ω^2, ...
+  // The constant Frw11 is specifically for power=11 (n=2048) circuits.
+  // IMPORTANT: For circuits with different domain sizes, this verifier would need
+  // the appropriate primitive root of unity for that domain size.
   let w = BigUint(1);
 
   /*
@@ -425,6 +478,8 @@ export function calculateLagrangeEvaluations(
    * Assumes ξ ≠ w and Z_H(ξ) ≠ 0 for valid proofs.
    */
   const L: Uint256[] = [new Uint256(), new Uint256()];
+  // When there are no public inputs (nPublic = 0), we still need L1(ξ) for the boundary constraint
+  // that enforces Z(1) = 1 in the permutation argument
   const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
   for (let i: uint64 = 1; i <= iterations; i++) {
     L[i] = new Uint256(
