@@ -15,15 +15,8 @@ import {
 
 const LSIG_BUDGET = 20_000; // Budget for each logicsig
 const APP_BUDGET = 700; // Budget for the app call
-
-// Keeping track of how many lsigs are needed for each step:
-// r0: 2
-// D: 4
-// F: 5
-// E: 6
-// Pairing check: 8
-const LSIG_TXNS_NEEDED = 8;
-const EXTRA_OPCODE_BUDGET = LSIG_BUDGET * LSIG_TXNS_NEEDED - APP_BUDGET; // Extra budget needed for an app call
+const GROUP_TXN_SIZE = 16;
+const EXTRA_OPCODE_BUDGET = LSIG_BUDGET * GROUP_TXN_SIZE - APP_BUDGET; // Extra budget needed for an app call
 
 const algorand = AlgorandClient.defaultLocalNet();
 
@@ -223,7 +216,6 @@ describe("verifier", () => {
     const group = client.newGroup().verify({ args: { signals, proof } });
 
     // We are testing using an app so we can log, so we need to increase the opcode budget
-    const lsigBudget = 20_000;
     const simResult = await group.simulate({
       extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
       allowMoreLogging: true,
@@ -304,6 +296,17 @@ describe("verifier", () => {
 
     expect(logValues.E).toBe(
       "10be434db7820f39ab40a95a54bbc57d673fffd3bdadbef08de0e5f8bc5e206a82f63d1fb3e12892601c220b51a8ef5f90f264a0a62778fccb84713818c856cf1156b61c90ae5968632b902b3101c51243629cab527a6cf23fa491e8478f35d",
+    );
+
+    const budgetUsed =
+      simResult.simulateResponse.txnGroups[0]!.appBudgetConsumed!;
+
+    expect(budgetUsed).toMatchSnapshot("budget used");
+    expect(Math.ceil(budgetUsed / LSIG_BUDGET)).toMatchSnapshot(
+      "number of lsig txns required for budget",
+    );
+    expect(Math.ceil(budgetUsed / APP_BUDGET)).toMatchSnapshot(
+      "number of app calls required for budget",
     );
   });
 });
