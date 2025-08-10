@@ -611,11 +611,21 @@ export function calculateD(
   l1: Uint256,
 ): bytes<96> {
   // d1: Gate constraints
-  let d1 = g1TimesFr(vk.Qm, frMul(proof.eval_a.native, proof.eval_b.native));
-  d1 = g1Add(d1, g1TimesFr(vk.Ql, proof.eval_a.native));
-  d1 = g1Add(d1, g1TimesFr(vk.Qr, proof.eval_b.native));
-  d1 = g1Add(d1, g1TimesFr(vk.Qo, proof.eval_c.native));
-  d1 = g1Add(d1, vk.Qc);
+  // Concatenate points: Qm || Ql || Qr || Qo
+  let gatePoints = op.concat(vk.Qm, vk.Ql);
+  gatePoints = op.concat(gatePoints, vk.Qr);
+  gatePoints = op.concat(gatePoints, vk.Qo);
+
+  // Concatenate scalars: (eval_a * eval_b) || eval_a || eval_b || eval_c
+  let gateScalars = op.concat(
+    b32(frMul(proof.eval_a.native, proof.eval_b.native)),
+    proof.eval_a.bytes
+  );
+  gateScalars = op.concat(gateScalars, proof.eval_b.bytes);
+  gateScalars = op.concat(gateScalars, proof.eval_c.bytes);
+
+  const d1Multi = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, gatePoints, gateScalars);
+  const d1 = g1Add(d1Multi.toFixed({ length: 96 }), vk.Qc);
 
   const betaxi = frMul(challenges.beta.native, challenges.xi.native);
 
@@ -665,14 +675,19 @@ export function calculateD(
   const d3 = g1TimesFr(vk.S3, frMul(frMul(d3a, d3b), d3c));
 
   // d4: Quotient reconstruction T(ξ) multiplied by Z_H(ξ)
-  const d4low = proof.T1;
-  const d4mid = g1TimesFr(proof.T2, challenges.xin.native);
-  const d4high = g1TimesFr(
-    proof.T3,
-    frMul(challenges.xin.native, challenges.xin.native),
+  // Concatenate points: T1 || T2 || T3
+  let quotientPoints = op.concat(proof.T1, proof.T2);
+  quotientPoints = op.concat(quotientPoints, proof.T3);
+
+  // Concatenate scalars: 1 || xin || xin²
+  let quotientScalars = op.concat(
+    b32(BigUint(1)),
+    challenges.xin.bytes
   );
-  let d4 = g1Add(d4low, g1Add(d4mid, d4high));
-  d4 = g1TimesFr(d4, challenges.zh.native);
+  quotientScalars = op.concat(quotientScalars, b32(frMul(challenges.xin.native, challenges.xin.native)));
+
+  const d4Temp = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, quotientPoints, quotientScalars);
+  const d4 = g1TimesFr(d4Temp.toFixed({ length: 96 }), challenges.zh.native);
 
   // Final linearization: D = d1 + d2 - d3 - d4
   const d = g1Sub(g1Sub(g1Add(d1, d2), d3), d4);
@@ -690,12 +705,23 @@ export function calculateF(
   vk: VerificationKey,
   D: bytes<96>,
 ): bytes<96> {
-  let res = g1Add(D, g1TimesFr(proof.A, (challenges.v[1] as Uint256).native));
-  res = g1Add(res, g1TimesFr(proof.B, (challenges.v[2] as Uint256).native));
-  res = g1Add(res, g1TimesFr(proof.C, (challenges.v[3] as Uint256).native));
-  res = g1Add(res, g1TimesFr(vk.S1, (challenges.v[4] as Uint256).native));
-  res = g1Add(res, g1TimesFr(vk.S2, (challenges.v[5] as Uint256).native));
-  return res;
+  // Concatenate points: A || B || C || S1 || S2
+  let points = op.concat(proof.A, proof.B);
+  points = op.concat(points, proof.C);
+  points = op.concat(points, vk.S1);
+  points = op.concat(points, vk.S2);
+
+  // Concatenate scalars (each already 32 bytes)
+  let scalars = op.concat(
+    (challenges.v[1] as Uint256).bytes,
+    (challenges.v[2] as Uint256).bytes
+  );
+  scalars = op.concat(scalars, (challenges.v[3] as Uint256).bytes);
+  scalars = op.concat(scalars, (challenges.v[4] as Uint256).bytes);
+  scalars = op.concat(scalars, (challenges.v[5] as Uint256).bytes);
+
+  const multiScalarResult = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, points, scalars);
+  return g1Add(D, multiScalarResult.toFixed({ length: 96 }));
 }
 
 /**
@@ -751,12 +777,17 @@ export function isValidPairing(
   A1 = g1Add(A1, g1TimesFr(proof.Wxiw, challenges.u.native));
 
   // B1 = xi*Wxi + u*xi*ω*Wxiw + F - E
-  let B1 = g1TimesFr(proof.Wxi, challenges.xi.native);
+  // Concatenate points: Wxi || Wxiw
+  const pairingPoints = op.concat(proof.Wxi, proof.Wxiw);
+
+  // Concatenate scalars: xi || (u * xi * ω)
   const s = frMul(
     frMul(challenges.u.native, challenges.xi.native),
     ROOT_OF_UNITY,
   );
-  B1 = g1Add(B1, g1TimesFr(proof.Wxiw, s));
+  const pairingScalars = op.concat(challenges.xi.bytes, b32(s));
+
+  let B1 = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, pairingPoints, pairingScalars).toFixed({ length: 96 });
   B1 = g1Add(B1, F);
   B1 = g1Sub(B1, E);
 

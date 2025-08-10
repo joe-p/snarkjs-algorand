@@ -222,6 +222,7 @@ describe("verifier", () => {
     });
     const logs = simResult.confirmations[0]!.logs!;
 
+    simResult.simulateResponse.txnGroups[0]?.appBudgetConsumed;
     const logValues = parseLogs(logs);
 
     // [INFO]  snarkJS: PLONK VERIFIER STARTED
