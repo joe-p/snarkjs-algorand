@@ -27,14 +27,18 @@ import { Uint256 } from "@algorandfoundation/algorand-typescript/arc4";
  * Field operations are over BLS12-381 Fr; commitments are on G1; the SRS element [x]₂ is on G2.
  */
 
-// Generator point for BLS12-381 G1 group (uncompressed format, big-endian)
-// 96 bytes = x(48) || y(48)
+/**
+ * Generator point for BLS12-381 G1 group (uncompressed format, big-endian)
+ * 96 bytes = x(48) || y(48)
+ */
 const G1_ONE = Bytes.fromHex(
   "17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1",
 );
 
-// Generator point for BLS12-381 G2 group (uncompressed format, big-endian)
-// 192 bytes = x.c0(48) || x.c1(48) || y.c0(48) || y.c1(48)
+/**
+ * Generator point for BLS12-381 G2 group (uncompressed format, big-endian)
+ * 192 bytes = x.c0(48) || x.c1(48) || y.c0(48) || y.c1(48)
+ */
 const G2_ONE = Bytes.fromHex(
   "024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb813e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b828010606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be",
 );
@@ -67,14 +71,18 @@ function frMul(a: biguint, b: biguint): biguint {
   return (a * b) % BLS12_381_SCALAR_MODULUS;
 }
 
-// BLS12_381_SCALAR_MODULUS - 1, used for point negation
+/**
+ * BLS12_381_SCALAR_MODULUS - 1, used for point negation
+ */
 const R_MINUS_1 = BigUint(
   Bytes.fromHex(
     "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000",
   ),
 );
 
-// BLS12_381_SCALAR_MODULUS - 2, used for modular inverse via Fermat's little theorem
+/**
+ * BLS12_381_SCALAR_MODULUS - 2, used for modular inverse via Fermat's little theorem
+ */
 const BLS12_381_R_MINUS_2 = BigUint(
   Bytes.fromHex(
     "73eda753299d7d483339d80809a1d80553bda402fffe5bfefffffffeffffffff",
@@ -167,7 +175,9 @@ function b32(a: biguint): bytes<32> {
 
 export type PublicSignals = Uint256[];
 
-// PLONK proof structure: G1 points (96B BE) and field evals (32B BE)
+/**
+ * PLONK proof structure: G1 points (96B BE) and field evals (32B BE)
+ */
 export type Proof = {
   // Uncompressed G1 points
   A: bytes<96>;
@@ -188,19 +198,24 @@ export type Proof = {
   eval_zw: Uint256;
 };
 
-// Fiat–Shamir challenges (SNARKJS chaining)
+/**
+ * Fiat–Shamir challenges (SNARKJS chaining)
+ */
 export type Challenges = {
   beta: Uint256;
   gamma: Uint256;
   alpha: Uint256;
   xi: Uint256;
-  v: FixedArray<Uint256, 6>; // v[i] = v1^i for batching
+  /** v[i] = v1^i for batching */
+  v: FixedArray<Uint256, 6>;
   u: Uint256;
   xin: Uint256;
   zh: Uint256;
 };
 
-// Debug logging helper
+/**
+ * Debug logging helper
+ */
 function namedLog(name: string, value: bytes): void {
   log(name);
   log(value);
@@ -251,22 +266,37 @@ function g1Sub(p: bytes<96>, q: bytes<96>): bytes<96> {
  * Contains all the preprocessed circuit information needed for verification.
  */
 export type VerificationKey = {
-  Qm: bytes<96>; // Multiplication gate selector polynomial commitment [Qm(x)]_1
-  Ql: bytes<96>; // Left wire selector polynomial commitment [Ql(x)]_1
-  Qr: bytes<96>; // Right wire selector polynomial commitment [Qr(x)]_1
-  Qo: bytes<96>; // Output wire selector polynomial commitment [Qo(x)]_1
-  Qc: bytes<96>; // Constant selector polynomial commitment [Qc(x)]_1
-  S1: bytes<96>; // First permutation polynomial commitment [S_σ(1)(x)]_1
-  S2: bytes<96>; // Second permutation polynomial commitment [S_σ(2)(x)]_1
-  S3: bytes<96>; // Third permutation polynomial commitment [S_σ(3)(x)]_1
-  power: uint64; // Circuit size as power of 2 (i.e., n = 2^power)
-  nPublic: uint64; // Number of public inputs to the circuit
-  k1: uint64; // First permutation coset generator (multiplicative offset for wire 2)
-  k2: uint64; // Second permutation coset generator (multiplicative offset for wire 3)
-  X_2: bytes<192>; // SRS element [x]_2 in G2 for pairing check, uncompressed BE
+  /** Multiplication gate selector polynomial commitment [Qm(x)]_1 */
+  Qm: bytes<96>;
+  /** Left wire selector polynomial commitment [Ql(x)]_1 */
+  Ql: bytes<96>;
+  /** Right wire selector polynomial commitment [Qr(x)]_1 */
+  Qr: bytes<96>;
+  /** Output wire selector polynomial commitment [Qo(x)]_1 */
+  Qo: bytes<96>;
+  /** Constant selector polynomial commitment [Qc(x)]_1 */
+  Qc: bytes<96>;
+  /** First permutation polynomial commitment [S_σ(1)(x)]_1 */
+  S1: bytes<96>;
+  /** Second permutation polynomial commitment [S_σ(2)(x)]_1 */
+  S2: bytes<96>;
+  /** Third permutation polynomial commitment [S_σ(3)(x)]_1 */
+  S3: bytes<96>;
+  /** Circuit size as power of 2 (i.e., n = 2^power) */
+  power: uint64;
+  /** Number of public inputs to the circuit */
+  nPublic: uint64;
+  /** First permutation coset generator (multiplicative offset for wire 2) */
+  k1: uint64;
+  /** Second permutation coset generator (multiplicative offset for wire 3) */
+  k2: uint64;
+  /** SRS element [x]_2 in G2 for pairing check, uncompressed BE */
+  X_2: bytes<192>;
 };
 
-// Verify proof using verification key from template variable
+/**
+ * Verify proof using verification key from template variable
+ */
 export function verifyFromTemplate(
   signals: PublicSignals,
   proof: Proof,
@@ -294,7 +324,9 @@ export function verifyFromTemplate(
   return verify(vk, signals, proof);
 }
 
-// Main PLONK verification function
+/**
+ * Main PLONK verification function
+ */
 export function verify(
   vk: VerificationKey,
   signals: PublicSignals,
@@ -347,13 +379,17 @@ export function verify(
   return isValidPairing(proof, challenges, vk, e, f);
 }
 
-// Derive a challenge by hashing the current transcript chunk, reduced to Fr
+/**
+ * Derive a challenge by hashing the current transcript chunk, reduced to Fr
+ */
 export function getChallenge(td: bytes): Uint256 {
   let hash = op.keccak256(td);
   return new Uint256(frScalar(BigUint(hash)));
 }
 
-// Compute all Fiat–Shamir challenges following SNARKJS transcript chaining
+/**
+ * Compute all Fiat–Shamir challenges following SNARKJS transcript chaining
+ */
 export function computeChallenges(
   vk: VerificationKey,
   signals: PublicSignals,
@@ -444,7 +480,9 @@ export function computeChallenges(
   };
 }
 
-// Evaluate Lagrange terms used by PI and boundary
+/**
+ * Evaluate Lagrange terms used by PI and boundary
+ */
 export function calculateLagrangeEvaluations(
   challengesInput: Challenges,
   vk: VerificationKey,
@@ -493,7 +531,9 @@ export function calculateLagrangeEvaluations(
   return { L, challenges };
 }
 
-// Public input polynomial evaluation: PI(ξ) = -∑ public[i] * L[i]
+/**
+ * Public input polynomial evaluation: PI(ξ) = -∑ public[i] * L[i]
+ */
 export function calculatePI(
   publicSignals: PublicSignals,
   L: Uint256[],
