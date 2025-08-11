@@ -515,15 +515,17 @@ export function calculateLagrangeEvaluations(
    * This matches how the terms are consumed in this verifier.
    * Assumes ξ ≠ w and Z_H(ξ) ≠ 0 for valid proofs.
    */
-  const L: Uint256[] = [new Uint256(), new Uint256()];
+  const L: Uint256[] = [new Uint256()];
   // When there are no public inputs (nPublic = 0), we still need L1(ξ) for the boundary constraint
   // that enforces Z(1) = 1 in the permutation argument
   const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
   for (let i: uint64 = 1; i <= iterations; i++) {
-    L[i] = new Uint256(
-      frDiv(
-        frMul(w, challenges.zh.native),
-        frMul(n, frSub(challenges.xi.native, w)),
+    L.push(
+      new Uint256(
+        frDiv(
+          frMul(w, challenges.zh.native),
+          frMul(n, frSub(challenges.xi.native, w)),
+        ),
       ),
     );
     w = frMul(w, ROOT_OF_UNITY); // Next root of unity step (ω^i)
@@ -624,11 +626,23 @@ export function calculateDF(
   const gateScalar2 = proof.eval_a.native; // Ql coefficient
   const gateScalar3 = proof.eval_b.native; // Qr coefficient
   const gateScalar4 = proof.eval_c.native; // Qo coefficient
-  
+
   // Quotient scalars (negated for subtraction: -T(ξ) * Z_H(ξ))
-  const quotientScalar1 = frSub(BigUint(0), frMul(BigUint(1), challenges.zh.native)); // -T1*zh
-  const quotientScalar2 = frSub(BigUint(0), frMul(challenges.xin.native, challenges.zh.native)); // -T2*xin*zh
-  const quotientScalar3 = frSub(BigUint(0), frMul(frMul(challenges.xin.native, challenges.xin.native), challenges.zh.native)); // -T3*xin²*zh
+  const quotientScalar1 = frSub(
+    BigUint(0),
+    frMul(BigUint(1), challenges.zh.native),
+  ); // -T1*zh
+  const quotientScalar2 = frSub(
+    BigUint(0),
+    frMul(challenges.xin.native, challenges.zh.native),
+  ); // -T2*xin*zh
+  const quotientScalar3 = frSub(
+    BigUint(0),
+    frMul(
+      frMul(challenges.xin.native, challenges.xin.native),
+      challenges.zh.native,
+    ),
+  ); // -T3*xin²*zh
 
   // Scalars: [gate scalars, quotient scalars]
   let dScalars = op.concat(b32(gateScalar1), b32(gateScalar2));
@@ -639,28 +653,59 @@ export function calculateDF(
   dScalars = op.concat(dScalars, b32(quotientScalar3));
 
   // Single multi-scalar operation for D components
-  const dBatched = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, dPoints, dScalars);
+  const dBatched = op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    dPoints,
+    dScalars,
+  );
   let D = g1Add(dBatched.toFixed({ length: 96 }), vk.Qc); // Add Qc constant term
-  
+
   // Add Z component to D (complex scalar calculation)
   const betaxi = frMul(challenges.beta.native, challenges.xi.native);
-  const d2a1 = frAdd(frAdd(proof.eval_a.native, betaxi), challenges.gamma.native);
-  const d2a2 = frAdd(frAdd(proof.eval_b.native, frMul(betaxi, BigUint(vk.k1))), challenges.gamma.native);
-  const d2a3 = frAdd(frAdd(proof.eval_c.native, frMul(betaxi, BigUint(vk.k2))), challenges.gamma.native);
+  const d2a1 = frAdd(
+    frAdd(proof.eval_a.native, betaxi),
+    challenges.gamma.native,
+  );
+  const d2a2 = frAdd(
+    frAdd(proof.eval_b.native, frMul(betaxi, BigUint(vk.k1))),
+    challenges.gamma.native,
+  );
+  const d2a3 = frAdd(
+    frAdd(proof.eval_c.native, frMul(betaxi, BigUint(vk.k2))),
+    challenges.gamma.native,
+  );
   const d2a = frMul(frMul(frMul(d2a1, d2a2), d2a3), challenges.alpha.native);
-  const d2b = frMul(l1.native, frMul(challenges.alpha.native, challenges.alpha.native));
+  const d2b = frMul(
+    l1.native,
+    frMul(challenges.alpha.native, challenges.alpha.native),
+  );
   const zScalar = frAdd(frAdd(d2a, d2b), challenges.u.native);
-  
+
   D = g1Add(D, g1TimesFr(proof.Z, zScalar));
-  
+
   // Subtract S3 component from D (permutation denominator)
-  const d3a = frAdd(frAdd(proof.eval_a.native, frMul(challenges.beta.native, proof.eval_s1.native)), challenges.gamma.native);
-  const d3b = frAdd(frAdd(proof.eval_b.native, frMul(challenges.beta.native, proof.eval_s2.native)), challenges.gamma.native);
-  const d3c = frMul(frMul(challenges.alpha.native, challenges.beta.native), proof.eval_zw.native);
+  const d3a = frAdd(
+    frAdd(
+      proof.eval_a.native,
+      frMul(challenges.beta.native, proof.eval_s1.native),
+    ),
+    challenges.gamma.native,
+  );
+  const d3b = frAdd(
+    frAdd(
+      proof.eval_b.native,
+      frMul(challenges.beta.native, proof.eval_s2.native),
+    ),
+    challenges.gamma.native,
+  );
+  const d3c = frMul(
+    frMul(challenges.alpha.native, challenges.beta.native),
+    proof.eval_zw.native,
+  );
   const s3Scalar = frMul(frMul(d3a, d3b), d3c);
-  
+
   D = g1Sub(D, g1TimesFr(vk.S3, s3Scalar));
-  
+
   // Calculate F = D + v*[A,B,C,S1,S2] using single multi-scalar operation
   // Points: [A, B, C, S1, S2]
   let fPoints = op.concat(proof.A, proof.B);
@@ -671,15 +716,19 @@ export function calculateDF(
   // Scalars: [v1, v2, v3, v4, v5]
   let fScalars = op.concat(
     (challenges.v[1] as Uint256).bytes,
-    (challenges.v[2] as Uint256).bytes
+    (challenges.v[2] as Uint256).bytes,
   );
   fScalars = op.concat(fScalars, (challenges.v[3] as Uint256).bytes);
   fScalars = op.concat(fScalars, (challenges.v[4] as Uint256).bytes);
   fScalars = op.concat(fScalars, (challenges.v[5] as Uint256).bytes);
 
-  const fBatched = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, fPoints, fScalars);
+  const fBatched = op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    fPoints,
+    fScalars,
+  );
   const F = g1Add(D, fBatched.toFixed({ length: 96 }));
-  
+
   return { D, F };
 }
 
@@ -746,7 +795,11 @@ export function isValidPairing(
   );
   const pairingScalars = op.concat(challenges.xi.bytes, b32(s));
 
-  let B1 = op.EllipticCurve.scalarMulMulti(op.Ec.BLS12_381g1, pairingPoints, pairingScalars).toFixed({ length: 96 });
+  let B1 = op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    pairingPoints,
+    pairingScalars,
+  ).toFixed({ length: 96 });
   B1 = g1Add(B1, F);
   B1 = g1Sub(B1, E);
 
