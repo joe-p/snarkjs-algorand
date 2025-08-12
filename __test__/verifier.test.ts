@@ -71,13 +71,7 @@ async function getVkey(path: string, curve: any): Promise<VerificationKey> {
   };
 }
 
-async function getVKeyBytes(
-  path: string,
-  curve: any,
-  appSpec: Arc56Contract,
-): Promise<Uint8Array> {
-  const vkey = await getVkey(path, curve);
-
+function encodeVk(vkey: VerificationKey, appSpec: Arc56Contract): Uint8Array {
   return getABIEncodedValue(vkey, "VerificationKey", appSpec.structs);
 }
 
@@ -177,15 +171,21 @@ describe("verifier", () => {
     curve = await snarkjs.curves.getCurveFromName("bls12381");
     const defaultSender = await algorand.account.localNetDispenser();
     const factory = new PlonkVerifierFactory({ algorand, defaultSender });
-    const vkBytes = await getVKeyBytes(
-      "circuit/circuit_final.zkey",
-      curve,
-      factory.appSpec,
-    );
+    const vk = await getVkey("circuit/circuit_final.zkey", curve);
+    const vkBytes = encodeVk(vk, factory.appSpec);
 
+    const rootOfUnity = Buffer.from(
+      curve.Fr.toObject(curve.Fr.w[Number(vk.power)])
+        .toString(16)
+        .padStart(64, "0"),
+      "hex",
+    );
     const { appClient } = await factory.deploy({
       appName: Math.random().toString(16),
-      deployTimeParams: { VERIFICATION_KEY: vkBytes },
+      deployTimeParams: {
+        VERIFICATION_KEY: vkBytes,
+        ROOT_OF_UNITY: rootOfUnity,
+      },
     });
     client = appClient;
   });

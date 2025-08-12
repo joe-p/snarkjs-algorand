@@ -44,19 +44,9 @@ const G2_ONE = Bytes.fromHex(
 );
 
 /**
- * Primitive 2^11-th root of unity in the BLS12-381 scalar field Fr.
- * This is ω where ω^(2^11) = 1 and ω^k ≠ 1 for 0 < k < 2^11.
- * Used for domain evaluation in circuits with n = 2048 = 2^11 constraints.
- * For circuits with different sizes, a different root of unity would be needed.
- *
- * The plan is to make this a template variable, but trying to do so right now
- * leads to a compiler error during bytecblock construction.
+ * Primitive root of unity in the BLS12-381 scalar field Fr.
  */
-const ROOT_OF_UNITY = BigUint(
-  Bytes.fromHex(
-    "43527a8bca252472eb674a1a620890d7a534af14b61e0abe74a1f6718c130477",
-  ),
-);
+const ROOT_OF_UNITY = TemplateVar<biguint>("ROOT_OF_UNITY");
 
 /** BLS12-381 scalar field modulus (Fr), 32-byte big-endian */
 const BLS12_381_SCALAR_MODULUS = BigUint(
