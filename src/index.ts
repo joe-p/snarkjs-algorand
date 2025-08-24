@@ -6,6 +6,7 @@ import {
   type Proof,
   type VerificationKey,
 } from "../contracts/clients/PlonkVerifier";
+import { PlonkVerifierWithLogsFactory } from "../contracts/clients/PlonkVerifierWithLogs";
 import * as snarkjs from "snarkjs";
 import {
   getABIEncodedValue,
@@ -162,10 +163,21 @@ export class AppVerifier {
 
     // @ts-expect-error curves is not typed
     const curve = await snarkjs.curves.getCurveFromName("bls12381");
-    const factory = new PlonkVerifierFactory({
-      algorand: this.algorand,
-      defaultSender: params.defaultSender,
-    });
+
+    let factory;
+
+    if (params.debugLogging) {
+      factory = new PlonkVerifierWithLogsFactory({
+        algorand: this.algorand,
+        defaultSender: params.defaultSender,
+      });
+    } else {
+      factory = new PlonkVerifierFactory({
+        algorand: this.algorand,
+        defaultSender: params.defaultSender,
+      });
+    }
+
     const vk = await getVkey(this.zKey, curve);
     const vkBytes = encodeVk(vk, factory.appSpec);
 
@@ -181,7 +193,6 @@ export class AppVerifier {
       deployTimeParams: {
         VERIFICATION_KEY: vkBytes,
         ROOT_OF_UNITY: rootOfUnity,
-        DEBUG_LOGGING: params.debugLogging ? 1 : 0,
       },
     });
 

@@ -5,8 +5,8 @@
 main:
     intcblock 96 32 1 0 384 192 288 480 576 672 768 776 784 792 800 992 352
     bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x 0x01 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000 TMPL_ROOT_OF_UNITY TMPL_VERIFICATION_KEY
-    // contracts/verifier.algo.ts:20
-    // export class PlonkVerifier extends Contract {
+    // contracts/verifier.algo.ts:10
+    // export class PlonkVerifierWithLogs extends Contract {
     txn NumAppArgs
     bz main_bare_routing@7
     pushbytess 0x95c10ce4 0x43d90a38 // method "_dummy((byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint64,uint64,uint64,uint64,byte[192]))void", method "verify(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void"
@@ -17,25 +17,25 @@ main_after_if_else@11:
     err
 
 main_verify_route@4:
-    // contracts/verifier.algo.ts:25
+    // contracts/verifier.algo.ts:15
     // verify(signals: PublicSignals, proof: Proof): void {
     txn OnCompletion
     !
     assert // OnCompletion is not NoOp
     txn ApplicationID
     assert // can only call when not creating
-    // contracts/verifier.algo.ts:20
-    // export class PlonkVerifier extends Contract {
+    // contracts/verifier.algo.ts:10
+    // export class PlonkVerifierWithLogs extends Contract {
     txna ApplicationArgs 1
     txna ApplicationArgs 2
-    // contracts/verifier.algo.ts:25
+    // contracts/verifier.algo.ts:15
     // verify(signals: PublicSignals, proof: Proof): void {
     callsub verify
     intc_2 // 1
     return
 
 main__dummy_route@3:
-    // contracts/verifier.algo.ts:22
+    // contracts/verifier.algo.ts:12
     // @abimethod({ allowActions: "CloseOut" })
     txn OnCompletion
     pushint 2 // CloseOut
@@ -47,8 +47,8 @@ main__dummy_route@3:
     return
 
 main_bare_routing@7:
-    // contracts/verifier.algo.ts:20
-    // export class PlonkVerifier extends Contract {
+    // contracts/verifier.algo.ts:10
+    // export class PlonkVerifierWithLogs extends Contract {
     txn OnCompletion
     bnz main_after_if_else@11
     txn ApplicationID
@@ -135,9 +135,9 @@ getChallenge:
     retsub
 
 
-// contracts/verifier.algo.ts::PlonkVerifier.verify(signals: bytes, proof: bytes) -> void:
+// contracts/verifier.algo.ts::PlonkVerifierWithLogs.verify(signals: bytes, proof: bytes) -> void:
 verify:
-    // contracts/verifier.algo.ts:25
+    // contracts/verifier.algo.ts:15
     // verify(signals: PublicSignals, proof: Proof): void {
     proto 2 0
     intc_3 // 0
@@ -2281,7 +2281,7 @@ verify_after_while@28:
     //   op.concat(vk.X_2, G2_ONE), // G2 points
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/verifier.algo.ts:26
+    // contracts/verifier.algo.ts:16
     // assert(verifyFromTemplateWithLogs(signals, proof), "Verification failed");
     assert // Verification failed
     retsub

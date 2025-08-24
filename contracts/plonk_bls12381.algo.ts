@@ -210,10 +210,8 @@ export type Challenges = {
  * Debug logging helper
  */
 function debugLog(name: string, value: bytes): void {
-  if (TemplateVar<boolean>("DEBUG_LOGGING")) {
-    log(name);
-    log(value);
-  }
+  log(name);
+  log(value);
 }
 
 /**
@@ -289,18 +287,10 @@ export type VerificationKey = {
   X_2: bytes<192>;
 };
 
-/**
- * Verify proof using verification key from template variable
- */
-export function verifyFromTemplate(
-  signals: PublicSignals,
-  proof: Proof,
-): boolean {
-  const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
-
+function decodeVk(vkBytes: bytes): VerificationKey {
   // Serialized VK layout (BE):
   // Qm||Ql||Qr||Qo||Qc||S1||S2||S3||power||nPublic||k1||k2||X_2
-  const vk: VerificationKey = {
+  return {
     Qm: vkBytes.slice(0, 96).toFixed({ length: 96 }),
     Ql: vkBytes.slice(96, 192).toFixed({ length: 96 }),
     Qr: vkBytes.slice(192, 288).toFixed({ length: 96 }),
@@ -315,14 +305,70 @@ export function verifyFromTemplate(
     k2: op.btoi(vkBytes.slice(792, 800)),
     X_2: vkBytes.slice(800, 992).toFixed({ length: 192 }),
   };
+}
 
-  return verify(vk, signals, proof);
+/**
+ * Verify proof using verification key from template variable with debug logging
+ */
+export function verifyFromTemplateWithLogs(
+  signals: PublicSignals,
+  proof: Proof,
+): boolean {
+  const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
+
+  return verifyWithLogs(decodeVk(vkBytes), signals, proof);
+}
+
+/**
+ * Verify proof using verification key from template variable
+ */
+export function verifyFromTemplate(
+  signals: PublicSignals,
+  proof: Proof,
+): boolean {
+  const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
+
+  return verifyWithLogs(decodeVk(vkBytes), signals, proof);
 }
 
 /**
  * Main PLONK verification function
  */
 export function verify(
+  vk: VerificationKey,
+  signals: PublicSignals,
+  proof: Proof,
+): boolean {
+  // 1) Fiat–Shamir challenges from transcript (SNARKJS chaining)
+  let challenges = computeChallenges(vk, signals, proof);
+
+  // 2) Lagrange evaluations used by PI(ξ) and L1(ξ)
+  const { L, challenges: updatedChallenges } = calculateLagrangeEvaluations(
+    challenges,
+    vk,
+  );
+  challenges = clone(updatedChallenges);
+
+  // 3) Public input polynomial at ξ
+  const pi = calculatePI(signals, L);
+
+  // 4) Linearization polynomial constant term r0
+  const r0 = calculateR0(proof, challenges, pi, L[1] as Uint256);
+
+  // 5) Linearization commitment D and batch opening commitment F (optimized)
+  const { D: d, F: f } = calculateDF(proof, challenges, vk, L[1] as Uint256);
+
+  // 7) Batched evaluation commitment E (on [1]_1)
+  const e = calculateE(proof, challenges, r0);
+
+  // 8) Final pairing check
+  return isValidPairing(proof, challenges, vk, e, f);
+}
+
+/**
+ * Main PLONK verification function with debug logging
+ */
+export function verifyWithLogs(
   vk: VerificationKey,
   signals: PublicSignals,
   proof: Proof,
@@ -794,12 +840,6 @@ export function isValidPairing(
   ).toFixed({ length: 96 });
   B1 = g1Add(B1, F);
   B1 = g1Sub(B1, E);
-
-  debugLog("A1", A1);
-  debugLog("B1", B1);
-  debugLog("neg(A1)", g1Neg(A1));
-  debugLog("vk.X_2", vk.X_2);
-  debugLog("G2_ONE", G2_ONE);
 
   // Final pairing check: e(-A1, [x]_2) * e(B1, [1]_2) = 1
   const res = op.EllipticCurve.pairingCheck(
