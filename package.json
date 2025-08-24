@@ -12,6 +12,7 @@
   "devDependencies": {
     "@algorandfoundation/algokit-utils": "^9.1.2",
     "@types/bun": "latest",
+    "@types/snarkjs": "^0.7.9",
     "algosdk": "^3.4.0",
     "vitest": "^3.2.4"
   },

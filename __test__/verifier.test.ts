@@ -77,7 +77,10 @@ function encodeVk(vkey: VerificationKey, appSpec: Arc56Contract): Uint8Array {
 
 async function getProof(path: string, curve: any): Promise<Proof> {
   const proof = JSON.parse(readFileSync(path, "utf8"));
+  return encodeProof(proof, curve);
+}
 
+function encodeProof(proof: any, curve: any): Proof {
   ["A", "B", "C", "Z", "T1", "T2", "T3", "Wxi", "Wxiw"].forEach((p) => {
     stringValuesToBigints(proof[p]);
     const point = curve.G1.fromObject(proof[p]);
@@ -109,7 +112,7 @@ async function getProof(path: string, curve: any): Promise<Proof> {
   };
 }
 
-function encodeSignals(...inputs: bigint[]) {
+function encodeSignals(...inputs: string[]) {
   return inputs.map((input) => {
     return BigInt(input);
   });
@@ -168,6 +171,7 @@ describe("verifier", () => {
   let curve: any;
 
   beforeAll(async () => {
+    // @ts-expect-error curves is not typed
     curve = await snarkjs.curves.getCurveFromName("bls12381");
     const defaultSender = await algorand.account.localNetDispenser();
     const factory = new PlonkVerifierFactory({ algorand, defaultSender });
@@ -196,7 +200,7 @@ describe("verifier", () => {
 
   it("fails with wrong signal", async () => {
     const proof = await getProof("circuit/proof.json", curve);
-    const signals = encodeSignals(1337n);
+    const signals = [1337n];
     const group = client.newGroup().verify({ args: { signals, proof } });
 
     const simResult = group.simulate({
@@ -209,10 +213,10 @@ describe("verifier", () => {
 
   it("works", async () => {
     const proof = await getProof("circuit/proof.json", curve);
-    const signals =
-      encodeSignals(
-        15744006038856998268181219516291113434365469909648022488288672656450282844855n,
-      );
+    const signals = [
+      15744006038856998268181219516291113434365469909648022488288672656450282844855n,
+    ];
+
     const group = client.newGroup().verify({ args: { signals, proof } });
 
     // We are testing using an app so we can log, so we need to increase the opcode budget
@@ -309,5 +313,27 @@ describe("verifier", () => {
     expect(Math.ceil(budgetUsed / APP_BUDGET)).toMatchSnapshot(
       "number of app calls required for budget",
     );
+  });
+
+  it("works with fullProve", async () => {
+    const { proof: rawProof, publicSignals: rawSignals } =
+      await snarkjs.plonk.fullProve(
+        { a: 10, b: 21 },
+        "circuit/circuit_js/circuit.wasm",
+        "circuit/circuit_final.zkey",
+      );
+
+    const proof = encodeProof(rawProof, curve);
+
+    const signals = encodeSignals(...rawSignals);
+    const group = client.newGroup().verify({ args: { signals, proof } });
+
+    // We are testing using an app so we can log, so we need to increase the opcode budget
+    const simResult = await group.simulate({
+      extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+      allowMoreLogging: true,
+    });
+
+    expect(simResult.simulateResponse.txnGroups[0]?.failedAt).toBeUndefined();
   });
 });
