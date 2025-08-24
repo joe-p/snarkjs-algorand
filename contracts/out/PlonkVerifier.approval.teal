@@ -14,10 +14,7 @@ main:
     match main__dummy_route@3 main_verify_route@4
 
 main_after_if_else@11:
-    // contracts/verifier.algo.ts:10
-    // export class PlonkVerifier extends Contract {
-    intc_3 // 0
-    return
+    err
 
 main_verify_route@4:
     // contracts/verifier.algo.ts:15
@@ -659,7 +656,7 @@ verify_after_for@4:
     // v[1] = getChallenge(td); // v1
     swap
     callsub getChallenge
-    replace2 32
+    replace2 32 // on error: index access is out of bounds
     frame_bury 29
     // contracts/plonk_bls12381.algo.ts:449
     // for (let i: uint64 = 2; i < 6; i++) {
@@ -707,7 +704,7 @@ verify_while_top@5:
     intc_1 // 32
     *
     swap
-    replace3
+    replace3 // on error: index access is out of bounds
     frame_bury 29
     // contracts/plonk_bls12381.algo.ts:449
     // for (let i: uint64 = 2; i < 6; i++) {

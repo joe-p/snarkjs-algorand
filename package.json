@@ -22,8 +22,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@algorandfoundation/algorand-typescript": "^1.0.0-alpha.74",
-    "@algorandfoundation/puya-ts": "^1.0.0-alpha.74",
+    "@algorandfoundation/algorand-typescript": "1.0.0-alpha.77",
+    "@algorandfoundation/puya-ts": "1.0.0-alpha.77",
     "snarkjs": "^0.7.5"
   }
 }

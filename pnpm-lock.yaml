@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@algorandfoundation/algorand-typescript':
-        specifier: ^1.0.0-alpha.74
-        version: 1.0.0-beta.72(tslib@2.8.1)
+        specifier: 1.0.0-alpha.77
+        version: 1.0.0-alpha.77(tslib@2.8.1)
       '@algorandfoundation/puya-ts':
-        specifier: ^1.0.0-alpha.74
-        version: 1.0.0-beta.72
+        specifier: 1.0.0-alpha.77
+        version: 1.0.0-alpha.77
       snarkjs:
         specifier: ^0.7.5
         version: 0.7.5
@@ -45,13 +45,13 @@ packages:
     peerDependencies:
       algosdk: ^3.0.0
 
-  '@algorandfoundation/algorand-typescript@1.0.0-beta.72':
-    resolution: {integrity: sha512-2Z7fahTzfxc7ezwszCfEsqhzg7XkxMjS+at8vblLQ/otkl5GPXpasgjmqRIF3pyICQTRVAuvtq4GoWnBkw2qmQ==}
+  '@algorandfoundation/algorand-typescript@1.0.0-alpha.77':
+    resolution: {integrity: sha512-MvgcRf44ZJvJxZX7gFxHve04uW278TvkQ7+hZFIGa1lVhh6Z3LEdZlRln24uxZckxXezjOZrg+3nsWI3AA2FuQ==}
     peerDependencies:
       tslib: ^2.6.2
 
-  '@algorandfoundation/puya-ts@1.0.0-beta.72':
-    resolution: {integrity: sha512-ZkQJ68fXYY+DHz6B95Zm9HuC2ubk3VeHGtbGYVtTvMp2nfUQKcljYHP8/dqYZ9UEZs8owyuSr2d69lLSERkZNg==}
+  '@algorandfoundation/puya-ts@1.0.0-alpha.77':
+    resolution: {integrity: sha512-i1rKLZjj6V9OEau9sDQlisdlKHSP3VEU+/ds6o1boQOd+akGju3S7BWtA+PNEhVHNJozSZC5n3FehH+jzsbJtg==}
     hasBin: true
 
   '@esbuild/aix-ppc64@0.25.9':
@@ -999,8 +999,8 @@ packages:
     resolution: {integrity: sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw==}
     engines: {node: '>=18'}
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+  zod@4.1.1:
+    resolution: {integrity: sha512-SgMZK/h8Tigt9nnKkfJMvB/mKjiJXaX26xegP4sa+0wHIFVFWVlsQGdhklDmuargBD3Hsi3rsQRIzwJIhTPJHA==}
 
 snapshots:
 
@@ -1009,13 +1009,13 @@ snapshots:
       algosdk: 3.4.0
       buffer: 6.0.3
 
-  '@algorandfoundation/algorand-typescript@1.0.0-beta.72(tslib@2.8.1)':
+  '@algorandfoundation/algorand-typescript@1.0.0-alpha.77(tslib@2.8.1)':
     dependencies:
       tslib: 2.8.1
 
-  '@algorandfoundation/puya-ts@1.0.0-beta.72':
+  '@algorandfoundation/puya-ts@1.0.0-alpha.77':
     dependencies:
-      '@algorandfoundation/algorand-typescript': 1.0.0-beta.72(tslib@2.8.1)
+      '@algorandfoundation/algorand-typescript': 1.0.0-alpha.77(tslib@2.8.1)
       arcsecond: 5.0.0
       argparse: 2.0.1
       chalk: 5.6.0
@@ -1034,7 +1034,7 @@ snapshots:
       vscode-languageserver-textdocument: 1.0.12
       vscode-uri: 3.1.0
       which: 5.0.0
-      zod: 3.25.76
+      zod: 4.1.1
 
   '@esbuild/aix-ppc64@0.25.9':
     optional: true
@@ -1869,4 +1869,4 @@ snapshots:
 
   yallist@5.0.0: {}
 
-  zod@3.25.76: {}
+  zod@4.1.1: {}
