@@ -209,9 +209,11 @@ export type Challenges = {
 /**
  * Debug logging helper
  */
-function namedLog(name: string, value: bytes): void {
-  log(name);
-  log(value);
+function debugLog(name: string, value: bytes): void {
+  if (TemplateVar<boolean>("DEBUG_LOGGING")) {
+    log(name);
+    log(value);
+  }
 }
 
 /**
@@ -327,43 +329,43 @@ export function verify(
 ): boolean {
   // 1) Fiat–Shamir challenges from transcript (SNARKJS chaining)
   let challenges = computeChallenges(vk, signals, proof);
-  namedLog("beta", challenges.beta.bytes);
-  namedLog("gamma", challenges.gamma.bytes);
-  namedLog("alpha", challenges.alpha.bytes);
-  namedLog("xi", challenges.xi.bytes);
-  namedLog("u", challenges.u.bytes);
-  namedLog("xin", challenges.xin.bytes);
-  namedLog("zh", challenges.zh.bytes);
-  namedLog("v[1]", (challenges.v[1] as Uint256).bytes);
-  namedLog("v[2]", (challenges.v[2] as Uint256).bytes);
-  namedLog("v[3]", (challenges.v[3] as Uint256).bytes);
-  namedLog("v[4]", (challenges.v[4] as Uint256).bytes);
-  namedLog("v[5]", (challenges.v[5] as Uint256).bytes);
+  debugLog("beta", challenges.beta.bytes);
+  debugLog("gamma", challenges.gamma.bytes);
+  debugLog("alpha", challenges.alpha.bytes);
+  debugLog("xi", challenges.xi.bytes);
+  debugLog("u", challenges.u.bytes);
+  debugLog("xin", challenges.xin.bytes);
+  debugLog("zh", challenges.zh.bytes);
+  debugLog("v[1]", (challenges.v[1] as Uint256).bytes);
+  debugLog("v[2]", (challenges.v[2] as Uint256).bytes);
+  debugLog("v[3]", (challenges.v[3] as Uint256).bytes);
+  debugLog("v[4]", (challenges.v[4] as Uint256).bytes);
+  debugLog("v[5]", (challenges.v[5] as Uint256).bytes);
 
   // 2) Lagrange evaluations used by PI(ξ) and L1(ξ)
   const { L, challenges: updatedChallenges } = calculateLagrangeEvaluations(
     challenges,
     vk,
   );
-  namedLog("L1(xi)", (L[1] as Uint256).bytes);
+  debugLog("L1(xi)", (L[1] as Uint256).bytes);
   challenges = clone(updatedChallenges);
 
   // 3) Public input polynomial at ξ
   const pi = calculatePI(signals, L);
-  namedLog("PI(xi)", pi.bytes);
+  debugLog("PI(xi)", pi.bytes);
 
   // 4) Linearization polynomial constant term r0
   const r0 = calculateR0(proof, challenges, pi, L[1] as Uint256);
-  namedLog("r0", r0.bytes);
+  debugLog("r0", r0.bytes);
 
   // 5) Linearization commitment D and batch opening commitment F (optimized)
   const { D: d, F: f } = calculateDF(proof, challenges, vk, L[1] as Uint256);
-  namedLog("D", d);
-  namedLog("F", f);
+  debugLog("D", d);
+  debugLog("F", f);
 
   // 7) Batched evaluation commitment E (on [1]_1)
   const e = calculateE(proof, challenges, r0);
-  namedLog("E", e);
+  debugLog("E", e);
 
   // 8) Final pairing check
   return isValidPairing(proof, challenges, vk, e, f);
@@ -793,11 +795,11 @@ export function isValidPairing(
   B1 = g1Add(B1, F);
   B1 = g1Sub(B1, E);
 
-  namedLog("A1", A1);
-  namedLog("B1", B1);
-  namedLog("neg(A1)", g1Neg(A1));
-  namedLog("vk.X_2", vk.X_2);
-  namedLog("G2_ONE", G2_ONE);
+  debugLog("A1", A1);
+  debugLog("B1", B1);
+  debugLog("neg(A1)", g1Neg(A1));
+  debugLog("vk.X_2", vk.X_2);
+  debugLog("G2_ONE", G2_ONE);
 
   // Final pairing check: e(-A1, [x]_2) * e(B1, [1]_2) = 1
   const res = op.EllipticCurve.pairingCheck(
