@@ -1,29 +1,56 @@
 {
   "name": "snarkjs-algorand",
-  "module": "index.ts",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build:contracts": "algokit compile ts contracts",
     "build:clients": "algokit generate client contracts/out --output contracts/clients/{contract_name}.ts",
-    "build": "bun build:contracts && bun build:clients",
+    "build:lib": "echo \"$(echo '// @ts-nocheck'; cat contracts/clients/PlonkVerifier.ts)\" > contracts/clients/PlonkVerifier.ts && tsup src/index.ts --dts --format esm,cjs --out-dir dist --clean",
+    "build": "pnpm build:contracts && pnpm build:clients && pnpm build:lib",
+    "prepublishOnly": "pnpm run build:lib",
     "verify": "cd circuit && node ~/git/other/snarkjs/cli.js plonk verify verification_key.json public.json proof.json -v",
     "test": "vitest run",
-    "bt": "bun run build && bun run test"
+    "bt": "pnpm build && pnpm test"
   },
-  "devDependencies": {
+  "dependencies": {
     "@algorandfoundation/algokit-utils": "^9.1.2",
-    "@types/bun": "latest",
-    "@types/snarkjs": "^0.7.9",
     "algosdk": "^3.4.0",
-    "vitest": "^3.2.4"
+    "snarkjs": "^0.7.5"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
-  "private": true,
-  "type": "module",
-  "dependencies": {
+  "devDependencies": {
     "@algorandfoundation/algorand-typescript": "1.0.0-alpha.77",
     "@algorandfoundation/puya-ts": "1.0.0-alpha.77",
-    "snarkjs": "^0.7.5"
+    "@types/snarkjs": "^0.7.9",
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^3.2.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joe-p/snarkjs-algorand.git"
+  },
+  "homepage": "https://github.com/joe-p/snarkjs-algorand#readme",
+  "bugs": {
+    "url": "https://github.com/joe-p/snarkjs-algorand/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
