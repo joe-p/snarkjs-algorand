@@ -1,122 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { AlgorandClient } from "@algorandfoundation/algokit-utils";
-import {
-  PlonkVerifierClient,
-  PlonkVerifierFactory,
-  type Proof,
-  type VerificationKey,
-} from "../contracts/clients/PlonkVerifier";
 import * as snarkjs from "snarkjs";
-import { readFileSync } from "fs";
-import {
-  getABIEncodedValue,
-  type Arc56Contract,
-} from "@algorandfoundation/algokit-utils/types/app-arc56";
+import { getProof, AppVerifier } from "../src/index";
 
 const LSIG_BUDGET = 20_000; // Budget for each logicsig
 const APP_BUDGET = 700; // Budget for the app call
 const GROUP_TXN_SIZE = 16;
-const EXTRA_OPCODE_BUDGET = LSIG_BUDGET * GROUP_TXN_SIZE - APP_BUDGET; // Extra budget needed for an app call
-
+const EXTRA_OPCODE_BUDGET = LSIG_BUDGET * GROUP_TXN_SIZE - APP_BUDGET; // Max budget possible with a group of 16 lsigs
 const algorand = AlgorandClient.defaultLocalNet();
-
-function stringValuesToBigints(obj: any): any {
-  for (const key in obj) {
-    if (typeof obj[key] === "string" && /^\d+$/.test(obj[key])) {
-      obj[key] = BigInt(obj[key]);
-    } else if (typeof obj[key] === "object" && obj[key] !== null) {
-      stringValuesToBigints(obj[key]);
-    }
-  }
-}
-
-async function getVkey(path: string, curve: any): Promise<VerificationKey> {
-  const vkey = await snarkjs.zKey.exportVerificationKey(path, console);
-
-  ["Ql", "Qr", "Qo", "Qm", "Qc", "S1", "S2", "S3"].forEach((p) => {
-    stringValuesToBigints(vkey[p]);
-    const point = curve.G1.fromObject(vkey[p]);
-    vkey[`${p}Bytes`] = curve.G1.toUncompressed(point);
-  });
-
-  stringValuesToBigints(vkey.X_2);
-  const x2Point = curve.G2.fromObject(vkey.X_2);
-  const x2Uncompressed = curve.G2.toUncompressed(x2Point);
-
-  const x1 = x2Uncompressed.subarray(0, 48);
-  const x0 = x2Uncompressed.subarray(48, 96);
-  const y1 = x2Uncompressed.subarray(96, 144);
-  const y0 = x2Uncompressed.subarray(144, 192);
-
-  const x2Bytes = new Uint8Array(192);
-  x2Bytes.set(x0, 0);
-  x2Bytes.set(x1, 48);
-  x2Bytes.set(y0, 96);
-  x2Bytes.set(y1, 144);
-
-  return {
-    power: vkey.power,
-    nPublic: vkey.nPublic,
-    ql: vkey.QlBytes,
-    qr: vkey.QrBytes,
-    qo: vkey.QoBytes,
-    qm: vkey.QmBytes,
-    qc: vkey.QcBytes,
-    s1: vkey.S1Bytes,
-    s2: vkey.S2Bytes,
-    s3: vkey.S3Bytes,
-    k1: BigInt(vkey.k1),
-    k2: BigInt(vkey.k2),
-    x_2: x2Bytes,
-  };
-}
-
-function encodeVk(vkey: VerificationKey, appSpec: Arc56Contract): Uint8Array {
-  return getABIEncodedValue(vkey, "VerificationKey", appSpec.structs);
-}
-
-async function getProof(path: string, curve: any): Promise<Proof> {
-  const proof = JSON.parse(readFileSync(path, "utf8"));
-  return encodeProof(proof, curve);
-}
-
-function encodeProof(proof: any, curve: any): Proof {
-  ["A", "B", "C", "Z", "T1", "T2", "T3", "Wxi", "Wxiw"].forEach((p) => {
-    stringValuesToBigints(proof[p]);
-    const point = curve.G1.fromObject(proof[p]);
-    proof[`${p}Bytes`] = curve.G1.toUncompressed(point);
-  });
-
-  ["eval_a", "eval_b", "eval_c", "eval_s1", "eval_s2", "eval_zw"].forEach(
-    (p) => {
-      proof[`${p}BigInt`] = BigInt(proof[p]);
-    },
-  );
-
-  return {
-    a: proof.ABytes,
-    b: proof.BBytes,
-    c: proof.CBytes,
-    z: proof.ZBytes,
-    t1: proof.T1Bytes,
-    t2: proof.T2Bytes,
-    t3: proof.T3Bytes,
-    wxi: proof.WxiBytes,
-    wxiw: proof.WxiwBytes,
-    evalA: proof.eval_aBigInt,
-    evalB: proof.eval_bBigInt,
-    evalC: proof.eval_cBigInt,
-    evalS1: proof.eval_s1BigInt,
-    evalS2: proof.eval_s2BigInt,
-    evalZw: proof.eval_zwBigInt,
-  };
-}
-
-function encodeSignals(...inputs: string[]) {
-  return inputs.map((input) => {
-    return BigInt(input);
-  });
-}
 
 type LogValues = {
   beta?: string;
@@ -167,31 +58,24 @@ function parseLogs(logs: Uint8Array[]): LogValues {
 }
 
 describe("verifier", () => {
-  let client: PlonkVerifierClient;
+  let verifier: AppVerifier;
   let curve: any;
 
   beforeAll(async () => {
+    const defaultSender = await algorand.account.localNetDispenser();
+
     // @ts-expect-error curves is not typed
     curve = await snarkjs.curves.getCurveFromName("bls12381");
-    const defaultSender = await algorand.account.localNetDispenser();
-    const factory = new PlonkVerifierFactory({ algorand, defaultSender });
-    const vk = await getVkey("circuit/circuit_final.zkey", curve);
-    const vkBytes = encodeVk(vk, factory.appSpec);
-
-    const rootOfUnity = Buffer.from(
-      curve.Fr.toObject(curve.Fr.w[Number(vk.power)])
-        .toString(16)
-        .padStart(64, "0"),
-      "hex",
+    verifier = new AppVerifier(
+      algorand,
+      "circuit/circuit_final.zkey",
+      "circuit/circuit_js/circuit.wasm",
     );
-    const { appClient } = await factory.deploy({
-      appName: Math.random().toString(16),
-      deployTimeParams: {
-        VERIFICATION_KEY: vkBytes,
-        ROOT_OF_UNITY: rootOfUnity,
-      },
+    await verifier.deploy({
+      appName: `plonk-verifier-${Date.now()}`,
+      debugLogging: true,
+      defaultSender,
     });
-    client = appClient;
   });
 
   afterAll(async () => {
@@ -201,14 +85,16 @@ describe("verifier", () => {
   it("fails with wrong signal", async () => {
     const proof = await getProof("circuit/proof.json", curve);
     const signals = [1337n];
-    const group = client.newGroup().verify({ args: { signals, proof } });
 
-    const simResult = group.simulate({
-      extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-      allowMoreLogging: true,
-    });
+    const simResult = verifier.simulateVerificationWithProofAndSignals(
+      { signals, proof },
+      {
+        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+        allowMoreLogging: true,
+      },
+    );
 
-    expect(simResult).rejects.toThrow();
+    await expect(simResult).rejects.toThrow();
   });
 
   it("works", async () => {
@@ -217,17 +103,28 @@ describe("verifier", () => {
       15744006038856998268181219516291113434365469909648022488288672656450282844855n,
     ];
 
-    const group = client.newGroup().verify({ args: { signals, proof } });
-
     // We are testing using an app so we can log, so we need to increase the opcode budget
-    const simResult = await group.simulate({
-      extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-      allowMoreLogging: true,
-    });
+    const simResult = await verifier.simulateVerificationWithProofAndSignals(
+      { signals, proof },
+      {
+        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+        allowMoreLogging: true,
+      },
+    );
     const logs = simResult.confirmations[0]!.logs!;
 
     simResult.simulateResponse.txnGroups[0]?.appBudgetConsumed;
-    const logValues = parseLogs(logs);
+
+    const budgetUsed =
+      simResult.simulateResponse.txnGroups[0]!.appBudgetConsumed!;
+
+    expect(budgetUsed).toMatchSnapshot("budget used");
+    expect(Math.ceil(budgetUsed / LSIG_BUDGET)).toMatchSnapshot(
+      "number of lsig txns required for budget",
+    );
+    expect(Math.ceil(budgetUsed / APP_BUDGET)).toMatchSnapshot(
+      "number of app calls required for budget",
+    );
 
     // [INFO]  snarkJS: PLONK VERIFIER STARTED
     // [DEBUG] snarkJS: beta: 2dcf3fb1a062e6a514fac1ceda05eb7216c0232888eb5ca21a2325ad39ba0ee3
@@ -247,6 +144,8 @@ describe("verifier", () => {
     // [DEBUG] snarkJS: F: [ 18463acd328baa605062c9ce3cceb2982e0fc4b3031c7b75872324ce6941321b73e7c06f70d1b3f9b44d37c74c4b2b01, ebd2a44a0be8eb548ad8846225e22b06048ff7de2f78ceb51a1e86994bcb93afdaff78c20b143b7ff4b5d3a8469848 ]
     // [DEBUG] snarkJS: E: [ 10be434db7820f39ab40a95a54bbc57d673fffd3bdadbef08de0e5f8bc5e206a82f63d1fb3e12892601c220b51a8ef5f, 90f264a0a62778fccb84713818c856cf1156b61c90ae5968632b902b3101c51243629cab527a6cf23fa491e8478f35d ]
     // [INFO]  snarkJS: OK!
+
+    const logValues = parseLogs(logs);
 
     expect(logValues.beta).toBe(
       "2dcf3fb1a062e6a514fac1ceda05eb7216c0232888eb5ca21a2325ad39ba0ee3",
@@ -302,37 +201,16 @@ describe("verifier", () => {
     expect(logValues.E).toBe(
       "10be434db7820f39ab40a95a54bbc57d673fffd3bdadbef08de0e5f8bc5e206a82f63d1fb3e12892601c220b51a8ef5f90f264a0a62778fccb84713818c856cf1156b61c90ae5968632b902b3101c51243629cab527a6cf23fa491e8478f35d",
     );
-
-    const budgetUsed =
-      simResult.simulateResponse.txnGroups[0]!.appBudgetConsumed!;
-
-    expect(budgetUsed).toMatchSnapshot("budget used");
-    expect(Math.ceil(budgetUsed / LSIG_BUDGET)).toMatchSnapshot(
-      "number of lsig txns required for budget",
-    );
-    expect(Math.ceil(budgetUsed / APP_BUDGET)).toMatchSnapshot(
-      "number of app calls required for budget",
-    );
   });
 
   it("works with fullProve", async () => {
-    const { proof: rawProof, publicSignals: rawSignals } =
-      await snarkjs.plonk.fullProve(
-        { a: 10, b: 21 },
-        "circuit/circuit_js/circuit.wasm",
-        "circuit/circuit_final.zkey",
-      );
-
-    const proof = encodeProof(rawProof, curve);
-
-    const signals = encodeSignals(...rawSignals);
-    const group = client.newGroup().verify({ args: { signals, proof } });
-
-    // We are testing using an app so we can log, so we need to increase the opcode budget
-    const simResult = await group.simulate({
-      extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-      allowMoreLogging: true,
-    });
+    const simResult = await verifier.simulateVerification(
+      { a: 10, b: 21 },
+      {
+        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+        allowMoreLogging: true,
+      },
+    );
 
     expect(simResult.simulateResponse.txnGroups[0]?.failedAt).toBeUndefined();
   });
