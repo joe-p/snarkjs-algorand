@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`verifier > works > budget used 1`] = `132283`;
+exports[`verifier > works > budget used 1`] = `132088`;
 
 exports[`verifier > works > number of app calls required for budget 1`] = `189`;
 

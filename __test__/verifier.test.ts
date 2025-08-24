@@ -58,6 +58,7 @@ function parseLogs(logs: Uint8Array[]): LogValues {
 }
 
 describe("verifier", () => {
+  let debugVerifier: AppVerifier;
   let verifier: AppVerifier;
   let curve: any;
 
@@ -66,6 +67,17 @@ describe("verifier", () => {
 
     // @ts-expect-error curves is not typed
     curve = await snarkjs.curves.getCurveFromName("bls12381");
+    debugVerifier = new AppVerifier(
+      algorand,
+      "circuit/circuit_final.zkey",
+      "circuit/circuit_js/circuit.wasm",
+    );
+    await debugVerifier.deploy({
+      appName: `plonk-verifier-${Date.now()}`,
+      debugLogging: true,
+      defaultSender,
+    });
+
     verifier = new AppVerifier(
       algorand,
       "circuit/circuit_final.zkey",
@@ -73,7 +85,6 @@ describe("verifier", () => {
     );
     await verifier.deploy({
       appName: `plonk-verifier-${Date.now()}`,
-      debugLogging: true,
       defaultSender,
     });
   });
@@ -86,7 +97,7 @@ describe("verifier", () => {
     const proof = await getProof("circuit/proof.json", curve);
     const signals = [1337n];
 
-    const simResult = verifier.simulateVerificationWithProofAndSignals(
+    const simResult = debugVerifier.simulateVerificationWithProofAndSignals(
       { signals, proof },
       {
         extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
@@ -111,7 +122,6 @@ describe("verifier", () => {
         allowMoreLogging: true,
       },
     );
-    const logs = simResult.confirmations[0]!.logs!;
 
     simResult.simulateResponse.txnGroups[0]?.appBudgetConsumed;
 
@@ -125,6 +135,26 @@ describe("verifier", () => {
     expect(Math.ceil(budgetUsed / APP_BUDGET)).toMatchSnapshot(
       "number of app calls required for budget",
     );
+  });
+
+  it("works with logging", async () => {
+    const proof = await getProof("circuit/proof.json", curve);
+    const signals = [
+      15744006038856998268181219516291113434365469909648022488288672656450282844855n,
+    ];
+
+    // We are testing using an app so we can log, so we need to increase the opcode budget
+    const simResult =
+      await debugVerifier.simulateVerificationWithProofAndSignals(
+        { signals, proof },
+        {
+          extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+          allowMoreLogging: true,
+        },
+      );
+    const logs = simResult.confirmations[0]!.logs!;
+
+    simResult.simulateResponse.txnGroups[0]?.appBudgetConsumed;
 
     // [INFO]  snarkJS: PLONK VERIFIER STARTED
     // [DEBUG] snarkJS: beta: 2dcf3fb1a062e6a514fac1ceda05eb7216c0232888eb5ca21a2325ad39ba0ee3
