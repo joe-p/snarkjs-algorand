@@ -1,0 +1,37 @@
+#pragma version 10
+#pragma typetrack false
+
+// @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
+main:
+    // contracts/verifier.algo.ts:101
+    // export class SignalsAndProof extends Contract {
+    txn NumAppArgs
+    bz main_bare_routing@6
+    pushbytes 0x44a4788b // method "signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void"
+    txna ApplicationArgs 0
+    match main_signalsAndProof_route@3
+
+main_after_if_else@10:
+    err
+
+main_signalsAndProof_route@3:
+    // contracts/verifier.algo.ts:102
+    // public signalsAndProof(signals: Uint256[], proof: Proof): void {}
+    txn OnCompletion
+    !
+    assert // OnCompletion is not NoOp
+    txn ApplicationID
+    assert // can only call when not creating
+    pushint 1 // 1
+    return
+
+main_bare_routing@6:
+    // contracts/verifier.algo.ts:101
+    // export class SignalsAndProof extends Contract {
+    txn OnCompletion
+    bnz main_after_if_else@10
+    txn ApplicationID
+    !
+    assert // can only call when creating
+    pushint 1 // 1
+    return
