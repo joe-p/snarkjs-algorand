@@ -1,11 +1,19 @@
-import type { AlgorandClient } from "@algorandfoundation/algokit-utils";
+import {
+  microAlgos,
+  type AlgorandClient,
+} from "@algorandfoundation/algokit-utils";
 import {
   PlonkVerifierClient,
   PlonkVerifierFactory,
   type PlonkVerifierDeployParams,
   type Proof,
   type VerificationKey,
+  APP_SPEC,
 } from "../contracts/clients/PlonkVerifier";
+import {
+  SignalsAndProofFactory,
+  SignalsAndProofClient,
+} from "../contracts/clients/SignalsAndProof";
 import { PlonkVerifierWithLogsFactory } from "../contracts/clients/PlonkVerifierWithLogs";
 import * as snarkjs from "snarkjs";
 import {
@@ -17,6 +25,7 @@ import type { RawSimulateOptions } from "@algorandfoundation/algokit-utils/types
 import type { Transaction } from "algosdk";
 import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
 import { type Address } from "algosdk";
+import { LSIG_SOURCE } from "../contracts/out/lsig_source";
 
 function stringValuesToBigints(obj: any): any {
   for (const key in obj) {
@@ -133,6 +142,113 @@ export type ProofAndSignals = {
   proof: Proof;
   signals: bigint[];
 };
+
+export class LsigVerifier {
+  curve?: any;
+
+  constructor(
+    public algorand: AlgorandClient,
+    public zKey: snarkjs.ZKArtifact,
+    public wasmProver: snarkjs.ZKArtifact,
+  ) {}
+
+  private async ensureCurveInstanttiation() {
+    if (!this.curve) {
+      // @ts-expect-error curves is not typed
+      this.curve = await snarkjs.curves.getCurveFromName("bls12381");
+    }
+  }
+
+  async proofAndSignals(
+    inputs: snarkjs.CircuitSignals,
+  ): Promise<ProofAndSignals> {
+    await this.ensureCurveInstanttiation();
+
+    const { proof: rawProof, publicSignals: rawSignals } =
+      await snarkjs.plonk.fullProve(inputs, this.wasmProver, this.zKey);
+
+    const proof = encodeProof(rawProof, this.curve);
+    const signals = encodeSignals(...rawSignals);
+
+    return { proof, signals };
+  }
+
+  async lsigAccount() {
+    await this.ensureCurveInstanttiation();
+
+    const vk = await getVkey(this.zKey, this.curve);
+    const vkBytes = encodeVk(vk, APP_SPEC);
+
+    const compilation = await this.algorand.app.compileTealTemplate(
+      LSIG_SOURCE,
+      {
+        VERIFICATION_KEY: vkBytes,
+        ROOT_OF_UNITY: Buffer.from(
+          this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
+            .toString(16)
+            .padStart(64, "0"),
+          "hex",
+        ),
+      },
+    );
+
+    return this.algorand.account.logicsig(compilation.compiledBase64ToBytes);
+  }
+
+  async proofAndSignalsComposer(
+    inputs: snarkjs.CircuitSignals,
+    totalLsigs: number,
+    appId?: bigint,
+    sender?: Address,
+  ) {
+    let client: SignalsAndProofClient;
+
+    if (appId) {
+      client = new SignalsAndProofClient({ algorand: this.algorand, appId });
+    } else {
+      console.debug("deploying new SignalsAndProof app");
+      const factory = new SignalsAndProofFactory({
+        algorand: this.algorand,
+        defaultSender: sender,
+      });
+
+      const { appClient } = await factory.send.create.bare();
+
+      console.debug(`deployed SignalsAndProof app ${appClient.appId}`);
+      client = appClient;
+    }
+
+    const { proof, signals } = await this.proofAndSignals(inputs);
+
+    const group = client.newGroup();
+    const compilation = await this.algorand.app.compileTeal(
+      "#pragma version 11\n txn RekeyTo; global ZeroAddress; ==",
+    );
+    const lsig = this.algorand.account.logicsig(
+      compilation.compiledBase64ToBytes,
+    );
+
+    for (let i = 0; i < totalLsigs - 1; i++) {
+      const lsigPay = await this.algorand.createTransaction.payment({
+        sender: lsig,
+        amount: microAlgos(0),
+        staticFee: microAlgos(0),
+        receiver: lsig,
+        note: `Extra lsig ${i + 1} of ${totalLsigs - 1}`,
+      });
+
+      group.addTransaction(lsigPay);
+    }
+
+    return await group
+      .signalsAndProof({
+        args: { proof, signals },
+        sender: await this.lsigAccount(),
+        staticFee: microAlgos(0),
+      })
+      .composer();
+  }
+}
 
 export class AppVerifier {
   appClient?: PlonkVerifierClient;

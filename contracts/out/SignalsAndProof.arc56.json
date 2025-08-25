@@ -1,0 +1,175 @@
+{
+    "name": "SignalsAndProof",
+    "structs": {
+        "Proof": [
+            {
+                "name": "A",
+                "type": "byte[96]"
+            },
+            {
+                "name": "B",
+                "type": "byte[96]"
+            },
+            {
+                "name": "C",
+                "type": "byte[96]"
+            },
+            {
+                "name": "Z",
+                "type": "byte[96]"
+            },
+            {
+                "name": "T1",
+                "type": "byte[96]"
+            },
+            {
+                "name": "T2",
+                "type": "byte[96]"
+            },
+            {
+                "name": "T3",
+                "type": "byte[96]"
+            },
+            {
+                "name": "Wxi",
+                "type": "byte[96]"
+            },
+            {
+                "name": "Wxiw",
+                "type": "byte[96]"
+            },
+            {
+                "name": "eval_a",
+                "type": "uint256"
+            },
+            {
+                "name": "eval_b",
+                "type": "uint256"
+            },
+            {
+                "name": "eval_c",
+                "type": "uint256"
+            },
+            {
+                "name": "eval_s1",
+                "type": "uint256"
+            },
+            {
+                "name": "eval_s2",
+                "type": "uint256"
+            },
+            {
+                "name": "eval_zw",
+                "type": "uint256"
+            }
+        ]
+    },
+    "methods": [
+        {
+            "name": "signalsAndProof",
+            "args": [
+                {
+                    "type": "uint256[]",
+                    "name": "signals"
+                },
+                {
+                    "type": "(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256)",
+                    "struct": "Proof",
+                    "name": "proof"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        }
+    ],
+    "arcs": [
+        22,
+        28
+    ],
+    "networks": {},
+    "state": {
+        "schema": {
+            "global": {
+                "ints": 0,
+                "bytes": 0
+            },
+            "local": {
+                "ints": 0,
+                "bytes": 0
+            }
+        },
+        "keys": {
+            "global": {},
+            "local": {},
+            "box": {}
+        },
+        "maps": {
+            "global": {},
+            "local": {},
+            "box": {}
+        }
+    },
+    "bareActions": {
+        "create": [
+            "NoOp"
+        ],
+        "call": []
+    },
+    "sourceInfo": {
+        "approval": {
+            "sourceInfo": [
+                {
+                    "pc": [
+                        23
+                    ],
+                    "errorMessage": "OnCompletion is not NoOp"
+                },
+                {
+                    "pc": [
+                        38
+                    ],
+                    "errorMessage": "can only call when creating"
+                },
+                {
+                    "pc": [
+                        26
+                    ],
+                    "errorMessage": "can only call when not creating"
+                }
+            ],
+            "pcOffsetMethod": "none"
+        },
+        "clear": {
+            "sourceInfo": [],
+            "pcOffsetMethod": "none"
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYXJjNC9pbmRleC5kLnRzOjpDb250cmFjdC5hcHByb3ZhbFByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICAvLyBjb250cmFjdHMvdmVyaWZpZXIuYWxnby50czoxMDEKICAgIC8vIGV4cG9ydCBjbGFzcyBTaWduYWxzQW5kUHJvb2YgZXh0ZW5kcyBDb250cmFjdCB7CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogbWFpbl9iYXJlX3JvdXRpbmdANgogICAgcHVzaGJ5dGVzIDB4NDRhNDc4OGIgLy8gbWV0aG9kICJzaWduYWxzQW5kUHJvb2YodWludDI1NltdLChieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSx1aW50MjU2LHVpbnQyNTYsdWludDI1Nix1aW50MjU2LHVpbnQyNTYsdWludDI1Nikpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fc2lnbmFsc0FuZFByb29mX3JvdXRlQDMKCm1haW5fYWZ0ZXJfaWZfZWxzZUAxMDoKICAgIGVycgoKbWFpbl9zaWduYWxzQW5kUHJvb2Zfcm91dGVAMzoKICAgIC8vIGNvbnRyYWN0cy92ZXJpZmllci5hbGdvLnRzOjEwMgogICAgLy8gcHVibGljIHNpZ25hbHNBbmRQcm9vZihzaWduYWxzOiBVaW50MjU2W10sIHByb29mOiBQcm9vZik6IHZvaWQge30KICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgcHVzaGludCAxIC8vIDEKICAgIHJldHVybgoKbWFpbl9iYXJlX3JvdXRpbmdANjoKICAgIC8vIGNvbnRyYWN0cy92ZXJpZmllci5hbGdvLnRzOjEwMQogICAgLy8gZXhwb3J0IGNsYXNzIFNpZ25hbHNBbmRQcm9vZiBleHRlbmRzIENvbnRyYWN0IHsKICAgIHR4biBPbkNvbXBsZXRpb24KICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMTAKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg==",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYmFzZS1jb250cmFjdC5kLnRzOjpCYXNlQ29udHJhY3QuY2xlYXJTdGF0ZVByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg=="
+    },
+    "byteCode": {
+        "approval": "CjEbQQAYgAREpHiLNhoAjgEAAQAxGRREMRhEgQFDMRlA//AxGBREgQFD",
+        "clear": "CoEBQw=="
+    },
+    "compilerInfo": {
+        "compiler": "puya",
+        "compilerVersion": {
+            "major": 5,
+            "minor": 0,
+            "patch": 0
+        }
+    },
+    "events": [],
+    "templateVariables": {}
+}

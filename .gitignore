@@ -7,6 +7,7 @@ node_modules
 *.arc32.json
 dist
 *.tgz
+contracts/out/*.ts
 
 # code coverage
 coverage

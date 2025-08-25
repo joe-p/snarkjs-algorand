@@ -328,7 +328,7 @@ export function verifyFromTemplate(
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verifyWithLogs(decodeVk(vkBytes), signals, proof);
+  return verify(decodeVk(vkBytes), signals, proof);
 }
 
 /**
