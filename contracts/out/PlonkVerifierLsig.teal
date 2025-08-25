@@ -675,7 +675,7 @@ main_after_for@4:
     intc_0 // 96
     extract3
     dup
-    bury 27
+    bury 44
     concat
     // contracts/plonk_bls12381.algo.ts:444
     // td = op.concat(td, vk.S1);
@@ -684,7 +684,7 @@ main_after_for@4:
     intc_0 // 96
     extract3
     dup
-    bury 45
+    bury 43
     concat
     // contracts/plonk_bls12381.algo.ts:445
     // td = op.concat(td, vk.S2);
@@ -693,7 +693,7 @@ main_after_for@4:
     intc_0 // 96
     extract3
     dup
-    bury 44
+    bury 42
     concat
     // contracts/plonk_bls12381.algo.ts:446
     // td = op.concat(td, vk.S3);
@@ -702,7 +702,7 @@ main_after_for@4:
     intc_0 // 96
     extract3
     dup
-    bury 28
+    bury 40
     concat
     bury 18
     // contracts/plonk_bls12381.algo.ts:448
@@ -753,7 +753,7 @@ main_after_for@10:
     dup
     extract 0 96
     dup
-    bury 42
+    bury 39
     dig 19
     swap
     concat
@@ -762,7 +762,7 @@ main_after_for@10:
     dig 1
     extract 96 96
     dup
-    bury 42
+    bury 39
     concat
     // contracts/plonk_bls12381.algo.ts:455
     // td = op.concat(td, proof.C);
@@ -790,13 +790,13 @@ main_after_for@10:
     intc_0 // 96
     extract3
     dup
-    bury 30
+    bury 48
     concat
     // contracts/plonk_bls12381.algo.ts:471
     // const alpha = getChallenge(td);
     callsub getChallenge
     dup
-    bury 40
+    bury 37
     // contracts/plonk_bls12381.algo.ts:478
     // td = op.concat(td, proof.T1);
     dig 1
@@ -804,7 +804,7 @@ main_after_for@10:
     intc_0 // 96
     extract3
     dup
-    bury 48
+    bury 47
     concat
     // contracts/plonk_bls12381.algo.ts:479
     // td = op.concat(td, proof.T2);
@@ -813,7 +813,7 @@ main_after_for@10:
     intc_0 // 96
     extract3
     dup
-    bury 47
+    bury 46
     concat
     // contracts/plonk_bls12381.algo.ts:480
     // td = op.concat(td, proof.T3);
@@ -822,7 +822,7 @@ main_after_for@10:
     intc_0 // 96
     extract3
     dup
-    bury 46
+    bury 45
     concat
     // contracts/plonk_bls12381.algo.ts:481
     // const xi = getChallenge(td);
@@ -836,7 +836,7 @@ main_after_for@10:
     intc_1 // 32
     extract3
     dup
-    bury 34
+    bury 31
     concat
     // contracts/plonk_bls12381.algo.ts:489
     // td = op.concat(td, proof.eval_b.bytes);
@@ -845,7 +845,7 @@ main_after_for@10:
     intc_1 // 32
     extract3
     dup
-    bury 33
+    bury 30
     concat
     // contracts/plonk_bls12381.algo.ts:490
     // td = op.concat(td, proof.eval_c.bytes);
@@ -854,7 +854,7 @@ main_after_for@10:
     intc_1 // 32
     extract3
     dup
-    bury 32
+    bury 29
     concat
     // contracts/plonk_bls12381.algo.ts:491
     // td = op.concat(td, proof.eval_s1.bytes);
@@ -863,7 +863,7 @@ main_after_for@10:
     intc_1 // 32
     extract3
     dup
-    bury 37
+    bury 34
     concat
     // contracts/plonk_bls12381.algo.ts:492
     // td = op.concat(td, proof.eval_s2.bytes);
@@ -872,7 +872,7 @@ main_after_for@10:
     intc_1 // 32
     extract3
     dup
-    bury 39
+    bury 36
     concat
     // contracts/plonk_bls12381.algo.ts:493
     // td = op.concat(td, proof.eval_zw.bytes);
@@ -881,7 +881,7 @@ main_after_for@10:
     intc_1 // 32
     extract3
     dup
-    bury 37
+    bury 34
     concat
     // contracts/plonk_bls12381.algo.ts:495
     // const v = new FixedArray<Uint256, 6>();
@@ -965,7 +965,7 @@ main_after_while@13:
     intc_0 // 96
     extract3
     dup
-    bury 27
+    bury 26
     concat
     dup
     bury 18
@@ -984,7 +984,7 @@ main_after_while@13:
     //   zh: new Uint256(),
     // };
     dig 18
-    dig 39
+    dig 36
     concat
     dig 14
     concat
@@ -995,7 +995,7 @@ main_after_while@13:
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
     dup
-    bury 34
+    bury 31
     // contracts/plonk_bls12381.algo.ts:529
     // let xin = challenges.xi.native;
     extract 96 32
@@ -1055,7 +1055,7 @@ main_after_while@16:
     bury 50
     dup2
     b|
-    dig 35
+    dig 32
     pushint 352 // 352
     uncover 2
     replace3
@@ -1074,7 +1074,7 @@ main_after_while@16:
     intc 4 // 384
     swap
     replace3
-    bury 33
+    bury 30
     // contracts/plonk_bls12381.algo.ts:541
     // const n = frScalar(BigUint(domainSize));
     dig 9
@@ -1083,7 +1083,7 @@ main_after_while@16:
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    bury 28
+    bury 25
     // contracts/plonk_bls12381.algo.ts:547
     // let w = BigUint(1);
     bytec_2 // 0x01
@@ -1118,7 +1118,7 @@ main_while_top@20:
     bz main_after_while@22
     // contracts/plonk_bls12381.algo.ts:564
     // frMul(w, challenges.zh.native),
-    dig 32
+    dig 29
     dup
     intc 4 // 384
     intc_1 // 32
@@ -1139,7 +1139,7 @@ main_while_top@20:
     callsub frSub
     // contracts/plonk_bls12381.algo.ts:64
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
-    dig 29
+    dig 26
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
@@ -1173,13 +1173,13 @@ main_while_top@20:
     // contracts/plonk_bls12381.algo.ts:91
     // let b: biguint = base % mod;
     b%
-    bury 38
-    bury 32
+    bury 35
+    bury 29
 
-main_while_top@27:
+main_while_top@29:
     // contracts/plonk_bls12381.algo.ts:93
     // while (e > (0n as biguint)) {
-    dig 31
+    dig 28
     bytec_1 // 0x
     b>
     // contracts/plonk_bls12381.algo.ts:93-99
@@ -1190,21 +1190,21 @@ main_while_top@27:
     //   b = (b * b) % mod;
     //   e = e / BigUint(2);
     // }
-    bz main_after_while@31
+    bz main_after_while@33
     // contracts/plonk_bls12381.algo.ts:94
     // if ((e & (1n as biguint)) !== (0n as biguint)) {
-    dig 31
+    dig 28
     bytec_2 // 0x01
     b&
     bytec_1 // 0x
     b!=
     dig 22
     bury 22
-    bz main_after_if_else@30
+    bz main_after_if_else@32
     // contracts/plonk_bls12381.algo.ts:95
     // result = (result * b) % mod;
     dig 21
-    dig 37
+    dig 34
     b*
     // contracts/plonk_bls12381.algo.ts:112
     // const inv = modPow(x, BLS12_381_R_MINUS_2, r);
@@ -1214,12 +1214,12 @@ main_while_top@27:
     b%
     bury 21
 
-main_after_if_else@30:
+main_after_if_else@32:
     dig 20
     bury 22
     // contracts/plonk_bls12381.algo.ts:97
     // b = (b * b) % mod;
-    dig 36
+    dig 33
     dup
     b*
     // contracts/plonk_bls12381.algo.ts:112
@@ -1228,16 +1228,16 @@ main_after_if_else@30:
     // contracts/plonk_bls12381.algo.ts:97
     // b = (b * b) % mod;
     b%
-    bury 37
+    bury 34
     // contracts/plonk_bls12381.algo.ts:98
     // e = e / BigUint(2);
-    dig 31
+    dig 28
     pushbytes 0x02
     b/
-    bury 32
-    b main_while_top@27
+    bury 29
+    b main_while_top@29
 
-main_after_while@31:
+main_after_while@33:
     // contracts/plonk_bls12381.algo.ts:125
     // return (aN * bInv) % r;
     dig 48
@@ -1305,7 +1305,7 @@ main_after_while@22:
     // contracts/plonk_bls12381.algo.ts:571
     // return { L, challenges };
     pushbytes 0x01a2
-    dig 33
+    dig 30
     concat
     dig 50
     concat
@@ -1424,7 +1424,7 @@ main_after_while@25:
     // contracts/plonk_bls12381.algo.ts:64
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     dup
-    dig 40
+    dig 37
     dup
     cover 8
     b*
@@ -1432,7 +1432,7 @@ main_after_while@25:
     b%
     // contracts/plonk_bls12381.algo.ts:147
     // const aN: biguint = a % r;
-    dig 38
+    dig 35
     dup
     cover 6
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
@@ -1472,7 +1472,7 @@ main_after_while@25:
     // contracts/plonk_bls12381.algo.ts:64
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     dig 3
-    dig 47
+    dig 44
     dup
     cover 12
     b*
@@ -1480,7 +1480,7 @@ main_after_while@25:
     b%
     // contracts/plonk_bls12381.algo.ts:147
     // const aN: biguint = a % r;
-    dig 42
+    dig 39
     dup
     cover 4
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
@@ -1508,9 +1508,9 @@ main_after_while@25:
     b%
     // contracts/plonk_bls12381.algo.ts:147
     // const aN: biguint = a % r;
-    dig 43
+    dig 40
     dup
-    cover 9
+    cover 14
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
     // contracts/plonk_bls12381.algo.ts:149
@@ -1532,19 +1532,19 @@ main_after_while@25:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    dig 51
+    dig 48
     dup
-    cover 15
+    cover 14
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    dig 10
+    dig 9
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
     // contracts/plonk_bls12381.algo.ts:631
     // const r0 = frSub(frSub(e1, e2), e3);
-    uncover 13
+    uncover 12
     dig 9
     callsub frSub
     swap
@@ -1556,31 +1556,35 @@ main_after_while@25:
     intc_1 // 32
     <=
     assert // overflow
-    uncover 14
+    uncover 13
     b|
     // contracts/plonk_bls12381.algo.ts:658
     // dPoints = op.concat(dPoints, proof.T1);
     dig 35
-    dig 61
+    dig 60
     concat
     // contracts/plonk_bls12381.algo.ts:659
     // dPoints = op.concat(dPoints, proof.T2);
-    dig 60
+    dig 59
     concat
     // contracts/plonk_bls12381.algo.ts:660
     // dPoints = op.concat(dPoints, proof.T3);
-    dig 59
+    dig 58
+    concat
+    // contracts/plonk_bls12381.algo.ts:661
+    // dPoints = op.concat(dPoints, vk.Qc);
+    dig 57
     concat
     // contracts/plonk_bls12381.algo.ts:64
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
-    dig 13
+    dig 12
     dig 7
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:671
+    // contracts/plonk_bls12381.algo.ts:672
     // frMul(BigUint(1), challenges.zh.native),
-    dig 13
+    dig 12
     intc 4 // 384
     intc_1 // 32
     extract3
@@ -1589,19 +1593,19 @@ main_after_while@25:
     dup
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:670
+    // contracts/plonk_bls12381.algo.ts:671
     // BigUint(0),
     bytec_1 // 0x
-    // contracts/plonk_bls12381.algo.ts:669-672
+    // contracts/plonk_bls12381.algo.ts:670-673
     // const quotientScalar1 = frSub(
     //   BigUint(0),
     //   frMul(BigUint(1), challenges.zh.native),
     // ); // -T1*zh
     swap
     callsub frSub
-    // contracts/plonk_bls12381.algo.ts:675
+    // contracts/plonk_bls12381.algo.ts:676
     // frMul(challenges.xin.native, challenges.zh.native),
-    dig 15
+    dig 14
     pushint 352 // 352
     intc_1 // 32
     extract3
@@ -1612,10 +1616,10 @@ main_after_while@25:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:674
+    // contracts/plonk_bls12381.algo.ts:675
     // BigUint(0),
     bytec_1 // 0x
-    // contracts/plonk_bls12381.algo.ts:673-676
+    // contracts/plonk_bls12381.algo.ts:674-677
     // const quotientScalar2 = frSub(
     //   BigUint(0),
     //   frMul(challenges.xin.native, challenges.zh.native),
@@ -1633,10 +1637,10 @@ main_after_while@25:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:678
+    // contracts/plonk_bls12381.algo.ts:679
     // BigUint(0),
     bytec_1 // 0x
-    // contracts/plonk_bls12381.algo.ts:677-683
+    // contracts/plonk_bls12381.algo.ts:678-684
     // const quotientScalar3 = frSub(
     //   BigUint(0),
     //   frMul(
@@ -1646,72 +1650,13 @@ main_after_while@25:
     // ); // -T3*xin²*zh
     swap
     callsub frSub
-    // contracts/plonk_bls12381.algo.ts:686
-    // let dScalars = op.concat(b32(gateScalar1), b32(gateScalar2));
-    uncover 3
-    callsub b32
-    dig 17
-    callsub b32
-    concat
     // contracts/plonk_bls12381.algo.ts:687
-    // dScalars = op.concat(dScalars, b32(gateScalar3));
-    dig 10
-    callsub b32
-    concat
-    // contracts/plonk_bls12381.algo.ts:688
-    // dScalars = op.concat(dScalars, b32(gateScalar4));
-    dig 14
-    callsub b32
-    concat
-    // contracts/plonk_bls12381.algo.ts:689
-    // dScalars = op.concat(dScalars, b32(quotientScalar1));
-    uncover 3
-    callsub b32
-    concat
-    // contracts/plonk_bls12381.algo.ts:690
-    // dScalars = op.concat(dScalars, b32(quotientScalar2));
-    uncover 2
-    callsub b32
-    concat
-    // contracts/plonk_bls12381.algo.ts:691
-    // dScalars = op.concat(dScalars, b32(quotientScalar3));
-    swap
-    callsub b32
-    concat
-    // contracts/plonk_bls12381.algo.ts:694-698
-    // const dBatched = op.EllipticCurve.scalarMulMulti(
-    //   op.Ec.BLS12_381g1,
-    //   dPoints,
-    //   dScalars,
-    // );
-    ec_multi_scalar_mul BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:699
-    // let D = g1Add(dBatched.toFixed({ length: 96 }), vk.Qc); // Add Qc constant term
-    dup
-    len
-    intc_0 // 96
-    ==
-    assert // Length must be 96
-    // contracts/plonk_bls12381.algo.ts:234
-    // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    dig 40
-    ec_add BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:234-236
-    // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    //   length: 96,
-    // });
-    dup
-    len
-    intc_0 // 96
-    ==
-    assert // Length must be 96
-    // contracts/plonk_bls12381.algo.ts:702
     // const betaxi = frMul(challenges.beta.native, challenges.xi.native);
-    dig 12
+    dig 15
     extract 96 32
     // contracts/plonk_bls12381.algo.ts:64
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
-    dig 9
+    dig 13
     dig 1
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
@@ -1723,7 +1668,7 @@ main_after_while@25:
     b%
     // contracts/plonk_bls12381.algo.ts:149
     // return (aN + bN) % r;
-    uncover 10
+    uncover 14
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
@@ -1733,13 +1678,13 @@ main_after_while@25:
     b%
     // contracts/plonk_bls12381.algo.ts:149
     // return (aN + bN) % r;
-    dig 8
+    dig 12
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:708
+    // contracts/plonk_bls12381.algo.ts:693
     // frAdd(proof.eval_b.native, frMul(betaxi, BigUint(vk.k1))),
-    dig 33
+    dig 37
     dup
     cover 3
     intc 18 // 784
@@ -1757,7 +1702,7 @@ main_after_while@25:
     b%
     // contracts/plonk_bls12381.algo.ts:149
     // return (aN + bN) % r;
-    uncover 9
+    uncover 13
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
@@ -1767,11 +1712,11 @@ main_after_while@25:
     b%
     // contracts/plonk_bls12381.algo.ts:149
     // return (aN + bN) % r;
-    dig 9
+    dig 13
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:712
+    // contracts/plonk_bls12381.algo.ts:697
     // frAdd(proof.eval_c.native, frMul(betaxi, BigUint(vk.k2))),
     dig 3
     intc 19 // 792
@@ -1789,7 +1734,7 @@ main_after_while@25:
     b%
     // contracts/plonk_bls12381.algo.ts:149
     // return (aN + bN) % r;
-    uncover 8
+    uncover 12
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
@@ -1799,7 +1744,7 @@ main_after_while@25:
     b%
     // contracts/plonk_bls12381.algo.ts:149
     // return (aN + bN) % r;
-    uncover 8
+    uncover 12
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
@@ -1812,7 +1757,7 @@ main_after_while@25:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    dig 10
+    dig 13
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
@@ -1822,7 +1767,7 @@ main_after_while@25:
     b%
     // contracts/plonk_bls12381.algo.ts:148
     // const bN: biguint = b % r;
-    uncover 8
+    uncover 12
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
     // contracts/plonk_bls12381.algo.ts:149
@@ -1830,9 +1775,9 @@ main_after_while@25:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:720
+    // contracts/plonk_bls12381.algo.ts:705
     // const zScalar = frAdd(frAdd(d2a, d2b), challenges.u.native);
-    dig 10
+    dig 13
     pushint 320 // 320
     intc_1 // 32
     extract3
@@ -1851,135 +1796,148 @@ main_after_while@25:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:223
-    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    dig 42
-    swap
-    ec_scalar_mul BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:223-225
-    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    //   length: 96,
-    // });
-    dup
-    len
-    intc_0 // 96
-    ==
-    assert // Length must be 96
-    // contracts/plonk_bls12381.algo.ts:234
-    // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    uncover 4
-    swap
-    ec_add BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:234-236
-    // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    //   length: 96,
-    // });
-    dup
-    len
-    intc_0 // 96
-    ==
-    assert // Length must be 96
     // contracts/plonk_bls12381.algo.ts:64
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    uncover 13
+    uncover 13
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    dig 15
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    uncover 11
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/plonk_bls12381.algo.ts:729
+    // dPoints = op.concat(dPoints, proof.Z);
     uncover 9
-    uncover 8
-    b*
-    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-    b%
-    dig 11
-    b*
-    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-    b%
-    uncover 6
-    b*
-    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-    b%
-    // contracts/plonk_bls12381.algo.ts:223
-    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    dig 38
-    swap
-    ec_scalar_mul BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:223-225
-    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    //   length: 96,
-    // });
-    dup
-    len
-    intc_0 // 96
-    ==
-    assert // Length must be 96
-    // contracts/plonk_bls12381.algo.ts:254
-    // return g1Add(p, g1Neg(q));
-    callsub g1Neg
-    // contracts/plonk_bls12381.algo.ts:234
-    // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    ec_add BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:234-236
-    // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    //   length: 96,
-    // });
-    dup
-    len
-    intc_0 // 96
-    ==
-    assert // Length must be 96
-    // contracts/plonk_bls12381.algo.ts:749
-    // let fPoints = op.concat(proof.A, proof.B);
-    dig 51
-    dig 51
+    dig 62
     concat
-    // contracts/plonk_bls12381.algo.ts:750
+    // contracts/plonk_bls12381.algo.ts:730
+    // dPoints = op.concat(dPoints, vk.S3);
+    dig 55
+    concat
+    // contracts/plonk_bls12381.algo.ts:733
+    // let dScalars = op.concat(b32(gateScalar1), b32(gateScalar2));
+    uncover 9
+    callsub b32
+    dig 13
+    callsub b32
+    concat
+    // contracts/plonk_bls12381.algo.ts:734
+    // dScalars = op.concat(dScalars, b32(gateScalar3));
+    dig 11
+    callsub b32
+    concat
+    // contracts/plonk_bls12381.algo.ts:735
+    // dScalars = op.concat(dScalars, b32(gateScalar4));
+    dig 15
+    callsub b32
+    concat
+    // contracts/plonk_bls12381.algo.ts:736
+    // dScalars = op.concat(dScalars, b32(quotientScalar1));
+    uncover 9
+    callsub b32
+    concat
+    // contracts/plonk_bls12381.algo.ts:737
+    // dScalars = op.concat(dScalars, b32(quotientScalar2));
+    uncover 8
+    callsub b32
+    concat
+    // contracts/plonk_bls12381.algo.ts:738
+    // dScalars = op.concat(dScalars, b32(quotientScalar3));
+    uncover 7
+    callsub b32
+    concat
+    // contracts/plonk_bls12381.algo.ts:739
+    // dScalars = op.concat(dScalars, b32(BigUint(1))); // Qc with scalar 1
+    bytec_2 // 0x01
+    callsub b32
+    concat
+    // contracts/plonk_bls12381.algo.ts:740
+    // dScalars = op.concat(dScalars, b32(zScalar)); // Z with zScalar
+    uncover 3
+    callsub b32
+    concat
+    // contracts/plonk_bls12381.algo.ts:741
+    // dScalars = op.concat(dScalars, b32(frSub(BigUint(0), s3Scalar))); // S3 with -s3Scalar
+    bytec_1 // 0x
+    uncover 3
+    callsub frSub
+    callsub b32
+    concat
+    // contracts/plonk_bls12381.algo.ts:744-748
+    // const D = op.EllipticCurve.scalarMulMulti(
+    //   op.Ec.BLS12_381g1,
+    //   dPoints,
+    //   dScalars,
+    // ).toFixed({ length: 96 });
+    ec_multi_scalar_mul BLS12_381g1
+    dup
+    len
+    intc_0 // 96
+    ==
+    assert // Length must be 96
+    // contracts/plonk_bls12381.algo.ts:752
+    // let fPoints = op.concat(proof.A, proof.B);
+    dig 48
+    dig 48
+    concat
+    // contracts/plonk_bls12381.algo.ts:753
     // fPoints = op.concat(fPoints, proof.C);
     dig 58
     concat
-    // contracts/plonk_bls12381.algo.ts:751
+    // contracts/plonk_bls12381.algo.ts:754
     // fPoints = op.concat(fPoints, vk.S1);
-    dig 54
+    dig 52
     concat
-    // contracts/plonk_bls12381.algo.ts:752
+    // contracts/plonk_bls12381.algo.ts:755
     // fPoints = op.concat(fPoints, vk.S2);
-    dig 53
+    dig 51
     concat
-    // contracts/plonk_bls12381.algo.ts:756
+    // contracts/plonk_bls12381.algo.ts:759
     // (challenges.v[1] as Uint256).bytes,
-    uncover 8
+    uncover 7
     extract 128 192
     dup
     extract 32 32 // on error: index access is out of bounds
-    // contracts/plonk_bls12381.algo.ts:756-757
+    // contracts/plonk_bls12381.algo.ts:759-760
     // (challenges.v[1] as Uint256).bytes,
     // (challenges.v[2] as Uint256).bytes,
     dig 1
     extract 64 32 // on error: index access is out of bounds
-    // contracts/plonk_bls12381.algo.ts:755-758
+    // contracts/plonk_bls12381.algo.ts:758-761
     // let fScalars = op.concat(
     //   (challenges.v[1] as Uint256).bytes,
     //   (challenges.v[2] as Uint256).bytes,
     // );
     dup2
     concat
-    // contracts/plonk_bls12381.algo.ts:759
+    // contracts/plonk_bls12381.algo.ts:762
     // fScalars = op.concat(fScalars, (challenges.v[3] as Uint256).bytes);
     dig 3
     extract 96 32 // on error: index access is out of bounds
     swap
     dig 1
     concat
-    // contracts/plonk_bls12381.algo.ts:760
+    // contracts/plonk_bls12381.algo.ts:763
     // fScalars = op.concat(fScalars, (challenges.v[4] as Uint256).bytes);
     dig 4
     extract 128 32 // on error: index access is out of bounds
     swap
     dig 1
     concat
-    // contracts/plonk_bls12381.algo.ts:761
+    // contracts/plonk_bls12381.algo.ts:764
     // fScalars = op.concat(fScalars, (challenges.v[5] as Uint256).bytes);
     uncover 5
     extract 160 32 // on error: index access is out of bounds
     swap
     dig 1
     concat
-    // contracts/plonk_bls12381.algo.ts:763-767
+    // contracts/plonk_bls12381.algo.ts:766-770
     // const fBatched = op.EllipticCurve.scalarMulMulti(
     //   op.Ec.BLS12_381g1,
     //   fPoints,
@@ -1988,7 +1946,7 @@ main_after_while@25:
     uncover 6
     swap
     ec_multi_scalar_mul BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:768
+    // contracts/plonk_bls12381.algo.ts:771
     // const F = g1Add(D, fBatched.toFixed({ length: 96 }));
     dup
     len
@@ -2009,22 +1967,22 @@ main_after_while@25:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/plonk_bls12381.algo.ts:770
+    // contracts/plonk_bls12381.algo.ts:773
     // return { D, F };
     uncover 6
     swap
     concat
     // contracts/plonk_bls12381.algo.ts:359
-    // const { D: d, F: f } = calculateDF(proof, challenges, vk, L[1] as Uint256);
+    // const { F: f } = calculateDF(proof, challenges, vk, L[1] as Uint256);
     extract 96 96
     // contracts/plonk_bls12381.algo.ts:64
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     uncover 5
-    uncover 12
+    uncover 11
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:784-787
+    // contracts/plonk_bls12381.algo.ts:787-790
     // let e = frSub(
     //   frMul((challenges.v[1] as Uint256).native, proof.eval_a.native),
     //   r0.native,
@@ -2056,7 +2014,7 @@ main_after_while@25:
     // contracts/plonk_bls12381.algo.ts:64
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     uncover 4
-    uncover 8
+    uncover 9
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
@@ -2141,7 +2099,7 @@ main_after_while@25:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:800
+    // contracts/plonk_bls12381.algo.ts:803
     // const res = g1TimesFr(G1_ONE.toFixed({ length: 96 }), e);
     pushbytes 0x17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1
     // contracts/plonk_bls12381.algo.ts:223
@@ -2159,7 +2117,7 @@ main_after_while@25:
     assert // Length must be 96
     // contracts/plonk_bls12381.algo.ts:223
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    dig 29
+    dig 28
     dig 3
     ec_scalar_mul BLS12_381g1
     // contracts/plonk_bls12381.algo.ts:223-225
@@ -2192,7 +2150,7 @@ main_after_while@25:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:832
+    // contracts/plonk_bls12381.algo.ts:835
     // ROOT_OF_UNITY,
     bytec_3 // TMPL_ROOT_OF_UNITY
     // contracts/plonk_bls12381.algo.ts:64
@@ -2200,13 +2158,13 @@ main_after_while@25:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:834
+    // contracts/plonk_bls12381.algo.ts:837
     // const pairingScalars = op.concat(challenges.xi.bytes, b32(s));
     callsub b32
     uncover 5
     swap
     concat
-    // contracts/plonk_bls12381.algo.ts:836-840
+    // contracts/plonk_bls12381.algo.ts:839-843
     // let B1 = op.EllipticCurve.scalarMulMulti(
     //   op.Ec.BLS12_381g1,
     //   pairingPoints,
@@ -2233,10 +2191,24 @@ main_after_while@25:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/plonk_bls12381.algo.ts:254
-    // return g1Add(p, g1Neg(q));
+    // contracts/plonk_bls12381.algo.ts:223
+    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     uncover 2
-    callsub g1Neg
+    // contracts/plonk_bls12381.algo.ts:245
+    // return g1TimesFr(p, R_MINUS_1);
+    bytec 4 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+    // contracts/plonk_bls12381.algo.ts:223
+    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
+    ec_scalar_mul BLS12_381g1
+    // contracts/plonk_bls12381.algo.ts:223-225
+    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
+    //   length: 96,
+    // });
+    dup
+    len
+    intc_0 // 96
+    ==
+    assert // Length must be 96
     // contracts/plonk_bls12381.algo.ts:234
     // return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
     ec_add BLS12_381g1
@@ -2267,11 +2239,11 @@ main_after_while@25:
     intc_0 // 96
     ==
     assert // Length must be 96
-    // contracts/plonk_bls12381.algo.ts:847
+    // contracts/plonk_bls12381.algo.ts:850
     // op.concat(g1Neg(A1), B1), // G1 points
     swap
     concat
-    // contracts/plonk_bls12381.algo.ts:848
+    // contracts/plonk_bls12381.algo.ts:851
     // op.concat(vk.X_2, G2_ONE), // G2 points
     swap
     intc 20 // 800
@@ -2279,7 +2251,7 @@ main_after_while@25:
     extract3
     pushbytes 0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb813e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b828010606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be
     concat
-    // contracts/plonk_bls12381.algo.ts:845-849
+    // contracts/plonk_bls12381.algo.ts:848-852
     // const res = op.EllipticCurve.pairingCheck(
     //   op.Ec.BLS12_381g1,
     //   op.concat(g1Neg(A1), B1), // G1 points
@@ -2348,34 +2320,6 @@ b32:
     intc_1 // 32
     ==
     assert // Length must be 32
-    retsub
-
-
-// contracts/plonk_bls12381.algo.ts::g1Neg(p: bytes) -> bytes:
-g1Neg:
-    // contracts/plonk_bls12381.algo.ts:244
-    // function g1Neg(p: bytes<96>): bytes<96> {
-    proto 1 1
-    // contracts/plonk_bls12381.algo.ts:223
-    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    frame_dig -1
-    // contracts/plonk_bls12381.algo.ts:245
-    // return g1TimesFr(p, R_MINUS_1);
-    bytec 4 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
-    // contracts/plonk_bls12381.algo.ts:223
-    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    ec_scalar_mul BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:223-225
-    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    //   length: 96,
-    // });
-    dup
-    len
-    intc_0 // 96
-    ==
-    assert // Length must be 96
-    // contracts/plonk_bls12381.algo.ts:245
-    // return g1TimesFr(p, R_MINUS_1);
     retsub
 
 
