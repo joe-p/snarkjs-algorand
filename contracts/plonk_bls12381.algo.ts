@@ -356,7 +356,7 @@ export function verify(
   const r0 = calculateR0(proof, challenges, pi, L[1] as Uint256);
 
   // 5) Linearization commitment D and batch opening commitment F (optimized)
-  const { D: d, F: f } = calculateDF(proof, challenges, vk, L[1] as Uint256);
+  const f = calculateF(proof, challenges, vk, L[1] as Uint256);
 
   // 7) Batched evaluation commitment E (on [1]_1)
   const e = calculateE(proof, challenges, r0);
@@ -405,8 +405,7 @@ export function verifyWithLogs(
   debugLog("r0", r0.bytes);
 
   // 5) Linearization commitment D and batch opening commitment F (optimized)
-  const { D: d, F: f } = calculateDF(proof, challenges, vk, L[1] as Uint256);
-  debugLog("D", d);
+  const f = calculateF(proof, challenges, vk, L[1] as Uint256);
   debugLog("F", f);
 
   // 7) Batched evaluation commitment E (on [1]_1)
@@ -644,20 +643,21 @@ export function calculateR0(
  *
  * F = D + v1*A + v2*B + v3*C + v4*S1 + v5*S2, with v[i] = v1^i
  */
-export function calculateDF(
+export function calculateF(
   proof: Proof,
   challenges: Challenges,
   vk: VerificationKey,
   l1: Uint256,
-): { D: bytes<96>; F: bytes<96> } {
-  // Combine gate constraints and quotient terms in single multi-scalar operation
-  // Points: [Qm, Ql, Qr, Qo, T1, T2, T3]
-  let dPoints = op.concat(vk.Qm, vk.Ql);
-  dPoints = op.concat(dPoints, vk.Qr);
-  dPoints = op.concat(dPoints, vk.Qo);
-  dPoints = op.concat(dPoints, proof.T1);
-  dPoints = op.concat(dPoints, proof.T2);
-  dPoints = op.concat(dPoints, proof.T3);
+): bytes<96> {
+  // Prepare points for a single MSM that includes gate, quotient, Qc, Z, -S3, and v-weighted [A,B,C,S1,S2]
+  // Points (15): [Qm, Ql, Qr, Qo, T1, T2, T3, Qc, Z, S3, A, B, C, S1, S2]
+  let points = op.concat(vk.Qm, vk.Ql);
+  points = op.concat(points, vk.Qr);
+  points = op.concat(points, vk.Qo);
+  points = op.concat(points, proof.T1);
+  points = op.concat(points, proof.T2);
+  points = op.concat(points, proof.T3);
+  points = op.concat(points, vk.Qc);
 
   // Gate constraint scalars
   const gateScalar1 = frMul(proof.eval_a.native, proof.eval_b.native); // Qm coefficient
@@ -666,10 +666,7 @@ export function calculateDF(
   const gateScalar4 = proof.eval_c.native; // Qo coefficient
 
   // Quotient scalars (negated for subtraction: -T(ξ) * Z_H(ξ))
-  const quotientScalar1 = frSub(
-    BigUint(0),
-    frMul(BigUint(1), challenges.zh.native),
-  ); // -T1*zh
+  const quotientScalar1 = frSub(BigUint(0), challenges.zh.native); // -T1*zh
   const quotientScalar2 = frSub(
     BigUint(0),
     frMul(challenges.xin.native, challenges.zh.native),
@@ -682,23 +679,7 @@ export function calculateDF(
     ),
   ); // -T3*xin²*zh
 
-  // Scalars: [gate scalars, quotient scalars]
-  let dScalars = op.concat(b32(gateScalar1), b32(gateScalar2));
-  dScalars = op.concat(dScalars, b32(gateScalar3));
-  dScalars = op.concat(dScalars, b32(gateScalar4));
-  dScalars = op.concat(dScalars, b32(quotientScalar1));
-  dScalars = op.concat(dScalars, b32(quotientScalar2));
-  dScalars = op.concat(dScalars, b32(quotientScalar3));
-
-  // Single multi-scalar operation for D components
-  const dBatched = op.EllipticCurve.scalarMulMulti(
-    op.Ec.BLS12_381g1,
-    dPoints,
-    dScalars,
-  );
-  let D = g1Add(dBatched.toFixed({ length: 96 }), vk.Qc); // Add Qc constant term
-
-  // Add Z component to D (complex scalar calculation)
+  // Z scalar (permutation numerator folded into Z)
   const betaxi = frMul(challenges.beta.native, challenges.xi.native);
   const d2a1 = frAdd(
     frAdd(proof.eval_a.native, betaxi),
@@ -719,9 +700,7 @@ export function calculateDF(
   );
   const zScalar = frAdd(frAdd(d2a, d2b), challenges.u.native);
 
-  D = g1Add(D, g1TimesFr(proof.Z, zScalar));
-
-  // Subtract S3 component from D (permutation denominator)
+  // S3 scalar (permutation denominator)
   const d3a = frAdd(
     frAdd(
       proof.eval_a.native,
@@ -742,32 +721,39 @@ export function calculateDF(
   );
   const s3Scalar = frMul(frMul(d3a, d3b), d3c);
 
-  D = g1Sub(D, g1TimesFr(vk.S3, s3Scalar));
+  // Append Z, S3 and v-weighted points
+  points = op.concat(points, proof.Z);
+  points = op.concat(points, vk.S3);
+  points = op.concat(points, proof.A);
+  points = op.concat(points, proof.B);
+  points = op.concat(points, proof.C);
+  points = op.concat(points, vk.S1);
+  points = op.concat(points, vk.S2);
 
-  // Calculate F = D + v*[A,B,C,S1,S2] using single multi-scalar operation
-  // Points: [A, B, C, S1, S2]
-  let fPoints = op.concat(proof.A, proof.B);
-  fPoints = op.concat(fPoints, proof.C);
-  fPoints = op.concat(fPoints, vk.S1);
-  fPoints = op.concat(fPoints, vk.S2);
+  // Scalars: [gate scalars, quotient scalars, 1 (Qc), zScalar (Z), -s3Scalar (S3), v1..v5]
+  let scalars = op.concat(b32(gateScalar1), b32(gateScalar2));
+  scalars = op.concat(scalars, b32(gateScalar3));
+  scalars = op.concat(scalars, b32(gateScalar4));
+  scalars = op.concat(scalars, b32(quotientScalar1));
+  scalars = op.concat(scalars, b32(quotientScalar2));
+  scalars = op.concat(scalars, b32(quotientScalar3));
+  scalars = op.concat(scalars, b32(BigUint(1))); // Qc with scalar 1
+  scalars = op.concat(scalars, b32(zScalar)); // Z with zScalar
+  scalars = op.concat(scalars, b32(frSub(BigUint(0), s3Scalar))); // S3 with -s3Scalar
+  scalars = op.concat(scalars, (challenges.v[1] as Uint256).bytes);
+  scalars = op.concat(scalars, (challenges.v[2] as Uint256).bytes);
+  scalars = op.concat(scalars, (challenges.v[3] as Uint256).bytes);
+  scalars = op.concat(scalars, (challenges.v[4] as Uint256).bytes);
+  scalars = op.concat(scalars, (challenges.v[5] as Uint256).bytes);
 
-  // Scalars: [v1, v2, v3, v4, v5]
-  let fScalars = op.concat(
-    (challenges.v[1] as Uint256).bytes,
-    (challenges.v[2] as Uint256).bytes,
-  );
-  fScalars = op.concat(fScalars, (challenges.v[3] as Uint256).bytes);
-  fScalars = op.concat(fScalars, (challenges.v[4] as Uint256).bytes);
-  fScalars = op.concat(fScalars, (challenges.v[5] as Uint256).bytes);
-
-  const fBatched = op.EllipticCurve.scalarMulMulti(
+  // Single multi-scalar operation producing F directly
+  const F = op.EllipticCurve.scalarMulMulti(
     op.Ec.BLS12_381g1,
-    fPoints,
-    fScalars,
-  );
-  const F = g1Add(D, fBatched.toFixed({ length: 96 }));
+    points,
+    scalars,
+  ).toFixed({ length: 96 });
 
-  return { D, F };
+  return F;
 }
 
 /**
