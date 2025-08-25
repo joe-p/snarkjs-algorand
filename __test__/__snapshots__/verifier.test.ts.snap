@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`verifier > works > budget used 1`] = `123042`;
+exports[`verifier > works > budget used 1`] = `116297`;
 
-exports[`verifier > works > number of app calls required for budget 1`] = `176`;
+exports[`verifier > works > number of app calls required for budget 1`] = `167`;
 
-exports[`verifier > works > number of lsig txns required for budget 1`] = `7`;
+exports[`verifier > works > number of lsig txns required for budget 1`] = `6`;
