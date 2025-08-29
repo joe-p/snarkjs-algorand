@@ -199,27 +199,11 @@ export class LsigVerifier {
     return this.algorand.account.logicsig(compilation.compiledBase64ToBytes);
   }
 
-  async proofAndSignalsComposer(
-    inputs: snarkjs.CircuitSignals,
-    appId?: bigint,
-    sender?: Address,
-  ) {
-    let client: SignalsAndProofClient;
-
-    if (appId) {
-      client = new SignalsAndProofClient({ algorand: this.algorand, appId });
-    } else {
-      console.debug("deploying new SignalsAndProof app");
-      const factory = new SignalsAndProofFactory({
-        algorand: this.algorand,
-        defaultSender: sender,
-      });
-
-      const { appClient } = await factory.send.create.bare();
-
-      console.debug(`deployed SignalsAndProof app ${appClient.appId}`);
-      client = appClient;
-    }
+  async proofAndSignalsComposer(inputs: snarkjs.CircuitSignals, appId: bigint) {
+    const client = new SignalsAndProofClient({
+      algorand: this.algorand,
+      appId,
+    });
 
     const { proof, signals } = await this.proofAndSignals(inputs);
 
