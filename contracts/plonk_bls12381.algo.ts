@@ -649,7 +649,9 @@ export function calculateF(
   vk: VerificationKey,
   l1: Uint256,
 ): bytes<96> {
-  // Prepare points for a single MSM that includes gate, quotient, Qc, Z, -S3, and v-weighted [A,B,C,S1,S2]
+  // Prepare points for a single MSM that includes gate, quotient, Qc, Z, S3 (with a NEGATED SCALAR),
+  // and v-weighted [A,B,C,S1,S2]. The S3 negation is handled via its scalar (−s3Scalar), not by
+  // negating the S3 point itself.
   // Points (15): [Qm, Ql, Qr, Qo, T1, T2, T3, Qc, Z, S3, A, B, C, S1, S2]
   let points = op.concat(vk.Qm, vk.Ql);
   points = op.concat(points, vk.Qr);
@@ -665,19 +667,19 @@ export function calculateF(
   const gateScalar3 = proof.eval_b.native; // Qr coefficient
   const gateScalar4 = proof.eval_c.native; // Qo coefficient
 
-  // Quotient scalars (negated for subtraction: -T(ξ) * Z_H(ξ))
-  const quotientScalar1 = frSub(BigUint(0), challenges.zh.native); // -T1*zh
+  // Quotient scalars for −T(ξ) · Z_H(ξ), with T(ξ) = T1 + xin·T2 + xin²·T3
+  const quotientScalar1 = frSub(BigUint(0), challenges.zh.native); // −zh (applies to T1)
   const quotientScalar2 = frSub(
     BigUint(0),
     frMul(challenges.xin.native, challenges.zh.native),
-  ); // -T2*xin*zh
+  ); // −xin·zh (applies to T2)
   const quotientScalar3 = frSub(
     BigUint(0),
     frMul(
       frMul(challenges.xin.native, challenges.xin.native),
       challenges.zh.native,
     ),
-  ); // -T3*xin²*zh
+  ); // −xin²·zh (applies to T3)
 
   // Z scalar (permutation numerator folded into Z)
   const betaxi = frMul(challenges.beta.native, challenges.xi.native);
