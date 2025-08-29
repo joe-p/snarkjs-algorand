@@ -220,9 +220,10 @@ describe("verifier", () => {
       "5e47e3760437353a648d5bb09e7cc190e141ddf993d6e9d073afe5e48fa3d006",
     );
 
-    expect(logValues.D).toBe(
-      "dd61360e478901e6bac4c71651b849bd372671aa5d78d357c47359f4d904323557defc9dfec613f47046f451feef11111f88115b918b1de982e3f497c4e725db31f58e7f96a183450300ec570fb193afc770cd5824b4de0d98f0280e865c77a",
-    );
+    // NOTE: We no longer calculate D individually and just calculate F in a single MSM
+    // expect(logValues.D).toBe(
+    //   "dd61360e478901e6bac4c71651b849bd372671aa5d78d357c47359f4d904323557defc9dfec613f47046f451feef11111f88115b918b1de982e3f497c4e725db31f58e7f96a183450300ec570fb193afc770cd5824b4de0d98f0280e865c77a",
+    // );
 
     expect(logValues.F).toBe(
       "18463acd328baa605062c9ce3cceb2982e0fc4b3031c7b75872324ce6941321b73e7c06f70d1b3f9b44d37c74c4b2b01ebd2a44a0be8eb548ad8846225e22b06048ff7de2f78ceb51a1e86994bcb93afdaff78c20b143b7ff4b5d3a8469848",
