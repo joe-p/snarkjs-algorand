@@ -21,7 +21,10 @@ import {
   type Arc56Contract,
 } from "@algorandfoundation/algokit-utils/types/app-arc56";
 import { readFileSync } from "fs";
-import type { RawSimulateOptions } from "@algorandfoundation/algokit-utils/types/composer";
+import type {
+  RawSimulateOptions,
+  TransactionComposer,
+} from "@algorandfoundation/algokit-utils/types/composer";
 import type { Transaction } from "algosdk";
 import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
 import { type Address } from "algosdk";
@@ -150,6 +153,7 @@ export class LsigVerifier {
     public algorand: AlgorandClient,
     public zKey: snarkjs.ZKArtifact,
     public wasmProver: snarkjs.ZKArtifact,
+    public totalLsigs: number,
   ) {}
 
   private async ensureCurveInstanttiation() {
@@ -197,7 +201,6 @@ export class LsigVerifier {
 
   async proofAndSignalsComposer(
     inputs: snarkjs.CircuitSignals,
-    totalLsigs: number,
     appId?: bigint,
     sender?: Address,
   ) {
@@ -228,13 +231,13 @@ export class LsigVerifier {
       compilation.compiledBase64ToBytes,
     );
 
-    for (let i = 0; i < totalLsigs - 1; i++) {
+    for (let i = 0; i < this.totalLsigs - 1; i++) {
       const lsigPay = await this.algorand.createTransaction.payment({
         sender: lsig,
         amount: microAlgos(0),
         staticFee: microAlgos(0),
         receiver: lsig,
-        note: `Extra lsig ${i + 1} of ${totalLsigs - 1}`,
+        note: `Extra lsig ${i + 1} of ${this.totalLsigs - 1}`,
       });
 
       group.addTransaction(lsigPay);
@@ -247,6 +250,46 @@ export class LsigVerifier {
         staticFee: microAlgos(0),
       })
       .composer();
+  }
+
+  async addVerificationToGroup({
+    group,
+    verifierCallback,
+    inputs,
+    appId,
+  }: {
+    /** The group to add the verification and extra lsigs to */
+    group: TransactionComposer;
+    /**
+     * A callback that is passed the verification lsig transaction.
+     * This is useful if the verification transaction is an ABI argument to another method
+     */
+    verifierCallback?: (lsgTxn: Transaction) => void;
+    /** The snarkjs inputs to generate the proof and signals */
+    inputs: snarkjs.CircuitSignals;
+    /** SignalsAndProof appId to use */
+    appId: bigint;
+  }) {
+    const proofAndSignalsComposer = await this.proofAndSignalsComposer(
+      inputs,
+      appId,
+    );
+
+    const tempGroup = await proofAndSignalsComposer.buildTransactions();
+
+    const lsigTxn = tempGroup.transactions.pop();
+
+    if (!lsigTxn) {
+      throw new Error("No lsig transaction generated");
+    }
+
+    const callback = verifierCallback ?? ((txn) => group.addTransaction(txn));
+
+    callback(lsigTxn);
+
+    tempGroup.transactions.forEach((txn) => {
+      group.addTransaction(txn);
+    });
   }
 }
 
