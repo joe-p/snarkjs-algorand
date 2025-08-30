@@ -29,6 +29,8 @@ import type { Transaction } from "algosdk";
 import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
 import { type Address } from "algosdk";
 import { LSIG_SOURCE } from "../contracts/out/lsig_source";
+import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
+import type { SignalsAndProof } from "../contracts/verifier.algo";
 
 function stringValuesToBigints(obj: any): any {
   for (const key in obj) {
@@ -199,81 +201,58 @@ export class LsigVerifier {
     return this.algorand.account.logicsig(compilation.compiledBase64ToBytes);
   }
 
-  async proofAndSignalsComposer(inputs: snarkjs.CircuitSignals, appId: bigint) {
-    const client = new SignalsAndProofClient({
-      algorand: this.algorand,
-      appId,
-    });
-
+  async addVerificationToGroup({
+    callback,
+    inputs,
+  }: {
+    callback: (arg: {
+      appParams: {
+        sender: Address;
+        staticFee: AlgoAmount;
+        args: { signals: bigint[]; proof: Proof };
+      };
+      lsigFees: AlgoAmount;
+      proof: Proof;
+      signals: bigint[];
+      extraLsigsTxns: Transaction[];
+    }) => Promise<void>;
+    /** The snarkjs inputs to generate the proof and signals */
+    inputs: snarkjs.CircuitSignals;
+  }) {
     const { proof, signals } = await this.proofAndSignals(inputs);
 
-    const group = client.newGroup();
+    const arg = {
+      appParams: {
+        sender: await this.lsigAccount(),
+        staticFee: microAlgos(0),
+        args: { signals, proof },
+      },
+      lsigFees: microAlgos(1000 * this.totalLsigs),
+      proof,
+      signals,
+      extraLsigsTxns: [] as Transaction[],
+    };
+
     const compilation = await this.algorand.app.compileTeal(
       "#pragma version 11\n txn RekeyTo; global ZeroAddress; ==",
     );
-    const lsig = this.algorand.account.logicsig(
+    const extraLsig = this.algorand.account.logicsig(
       compilation.compiledBase64ToBytes,
     );
 
     for (let i = 0; i < this.totalLsigs - 1; i++) {
       const lsigPay = await this.algorand.createTransaction.payment({
-        sender: lsig,
+        sender: extraLsig,
         amount: microAlgos(0),
         staticFee: microAlgos(0),
-        receiver: lsig,
+        receiver: extraLsig,
         note: `Extra lsig ${i + 1} of ${this.totalLsigs - 1}`,
       });
 
-      group.addTransaction(lsigPay);
+      arg.extraLsigsTxns.push(lsigPay);
     }
 
-    return await group
-      .signalsAndProof({
-        args: { proof, signals },
-        sender: await this.lsigAccount(),
-        staticFee: microAlgos(0),
-      })
-      .composer();
-  }
-
-  async addVerificationToGroup({
-    group,
-    verifierCallback,
-    inputs,
-    appId,
-  }: {
-    /** The group to add the verification and extra lsigs to */
-    group: TransactionComposer;
-    /**
-     * A callback that is passed the verification lsig transaction.
-     * This is useful if the verification transaction is an ABI argument to another method
-     */
-    verifierCallback?: (lsgTxn: Transaction) => void;
-    /** The snarkjs inputs to generate the proof and signals */
-    inputs: snarkjs.CircuitSignals;
-    /** SignalsAndProof appId to use */
-    appId: bigint;
-  }) {
-    const proofAndSignalsComposer = await this.proofAndSignalsComposer(
-      inputs,
-      appId,
-    );
-
-    const tempGroup = await proofAndSignalsComposer.buildTransactions();
-
-    const lsigTxn = tempGroup.transactions.pop();
-
-    if (!lsigTxn) {
-      throw new Error("No lsig transaction generated");
-    }
-
-    const callback = verifierCallback ?? ((txn) => group.addTransaction(txn));
-
-    callback(lsigTxn);
-
-    tempGroup.transactions.forEach((txn) => {
-      group.addTransaction(txn);
-    });
+    await callback(arg);
   }
 }
 

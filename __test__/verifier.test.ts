@@ -2,7 +2,10 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { AlgorandClient, microAlgos } from "@algorandfoundation/algokit-utils";
 import * as snarkjs from "snarkjs";
 import { getProof, AppVerifier, LsigVerifier } from "../src/index";
-import { SignalsAndProofFactory } from "../contracts/clients/SignalsAndProof";
+import {
+  SignalsAndProofClient,
+  SignalsAndProofFactory,
+} from "../contracts/clients/SignalsAndProof";
 
 const LSIG_BUDGET = 20_000; // Budget for each logicsig
 const APP_BUDGET = 700; // Budget for the app call
@@ -252,7 +255,7 @@ describe("verifier lsig", () => {
   let verifier: LsigVerifier;
   let algorand: AlgorandClient;
   const lsigsNeededForBudget = 6;
-  let signalsAndProofAppId: bigint;
+  let client: SignalsAndProofClient;
 
   beforeAll(async () => {
     algorand = AlgorandClient.defaultLocalNet();
@@ -270,23 +273,36 @@ describe("verifier lsig", () => {
 
     const { appClient } = await signalsAndProofFactory.deploy();
 
-    signalsAndProofAppId = appClient.appId!;
+    client = appClient;
   });
 
   it("works", async () => {
-    const group = algorand.newGroup();
-    await verifier.addVerificationToGroup({
-      group,
-      inputs: { a: 10, b: 21 },
-      appId: signalsAndProofAppId,
-    });
+    const group = client.newGroup();
 
-    const feePayer = await algorand.account.localNetDispenser();
-    group.addPayment({
-      sender: feePayer,
-      amount: microAlgos(0),
-      receiver: feePayer,
-      extraFee: microAlgos(lsigsNeededForBudget * 1000),
+    await verifier.addVerificationToGroup({
+      inputs: { a: 10, b: 21 },
+      callback: async (arg) => {
+        const { appParams, extraLsigsTxns, lsigFees } = arg;
+
+        // Call app with signals and proof via lsig
+        group.signalsAndProof(appParams);
+
+        // Add extra lsig txns to get opcode budget
+        for (const txn of extraLsigsTxns) {
+          group.addTransaction(txn);
+        }
+
+        // Pay the required fees
+        const feePayer = await algorand.account.localNetDispenser();
+        group.addTransaction(
+          await algorand.createTransaction.payment({
+            sender: feePayer,
+            amount: microAlgos(0),
+            receiver: feePayer,
+            extraFee: lsigFees,
+          }),
+        );
+      },
     });
 
     await group.send();
