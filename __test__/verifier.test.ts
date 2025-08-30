@@ -2,6 +2,10 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { AlgorandClient, microAlgos } from "@algorandfoundation/algokit-utils";
 import * as snarkjs from "snarkjs";
 import { getProof, AppVerifier, LsigVerifier } from "../src/index";
+import {
+  SignalsAndProofClient,
+  SignalsAndProofFactory,
+} from "../contracts/clients/SignalsAndProof";
 
 const LSIG_BUDGET = 20_000; // Budget for each logicsig
 const APP_BUDGET = 700; // Budget for the app call
@@ -250,6 +254,8 @@ describe("verifier", () => {
 describe("verifier lsig", () => {
   let verifier: LsigVerifier;
   let algorand: AlgorandClient;
+  const lsigsNeededForBudget = 6;
+  let client: SignalsAndProofClient;
 
   beforeAll(async () => {
     algorand = AlgorandClient.defaultLocalNet();
@@ -257,26 +263,48 @@ describe("verifier lsig", () => {
       algorand,
       "circuit/circuit_final.zkey",
       "circuit/circuit_js/circuit.wasm",
+      lsigsNeededForBudget,
     );
+
+    const signalsAndProofFactory = new SignalsAndProofFactory({
+      algorand,
+      defaultSender: await algorand.account.localNetDispenser(),
+    });
+
+    const { appClient } = await signalsAndProofFactory.deploy();
+
+    client = appClient;
   });
 
   it("works", async () => {
-    const lsigsNeededForBudget = 6;
-    const composer = await verifier.proofAndSignalsComposer(
-      { a: 10, b: 21 },
-      lsigsNeededForBudget,
-      0n,
-      await algorand.account.localNetDispenser(),
-    );
+    const group = client.newGroup();
 
-    const feePayer = await algorand.account.localNetDispenser();
-    composer.addPayment({
-      sender: feePayer,
-      amount: microAlgos(0),
-      receiver: feePayer,
-      extraFee: microAlgos(lsigsNeededForBudget * 1000),
+    await verifier.verify({
+      inputs: { a: 10, b: 21 },
+      callback: async (arg) => {
+        const { appParams, extraLsigsTxns, lsigFees } = arg;
+
+        // Call app with signals and proof via lsig
+        group.signalsAndProof(appParams);
+
+        // Add extra lsig txns to get opcode budget
+        for (const txn of extraLsigsTxns) {
+          group.addTransaction(txn);
+        }
+
+        // Pay the required fees
+        const feePayer = await algorand.account.localNetDispenser();
+        group.addTransaction(
+          await algorand.createTransaction.payment({
+            sender: feePayer,
+            amount: microAlgos(0),
+            receiver: feePayer,
+            extraFee: lsigFees,
+          }),
+        );
+      },
     });
 
-    await composer.send();
+    await group.send();
   });
 });

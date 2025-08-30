@@ -10,10 +10,6 @@ import {
   type VerificationKey,
   APP_SPEC,
 } from "../contracts/clients/PlonkVerifier";
-import {
-  SignalsAndProofFactory,
-  SignalsAndProofClient,
-} from "../contracts/clients/SignalsAndProof";
 import { PlonkVerifierWithLogsFactory } from "../contracts/clients/PlonkVerifierWithLogs";
 import * as snarkjs from "snarkjs";
 import {
@@ -26,6 +22,7 @@ import type { Transaction } from "algosdk";
 import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
 import { type Address } from "algosdk";
 import { LSIG_SOURCE } from "../contracts/out/lsig_source";
+import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
 
 function stringValuesToBigints(obj: any): any {
   for (const key in obj) {
@@ -150,6 +147,7 @@ export class LsigVerifier {
     public algorand: AlgorandClient,
     public zKey: snarkjs.ZKArtifact,
     public wasmProver: snarkjs.ZKArtifact,
+    public totalLsigs: number,
   ) {}
 
   private async ensureCurveInstanttiation() {
@@ -195,58 +193,58 @@ export class LsigVerifier {
     return this.algorand.account.logicsig(compilation.compiledBase64ToBytes);
   }
 
-  async proofAndSignalsComposer(
-    inputs: snarkjs.CircuitSignals,
-    totalLsigs: number,
-    appId?: bigint,
-    sender?: Address,
-  ) {
-    let client: SignalsAndProofClient;
-
-    if (appId) {
-      client = new SignalsAndProofClient({ algorand: this.algorand, appId });
-    } else {
-      console.debug("deploying new SignalsAndProof app");
-      const factory = new SignalsAndProofFactory({
-        algorand: this.algorand,
-        defaultSender: sender,
-      });
-
-      const { appClient } = await factory.send.create.bare();
-
-      console.debug(`deployed SignalsAndProof app ${appClient.appId}`);
-      client = appClient;
-    }
-
+  async verify({
+    callback,
+    inputs,
+  }: {
+    callback: (arg: {
+      appParams: {
+        sender: Address;
+        staticFee: AlgoAmount;
+        args: { signals: bigint[]; proof: Proof };
+      };
+      lsigFees: AlgoAmount;
+      proof: Proof;
+      signals: bigint[];
+      extraLsigsTxns: Transaction[];
+    }) => Promise<void>;
+    /** The snarkjs inputs to generate the proof and signals */
+    inputs: snarkjs.CircuitSignals;
+  }) {
     const { proof, signals } = await this.proofAndSignals(inputs);
 
-    const group = client.newGroup();
+    const arg = {
+      appParams: {
+        sender: await this.lsigAccount(),
+        staticFee: microAlgos(0),
+        args: { signals, proof },
+      },
+      lsigFees: microAlgos(1000 * this.totalLsigs),
+      proof,
+      signals,
+      extraLsigsTxns: [] as Transaction[],
+    };
+
     const compilation = await this.algorand.app.compileTeal(
       "#pragma version 11\n txn RekeyTo; global ZeroAddress; ==",
     );
-    const lsig = this.algorand.account.logicsig(
+    const extraLsig = this.algorand.account.logicsig(
       compilation.compiledBase64ToBytes,
     );
 
-    for (let i = 0; i < totalLsigs - 1; i++) {
+    for (let i = 0; i < this.totalLsigs - 1; i++) {
       const lsigPay = await this.algorand.createTransaction.payment({
-        sender: lsig,
+        sender: extraLsig,
         amount: microAlgos(0),
         staticFee: microAlgos(0),
-        receiver: lsig,
-        note: `Extra lsig ${i + 1} of ${totalLsigs - 1}`,
+        receiver: extraLsig,
+        note: `Extra lsig ${i + 1} of ${this.totalLsigs - 1}`,
       });
 
-      group.addTransaction(lsigPay);
+      arg.extraLsigsTxns.push(lsigPay);
     }
 
-    return await group
-      .signalsAndProof({
-        args: { proof, signals },
-        sender: await this.lsigAccount(),
-        staticFee: microAlgos(0),
-      })
-      .composer();
+    await callback(arg);
   }
 }
 
