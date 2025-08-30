@@ -36,7 +36,7 @@ export class PlonkVerifier extends Contract {
   public _dummy(_vk: VerificationKey): void {}
 
   verify(signals: PublicSignals, proof: Proof): void {
-    assert(verifyFromTemplateWithLogs(signals, proof), "Verification failed");
+    assert(verifyFromTemplate(signals, proof), "Verification failed");
   }
 }
 
