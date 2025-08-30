@@ -1,6 +1,6 @@
 {
   "name": "snarkjs-algorand",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -21,7 +21,7 @@
     "build:clients": "algokit generate client contracts/out --output contracts/clients/{contract_name}.ts",
     "build:lib": "bun scripts/ts_ignore.ts && tsup src/index.ts --dts --format esm,cjs --out-dir dist --clean",
     "build": "pnpm build:contracts && pnpm build:clients && pnpm build:lib",
-    "prepublishOnly": "pnpm run build:lib",
+    "prepublishOnly": "pnpm run build",
     "verify": "cd circuit && node ~/git/other/snarkjs/cli.js plonk verify verification_key.json public.json proof.json -v",
     "test": "vitest run",
     "bt": "pnpm build && pnpm test"
