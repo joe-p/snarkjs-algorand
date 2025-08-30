@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from "fs";
 const files = [
   "contracts/clients/PlonkVerifier.ts",
   "contracts/clients/PlonkVerifierWithLogs.ts",
+  "contracts/clients/SignalsAndProof.ts",
 ];
 
 for (const file of files) {

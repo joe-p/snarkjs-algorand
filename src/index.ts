@@ -24,6 +24,13 @@ import { type Address } from "algosdk";
 import { LSIG_SOURCE } from "../contracts/out/lsig_source";
 import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
 
+export {
+  SignalsAndProofFactory,
+  SignalsAndProofClient,
+} from "../contracts/clients/SignalsAndProof.ts";
+
+export type { Proof as OnChainProof } from "../contracts/plonk_bls12381.algo.ts";
+
 function stringValuesToBigints(obj: any): any {
   for (const key in obj) {
     if (typeof obj[key] === "string" && /^\d+$/.test(obj[key])) {
