@@ -1,7 +1,4 @@
-import {
-  microAlgos,
-  type AlgorandClient,
-} from "@algorandfoundation/algokit-utils";
+import { AlgorandClient, microAlgos } from "@algorandfoundation/algokit-utils";
 import {
   PlonkVerifierClient,
   PlonkVerifierFactory,
@@ -20,9 +17,16 @@ import { readFileSync } from "fs";
 import type { RawSimulateOptions } from "@algorandfoundation/algokit-utils/types/composer";
 import type { Transaction } from "algosdk";
 import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
-import { type Address } from "algosdk";
+import algosdk, { OnApplicationComplete, type Address } from "algosdk";
 import { LSIG_SOURCE } from "../contracts/out/lsig_source";
 import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
+import {
+  LagrangeWitnessCalculatorClient,
+  LagrangeWitnessCalculatorFactory,
+  LagrangeWitnessFromTuple,
+  type LagrangeWitness,
+} from "../contracts/clients/LagrangeWitnessCalculator";
+import { OnCompleteAction } from "@algorandfoundation/algorand-typescript";
 
 export {
   SignalsAndProofFactory,
@@ -142,9 +146,50 @@ export function encodeSignals(...inputs: string[]) {
   });
 }
 
-export type ProofAndSignals = {
+export async function getLagrangeWitness(
+  proof: Proof,
+  signals: bigint[],
+  algorand: AlgorandClient,
+  vkBytes: Uint8Array,
+  rootOfUnity: Uint8Array,
+): Promise<LagrangeWitness> {
+  const calcTxn = await new LagrangeWitnessCalculatorFactory({
+    algorand,
+  }).createTransaction.create.calculateLagrangeWitness({
+    args: { proof, signals },
+    deployTimeParams: {
+      VERIFICATION_KEY: vkBytes,
+      ROOT_OF_UNITY: rootOfUnity,
+    },
+    sender: await algorand.account.localNetDispenser(), // TODO: For mainnet/testnet, use feesink
+    onComplete: OnApplicationComplete.DeleteApplicationOC,
+  });
+
+  const simResult = await algorand
+    .newGroup()
+    .addTransaction(calcTxn.transactions[0]!)
+    .simulate({
+      extraOpcodeBudget: 700 * 255,
+      skipSignatures: true,
+    });
+
+  const log = simResult.confirmations[0]!.logs!.at(-1)!;
+
+  const abiType = algosdk.ABIType.from("(uint256[],uint256,uint256)");
+
+  const retVal = abiType.decode(log.slice(4)) as [bigint[], bigint, bigint];
+
+  return LagrangeWitnessFromTuple(retVal);
+}
+
+export type Witness = {
   proof: Proof;
   signals: bigint[];
+  lw: {
+    l: bigint[];
+    xin: bigint;
+    zh: bigint;
+  };
 };
 
 export class LsigVerifier {
@@ -164,9 +209,7 @@ export class LsigVerifier {
     }
   }
 
-  async proofAndSignals(
-    inputs: snarkjs.CircuitSignals,
-  ): Promise<ProofAndSignals> {
+  async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<Witness> {
     await this.ensureCurveInstanttiation();
 
     const { proof: rawProof, publicSignals: rawSignals } =
@@ -175,7 +218,27 @@ export class LsigVerifier {
     const proof = encodeProof(rawProof, this.curve);
     const signals = encodeSignals(...rawSignals);
 
-    return { proof, signals };
+    const vk = await getVkey(this.zKey, this.curve);
+    const vkBytes = encodeVk(vk, APP_SPEC);
+
+    const rootOfUnity = Buffer.from(
+      this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
+        .toString(16)
+        .padStart(64, "0"),
+      "hex",
+    );
+
+    return {
+      proof,
+      signals,
+      lw: await getLagrangeWitness(
+        proof,
+        signals,
+        this.algorand,
+        vkBytes,
+        rootOfUnity,
+      ),
+    };
   }
 
   async lsigAccount() {
@@ -208,7 +271,7 @@ export class LsigVerifier {
       appParams: {
         sender: Address;
         staticFee: AlgoAmount;
-        args: { signals: bigint[]; proof: Proof };
+        args: { signals: bigint[]; proof: Proof; lw: LagrangeWitness };
       };
       lsigFees: AlgoAmount;
       proof: Proof;
@@ -218,17 +281,18 @@ export class LsigVerifier {
     /** The snarkjs inputs to generate the proof and signals */
     inputs: snarkjs.CircuitSignals;
   }) {
-    const { proof, signals } = await this.proofAndSignals(inputs);
+    const { proof, signals, lw } = await this.proofAndSignals(inputs);
 
     const arg = {
       appParams: {
         sender: await this.lsigAccount(),
         staticFee: microAlgos(0),
-        args: { signals, proof },
+        args: { signals, proof, lw },
       },
       lsigFees: microAlgos(1000 * this.totalLsigs),
       proof,
       signals,
+      lw,
       extraLsigsTxns: [] as Transaction[],
     };
 
@@ -282,8 +346,7 @@ export class AppVerifier {
       throw new Error("AppVerifier already deployed");
     }
 
-    // @ts-expect-error curves is not typed
-    const curve = await snarkjs.curves.getCurveFromName("bls12381");
+    await this.ensureCurveInstanttiation();
 
     let factory;
 
@@ -299,11 +362,11 @@ export class AppVerifier {
       });
     }
 
-    const vk = await getVkey(this.zKey, curve);
+    const vk = await getVkey(this.zKey, this.curve);
     const vkBytes = encodeVk(vk, factory.appSpec);
 
     const rootOfUnity = Buffer.from(
-      curve.Fr.toObject(curve.Fr.w[Number(vk.power)])
+      this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
         .toString(16)
         .padStart(64, "0"),
       "hex",
@@ -321,9 +384,7 @@ export class AppVerifier {
     return appClient;
   }
 
-  async proofAndSignals(
-    inputs: snarkjs.CircuitSignals,
-  ): Promise<ProofAndSignals> {
+  async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<Witness> {
     await this.ensureCurveInstanttiation();
 
     const { proof: rawProof, publicSignals: rawSignals } =
@@ -331,8 +392,27 @@ export class AppVerifier {
 
     const proof = encodeProof(rawProof, this.curve);
     const signals = encodeSignals(...rawSignals);
+    const vk = await getVkey(this.zKey, this.curve);
+    const vkBytes = encodeVk(vk, APP_SPEC);
 
-    return { proof, signals };
+    const rootOfUnity = Buffer.from(
+      this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
+        .toString(16)
+        .padStart(64, "0"),
+      "hex",
+    );
+
+    return {
+      proof,
+      signals,
+      lw: await getLagrangeWitness(
+        proof,
+        signals,
+        this.algorand,
+        vkBytes,
+        rootOfUnity,
+      ),
+    };
   }
 
   private assertDeployed(): asserts this is { appClient: PlonkVerifierClient } {
@@ -344,19 +424,36 @@ export class AppVerifier {
   // Methods that take in proof and signals directly
 
   async simulateVerificationWithProofAndSignals(
-    proofAndSignals: ProofAndSignals,
+    proofAndSignals: { proof: Proof; signals: bigint[] },
     simParams?: RawSimulateOptions,
   ) {
     this.assertDeployed();
 
+    const vk = await getVkey(this.zKey, this.curve);
+    const vkBytes = encodeVk(vk, APP_SPEC);
+
+    const rootOfUnity = Buffer.from(
+      this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
+        .toString(16)
+        .padStart(64, "0"),
+      "hex",
+    );
+
+    const lw = await getLagrangeWitness(
+      proofAndSignals.proof,
+      proofAndSignals.signals,
+      this.algorand,
+      vkBytes,
+      rootOfUnity,
+    );
     return this.appClient
       .newGroup()
-      .verify({ args: proofAndSignals })
+      .verify({ args: { ...proofAndSignals, lw } })
       .simulate(simParams ?? {});
   }
 
   async verifyTransactionFromProofAndSignals(
-    proofAndSignals: ProofAndSignals,
+    proofAndSignals: Witness,
   ): Promise<Transaction> {
     this.assertDeployed();
 
@@ -368,7 +465,7 @@ export class AppVerifier {
   }
 
   async callVerifyFromProofAndSignals(
-    proofAndSignals: ProofAndSignals,
+    proofAndSignals: Witness,
     callParams?: Omit<
       AppClientMethodCallParams,
       "method" | "args" | "onComplete"

@@ -271,7 +271,9 @@ describe("verifier lsig", () => {
       defaultSender: await algorand.account.localNetDispenser(),
     });
 
-    const { appClient } = await signalsAndProofFactory.deploy();
+    const { appClient } = await signalsAndProofFactory.deploy({
+      onUpdate: "append",
+    });
 
     client = appClient;
   });

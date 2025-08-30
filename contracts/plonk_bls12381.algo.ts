@@ -168,6 +168,13 @@ function b32(a: biguint): bytes<32> {
 
 export type PublicSignals = Uint256[];
 
+export type LagrangeWitness = {
+  // L[0..iterations-1] where iterations = max(nPublic,1); L[0] corresponds to L1(ξ)
+  L: Uint256[];
+  xin: Uint256; // ξ^n
+  zh: Uint256; // ξ^n − 1
+};
+
 /**
  * PLONK proof structure: G1 points (96B BE) and field evals (32B BE)
  */
@@ -287,7 +294,7 @@ export type VerificationKey = {
   X_2: bytes<192>;
 };
 
-function decodeVk(vkBytes: bytes): VerificationKey {
+export function decodeVk(vkBytes: bytes): VerificationKey {
   // Serialized VK layout (BE):
   // Qm||Ql||Qr||Qo||Qc||S1||S2||S3||power||nPublic||k1||k2||X_2
   return {
@@ -313,10 +320,11 @@ function decodeVk(vkBytes: bytes): VerificationKey {
 export function verifyFromTemplateWithLogs(
   signals: PublicSignals,
   proof: Proof,
+  lw: LagrangeWitness,
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verifyWithLogs(decodeVk(vkBytes), signals, proof);
+  return verifyWithLogs(decodeVk(vkBytes), signals, proof, lw);
 }
 
 /**
@@ -325,10 +333,11 @@ export function verifyFromTemplateWithLogs(
 export function verifyFromTemplate(
   signals: PublicSignals,
   proof: Proof,
+  lw: LagrangeWitness,
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verify(decodeVk(vkBytes), signals, proof);
+  return verify(decodeVk(vkBytes), signals, proof, lw);
 }
 
 function groupCheck(p: bytes<96>): boolean {
@@ -337,6 +346,43 @@ function groupCheck(p: bytes<96>): boolean {
 
 function inField(value: Uint256): boolean {
   return value.native < BLS12_381_SCALAR_MODULUS;
+}
+
+function assertLwInField(lw: LagrangeWitness) {
+  assert(inField(lw.xin), "lw.xin not in Fr");
+  assert(inField(lw.zh), "lw.zh not in Fr");
+  for (let i: uint64 = 0; i < lw.L.length; i++) {
+    assert(inField(lw.L[i] as Uint256), "lw.L not in Fr");
+  }
+}
+
+export function validateLagrangeWitness(
+  vk: VerificationKey,
+  challenges: Challenges,
+  lw: LagrangeWitness,
+): void {
+  assertLwInField(lw);
+
+  // Compute n = 2^power and xi^n to compare against provided xin
+  let nPow: uint64 = 1;
+  let xin = challenges.xi.native;
+  for (let i: uint64 = 0; i < vk.power; i++) {
+    xin = frMul(xin, xin);
+    nPow *= 2;
+  }
+  const xinExpected = new Uint256(xin);
+  assert(lw.xin.native === xinExpected.native, "lw.xin != xi^n");
+
+  // zh = xi^n - 1
+  const zhExpected = new Uint256(frSub(xinExpected.native, BigUint(1)));
+  assert(lw.zh.native === zhExpected.native, "lw.zh != xi^n - 1");
+
+  // Require L length rules: if nPublic == 0 then require exactly L[1] present; else require at least nPublic entries
+  const required: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
+  assert(lw.L.length >= required + 1, "lw.L length too short"); // L[0] unused; start at index 1
+
+  // Basic guard against xi == 1 (would cause division-by-zero in classic formula); forbid to keep semantics
+  assert(challenges.xi.native !== BigUint(1), "invalid xi (equals 1)");
 }
 
 function assertSignalsInField(vk: VerificationKey, signals: PublicSignals) {
@@ -385,27 +431,26 @@ export function verify(
   vk: VerificationKey,
   signals: PublicSignals,
   proof: Proof,
+  lw: LagrangeWitness,
 ): boolean {
   validateInput(vk, signals, proof);
 
   // 1) Fiat–Shamir challenges from transcript (SNARKJS chaining)
   let challenges = computeChallenges(vk, signals, proof);
 
-  // 2) Lagrange evaluations used by PI(ξ) and L1(ξ)
-  const { L, challenges: updatedChallenges } = calculateLagrangeEvaluations(
-    challenges,
-    vk,
-  );
-  challenges = clone(updatedChallenges);
+  // 2) Validate provided Lagrange evaluations and associated witness (off-chain computed)
+  validateLagrangeWitness(vk, challenges, lw);
+  challenges.xin = lw.xin;
+  challenges.zh = lw.zh;
 
-  // 3) Public input polynomial at ξ
-  const pi = calculatePI(signals, L);
+  // 3) Public input polynomial at ξ using provided Lagrange evaluations
+  const pi = calculatePI(signals, lw.L);
 
   // 4) Linearization polynomial constant term r0
-  const r0 = calculateR0(proof, challenges, pi, L[1] as Uint256);
+  const r0 = calculateR0(proof, challenges, pi, lw.L[1] as Uint256);
 
   // 5) Linearization commitment D and batch opening commitment F (optimized)
-  const f = calculateF(proof, challenges, vk, L[1] as Uint256);
+  const f = calculateF(proof, challenges, vk, lw.L[1] as Uint256);
 
   // 7) Batched evaluation commitment E (on [1]_1)
   const e = calculateE(proof, challenges, r0);
@@ -421,6 +466,7 @@ export function verifyWithLogs(
   vk: VerificationKey,
   signals: PublicSignals,
   proof: Proof,
+  lw: LagrangeWitness,
 ): boolean {
   validateInput(vk, signals, proof);
 
@@ -431,6 +477,11 @@ export function verifyWithLogs(
   debugLog("alpha", challenges.alpha.bytes);
   debugLog("xi", challenges.xi.bytes);
   debugLog("u", challenges.u.bytes);
+
+  // 2) Validate provided Lagrange evaluations and set xin/zh
+  validateLagrangeWitness(vk, challenges, lw);
+  challenges.xin = lw.xin;
+  challenges.zh = lw.zh;
   debugLog("xin", challenges.xin.bytes);
   debugLog("zh", challenges.zh.bytes);
   debugLog("v[1]", (challenges.v[1] as Uint256).bytes);
@@ -439,24 +490,17 @@ export function verifyWithLogs(
   debugLog("v[4]", (challenges.v[4] as Uint256).bytes);
   debugLog("v[5]", (challenges.v[5] as Uint256).bytes);
 
-  // 2) Lagrange evaluations used by PI(ξ) and L1(ξ)
-  const { L, challenges: updatedChallenges } = calculateLagrangeEvaluations(
-    challenges,
-    vk,
-  );
-  debugLog("L1(xi)", (L[1] as Uint256).bytes);
-  challenges = clone(updatedChallenges);
-
-  // 3) Public input polynomial at ξ
-  const pi = calculatePI(signals, L);
+  // 3) Public input polynomial at ξ (using provided L)
+  const pi = calculatePI(signals, lw.L);
+  debugLog("L1(xi)", (lw.L[1] as Uint256).bytes);
   debugLog("PI(xi)", pi.bytes);
 
   // 4) Linearization polynomial constant term r0
-  const r0 = calculateR0(proof, challenges, pi, L[1] as Uint256);
+  const r0 = calculateR0(proof, challenges, pi, lw.L[1] as Uint256);
   debugLog("r0", r0.bytes);
 
   // 5) Linearization commitment D and batch opening commitment F (optimized)
-  const f = calculateF(proof, challenges, vk, L[1] as Uint256);
+  const f = calculateF(proof, challenges, vk, lw.L[1] as Uint256);
   debugLog("F", f);
 
   // 7) Batched evaluation commitment E (on [1]_1)
