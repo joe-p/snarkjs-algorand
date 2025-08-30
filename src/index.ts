@@ -10,10 +10,6 @@ import {
   type VerificationKey,
   APP_SPEC,
 } from "../contracts/clients/PlonkVerifier";
-import {
-  SignalsAndProofFactory,
-  SignalsAndProofClient,
-} from "../contracts/clients/SignalsAndProof";
 import { PlonkVerifierWithLogsFactory } from "../contracts/clients/PlonkVerifierWithLogs";
 import * as snarkjs from "snarkjs";
 import {
@@ -21,16 +17,12 @@ import {
   type Arc56Contract,
 } from "@algorandfoundation/algokit-utils/types/app-arc56";
 import { readFileSync } from "fs";
-import type {
-  RawSimulateOptions,
-  TransactionComposer,
-} from "@algorandfoundation/algokit-utils/types/composer";
+import type { RawSimulateOptions } from "@algorandfoundation/algokit-utils/types/composer";
 import type { Transaction } from "algosdk";
 import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
 import { type Address } from "algosdk";
 import { LSIG_SOURCE } from "../contracts/out/lsig_source";
 import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
-import type { SignalsAndProof } from "../contracts/verifier.algo";
 
 function stringValuesToBigints(obj: any): any {
   for (const key in obj) {
