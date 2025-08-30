@@ -331,6 +331,53 @@ export function verifyFromTemplate(
   return verify(decodeVk(vkBytes), signals, proof);
 }
 
+function groupCheck(p: bytes<96>): boolean {
+  return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
+}
+
+function inField(value: Uint256): boolean {
+  return value.native < BLS12_381_SCALAR_MODULUS;
+}
+
+function assertSignalsInField(vk: VerificationKey, signals: PublicSignals) {
+  assert(signals.length === vk.nPublic, "Invalid number of public inputs");
+
+  for (const signal of signals) {
+    assert(inField(signal), "public signal not in Fr");
+  }
+}
+
+function assertEvalsInField(proof: Proof) {
+  assert(inField(proof.eval_a), "eval_a not in Fr");
+  assert(inField(proof.eval_b), "eval_b not in Fr");
+  assert(inField(proof.eval_c), "eval_c not in Fr");
+  assert(inField(proof.eval_s1), "eval_s1 not in Fr");
+  assert(inField(proof.eval_s2), "eval_s2 not in Fr");
+  assert(inField(proof.eval_zw), "eval_zw not in Fr");
+}
+
+function assertProofInSubgroup(proof: Proof) {
+  assert(groupCheck(proof.A), "A not in G1");
+  assert(groupCheck(proof.B), "B not in G1");
+  assert(groupCheck(proof.C), "C not in G1");
+  assert(groupCheck(proof.Z), "Z not in G1");
+  assert(groupCheck(proof.T1), "T1 not in G1");
+  assert(groupCheck(proof.T2), "T2 not in G1");
+  assert(groupCheck(proof.T3), "T3 not in G1");
+  assert(groupCheck(proof.Wxi), "Wxi not in G1");
+  assert(groupCheck(proof.Wxiw), "Wxiw not in G1");
+}
+
+export function validateInput(
+  vk: VerificationKey,
+  signals: PublicSignals,
+  proof: Proof,
+): void {
+  assertProofInSubgroup(proof);
+  assertEvalsInField(proof);
+  assertSignalsInField(vk, signals);
+}
+
 /**
  * Main PLONK verification function
  */
@@ -339,6 +386,8 @@ export function verify(
   signals: PublicSignals,
   proof: Proof,
 ): boolean {
+  validateInput(vk, signals, proof);
+
   // 1) Fiat–Shamir challenges from transcript (SNARKJS chaining)
   let challenges = computeChallenges(vk, signals, proof);
 
@@ -373,6 +422,8 @@ export function verifyWithLogs(
   signals: PublicSignals,
   proof: Proof,
 ): boolean {
+  validateInput(vk, signals, proof);
+
   // 1) Fiat–Shamir challenges from transcript (SNARKJS chaining)
   let challenges = computeChallenges(vk, signals, proof);
   debugLog("beta", challenges.beta.bytes);
