@@ -279,7 +279,7 @@ describe("verifier lsig", () => {
   it("works", async () => {
     const group = client.newGroup();
 
-    await verifier.addVerificationToGroup({
+    await verifier.verify({
       inputs: { a: 10, b: 21 },
       callback: async (arg) => {
         const { appParams, extraLsigsTxns, lsigFees } = arg;

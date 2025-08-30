@@ -201,7 +201,7 @@ export class LsigVerifier {
     return this.algorand.account.logicsig(compilation.compiledBase64ToBytes);
   }
 
-  async addVerificationToGroup({
+  async verify({
     callback,
     inputs,
   }: {
