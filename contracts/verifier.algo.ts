@@ -2,10 +2,13 @@ import {
   Contract,
   Global,
   LogicSig,
+  TemplateVar,
   Txn,
   arc4,
   assert,
   assertMatch,
+  ensureBudget,
+  type bytes,
 } from "@algorandfoundation/algorand-typescript";
 import {
   abimethod,
@@ -18,6 +21,10 @@ import {
   type PublicSignals,
   type Proof,
   verifyFromTemplate,
+  type LagrangeWitness,
+  calculateLagrangeEvaluations,
+  decodeVk,
+  computeChallenges,
 } from "./plonk_bls12381.algo";
 
 export class PlonkVerifierWithLogs extends Contract {
@@ -25,8 +32,11 @@ export class PlonkVerifierWithLogs extends Contract {
   @abimethod({ allowActions: "CloseOut" })
   public _dummy(_vk: VerificationKey): void {}
 
-  verify(signals: PublicSignals, proof: Proof): void {
-    assert(verifyFromTemplateWithLogs(signals, proof), "Verification failed");
+  verify(signals: PublicSignals, proof: Proof, lw: LagrangeWitness): void {
+    assert(
+      verifyFromTemplateWithLogs(signals, proof, lw),
+      "Verification failed",
+    );
   }
 }
 
@@ -35,8 +45,8 @@ export class PlonkVerifier extends Contract {
   @abimethod({ allowActions: "CloseOut" })
   public _dummy(_vk: VerificationKey): void {}
 
-  verify(signals: PublicSignals, proof: Proof): void {
-    assert(verifyFromTemplate(signals, proof), "Verification failed");
+  verify(signals: PublicSignals, proof: Proof, lw: LagrangeWitness): void {
+    assert(verifyFromTemplate(signals, proof, lw), "Verification failed");
   }
 }
 
@@ -87,17 +97,59 @@ export class PlonkVerifierLsig extends LogicSig {
       interpretAsArc4<arc4.DynamicArray<Uint256>>(signalBytes);
 
     const signals: Uint256[] = [];
-
     for (const s of signalsArc4) {
       signals.push(s);
     }
 
-    assert(verifyFromTemplate(signals, proof), "Verification failed");
+    const lwBytes = Txn.applicationArgs(3);
+    const lwArc4 =
+      interpretAsArc4<
+        arc4.Tuple<[arc4.DynamicArray<Uint256>, Uint256, Uint256]>
+      >(lwBytes);
+
+    const lw: LagrangeWitness = {
+      L: [] as Uint256[],
+      xin: lwArc4.at(1),
+      zh: lwArc4.at(2),
+    };
+
+    for (const v of lwArc4.at(0)) {
+      lw.L.push(v);
+    }
+
+    assert(verifyFromTemplate(signals, proof, lw), "Verification failed");
 
     return true;
   }
 }
 
 export class SignalsAndProof extends Contract {
-  public signalsAndProof(signals: Uint256[], proof: Proof): void {}
+  public signalsAndProof(
+    signals: Uint256[],
+    proof: Proof,
+    lw: LagrangeWitness,
+  ): void {}
+}
+
+export class LagrangeWitnessCalculator extends Contract {
+  @abimethod({ onCreate: "require", allowActions: "DeleteApplication" })
+  public calculateLagrangeWitness(
+    signals: PublicSignals,
+    proof: Proof,
+  ): LagrangeWitness {
+    ensureBudget(700 * 250);
+    const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
+
+    const vk = decodeVk(vkBytes);
+
+    let challenges = computeChallenges(vk, signals, proof);
+
+    const calc = calculateLagrangeEvaluations(challenges, vk);
+
+    return {
+      L: calc.L,
+      xin: calc.challenges.xin,
+      zh: calc.challenges.zh,
+    };
+  }
 }
