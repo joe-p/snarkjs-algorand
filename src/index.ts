@@ -263,36 +263,24 @@ export class LsigVerifier {
     return this.algorand.account.logicsig(compilation.compiledBase64ToBytes);
   }
 
-  async verify({
-    callback,
-    inputs,
-  }: {
-    callback: (arg: {
-      appParams: {
-        sender: Address;
-        staticFee: AlgoAmount;
-        args: { signals: bigint[]; proof: Proof; lw: LagrangeWitness };
-      };
-      lsigFees: AlgoAmount;
-      proof: Proof;
-      signals: bigint[];
-      extraLsigsTxns: Transaction[];
-    }) => Promise<void>;
-    /** The snarkjs inputs to generate the proof and signals */
-    inputs: snarkjs.CircuitSignals;
-  }) {
+  async verificationParams(inputs: snarkjs.CircuitSignals): Promise<{
+    appParams: {
+      sender: Address;
+      staticFee: AlgoAmount;
+      args: { signals: bigint[]; proof: Proof; lw: LagrangeWitness };
+    };
+    lsigFees: AlgoAmount;
+    extraLsigsTxns: Transaction[];
+  }> {
     const { proof, signals, lw } = await this.proofAndSignals(inputs);
 
-    const arg = {
+    const params = {
       appParams: {
         sender: await this.lsigAccount(),
         staticFee: microAlgos(0),
         args: { signals, proof, lw },
       },
       lsigFees: microAlgos(1000 * this.totalLsigs),
-      proof,
-      signals,
-      lw,
       extraLsigsTxns: [] as Transaction[],
     };
 
@@ -312,10 +300,10 @@ export class LsigVerifier {
         note: `Extra lsig ${i + 1} of ${this.totalLsigs - 1}`,
       });
 
-      arg.extraLsigsTxns.push(lsigPay);
+      params.extraLsigsTxns.push(lsigPay);
     }
 
-    await callback(arg);
+    return params;
   }
 }
 
