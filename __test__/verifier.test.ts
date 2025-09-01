@@ -254,7 +254,6 @@ describe("verifier", () => {
 describe("verifier lsig", () => {
   let verifier: LsigVerifier;
   let algorand: AlgorandClient;
-  const lsigsNeededForBudget = 6;
   let client: SignalsAndProofClient;
 
   beforeAll(async () => {
@@ -263,7 +262,6 @@ describe("verifier lsig", () => {
       algorand,
       "circuit/circuit_final.zkey",
       "circuit/circuit_js/circuit.wasm",
-      lsigsNeededForBudget,
     );
 
     const signalsAndProofFactory = new SignalsAndProofFactory({
@@ -281,28 +279,27 @@ describe("verifier lsig", () => {
   it("works", async () => {
     const group = client.newGroup();
 
-    const params = await verifier.verificationParams({ a: 10, b: 21 });
+    await verifier.verificationParams({
+      inputs: { a: 10, b: 21 },
+      composer: group,
+      paramsCallback: async (params) => {
+        const { appParams, lsigsFee } = params;
 
-    const { appParams, extraLsigsTxns, lsigFees } = params;
+        // Call app with signals and proof via lsig
+        group.signalsAndProof(appParams);
 
-    // Call app with signals and proof via lsig
-    group.signalsAndProof(appParams);
-
-    // Add extra lsig txns to get opcode budget
-    for (const txn of extraLsigsTxns) {
-      group.addTransaction(txn);
-    }
-
-    // Pay the required fees
-    const feePayer = await algorand.account.localNetDispenser();
-    group.addTransaction(
-      await algorand.createTransaction.payment({
-        sender: feePayer,
-        amount: microAlgos(0),
-        receiver: feePayer,
-        extraFee: lsigFees,
-      }),
-    );
+        // Pay the required fees
+        const feePayer = await algorand.account.localNetDispenser();
+        group.addTransaction(
+          await algorand.createTransaction.payment({
+            sender: feePayer,
+            amount: microAlgos(0),
+            receiver: feePayer,
+            extraFee: lsigsFee,
+          }),
+        );
+      },
+    });
 
     await group.send();
   });
