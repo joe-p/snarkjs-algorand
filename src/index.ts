@@ -169,7 +169,7 @@ export async function getLagrangeWitness(
     .newGroup()
     .addTransaction(calcTxn.transactions[0]!)
     .simulate({
-      extraOpcodeBudget: 700 * 255,
+      extraOpcodeBudget: 20_000 * 16,
       skipSignatures: true,
     });
 
