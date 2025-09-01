@@ -281,31 +281,28 @@ describe("verifier lsig", () => {
   it("works", async () => {
     const group = client.newGroup();
 
-    await verifier.verify({
-      inputs: { a: 10, b: 21 },
-      callback: async (arg) => {
-        const { appParams, extraLsigsTxns, lsigFees } = arg;
+    const params = await verifier.verificationParams({ a: 10, b: 21 });
 
-        // Call app with signals and proof via lsig
-        group.signalsAndProof(appParams);
+    const { appParams, extraLsigsTxns, lsigFees } = params;
 
-        // Add extra lsig txns to get opcode budget
-        for (const txn of extraLsigsTxns) {
-          group.addTransaction(txn);
-        }
+    // Call app with signals and proof via lsig
+    group.signalsAndProof(appParams);
 
-        // Pay the required fees
-        const feePayer = await algorand.account.localNetDispenser();
-        group.addTransaction(
-          await algorand.createTransaction.payment({
-            sender: feePayer,
-            amount: microAlgos(0),
-            receiver: feePayer,
-            extraFee: lsigFees,
-          }),
-        );
-      },
-    });
+    // Add extra lsig txns to get opcode budget
+    for (const txn of extraLsigsTxns) {
+      group.addTransaction(txn);
+    }
+
+    // Pay the required fees
+    const feePayer = await algorand.account.localNetDispenser();
+    group.addTransaction(
+      await algorand.createTransaction.payment({
+        sender: feePayer,
+        amount: microAlgos(0),
+        receiver: feePayer,
+        extraFee: lsigFees,
+      }),
+    );
 
     await group.send();
   });
