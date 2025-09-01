@@ -14,7 +14,10 @@ import {
   type Arc56Contract,
 } from "@algorandfoundation/algokit-utils/types/app-arc56";
 import { readFileSync } from "fs";
-import type { RawSimulateOptions } from "@algorandfoundation/algokit-utils/types/composer";
+import type {
+  RawSimulateOptions,
+  TransactionComposer,
+} from "@algorandfoundation/algokit-utils/types/composer";
 import type { Transaction } from "algosdk";
 import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
 import algosdk, { OnApplicationComplete, type Address } from "algosdk";
@@ -199,7 +202,7 @@ export class LsigVerifier {
     public algorand: AlgorandClient,
     public zKey: snarkjs.ZKArtifact,
     public wasmProver: snarkjs.ZKArtifact,
-    public totalLsigs: number,
+    public totalLsigs: number = 6,
   ) {}
 
   private async ensureCurveInstanttiation() {
@@ -263,15 +266,27 @@ export class LsigVerifier {
     return this.algorand.account.logicsig(compilation.compiledBase64ToBytes);
   }
 
-  async verificationParams(inputs: snarkjs.CircuitSignals): Promise<{
-    appParams: {
-      sender: Address;
-      staticFee: AlgoAmount;
-      args: { signals: bigint[]; proof: Proof; lw: LagrangeWitness };
+  async verificationParams({
+    inputs,
+    composer,
+    paramsCallback,
+    addExtraLsigs = true,
+  }: {
+    inputs: snarkjs.CircuitSignals;
+    composer: {
+      addTransaction: (txn: Transaction) => unknown;
     };
-    lsigFees: AlgoAmount;
-    extraLsigsTxns: Transaction[];
-  }> {
+    addExtraLsigs?: boolean;
+    paramsCallback: (params: {
+      appParams: {
+        sender: Address;
+        staticFee: AlgoAmount;
+        args: { signals: bigint[]; proof: Proof; lw: LagrangeWitness };
+      };
+      lsigsFee: AlgoAmount;
+      extraLsigsTxns: Transaction[];
+    }) => Promise<void>;
+  }): Promise<void> {
     const { proof, signals, lw } = await this.proofAndSignals(inputs);
 
     const params = {
@@ -280,7 +295,7 @@ export class LsigVerifier {
         staticFee: microAlgos(0),
         args: { signals, proof, lw },
       },
-      lsigFees: microAlgos(1000 * this.totalLsigs),
+      lsigsFee: microAlgos(1000 * this.totalLsigs),
       extraLsigsTxns: [] as Transaction[],
     };
 
@@ -290,6 +305,8 @@ export class LsigVerifier {
     const extraLsig = this.algorand.account.logicsig(
       compilation.compiledBase64ToBytes,
     );
+
+    await paramsCallback(params);
 
     for (let i = 0; i < this.totalLsigs - 1; i++) {
       const lsigPay = await this.algorand.createTransaction.payment({
@@ -301,9 +318,11 @@ export class LsigVerifier {
       });
 
       params.extraLsigsTxns.push(lsigPay);
-    }
 
-    return params;
+      if (addExtraLsigs) {
+        composer.addTransaction(lsigPay);
+      }
+    }
   }
 }
 
