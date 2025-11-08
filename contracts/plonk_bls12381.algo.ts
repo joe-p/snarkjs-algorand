@@ -11,7 +11,10 @@ import {
   clone,
   TemplateVar,
 } from "@algorandfoundation/algorand-typescript";
-import { Uint256 } from "@algorandfoundation/algorand-typescript/arc4";
+import {
+  decodeArc4,
+  Uint256,
+} from "@algorandfoundation/algorand-typescript/arc4";
 
 /**
  * PLONK verifier for BLS12-381 (SNARKJS-compatible)
@@ -294,26 +297,6 @@ export type VerificationKey = {
   X_2: bytes<192>;
 };
 
-export function decodeVk(vkBytes: bytes): VerificationKey {
-  // Serialized VK layout (BE):
-  // Qm||Ql||Qr||Qo||Qc||S1||S2||S3||power||nPublic||k1||k2||X_2
-  return {
-    Qm: vkBytes.slice(0, 96).toFixed({ length: 96 }),
-    Ql: vkBytes.slice(96, 192).toFixed({ length: 96 }),
-    Qr: vkBytes.slice(192, 288).toFixed({ length: 96 }),
-    Qo: vkBytes.slice(288, 384).toFixed({ length: 96 }),
-    Qc: vkBytes.slice(384, 480).toFixed({ length: 96 }),
-    S1: vkBytes.slice(480, 576).toFixed({ length: 96 }),
-    S2: vkBytes.slice(576, 672).toFixed({ length: 96 }),
-    S3: vkBytes.slice(672, 768).toFixed({ length: 96 }),
-    power: op.btoi(vkBytes.slice(768, 776)),
-    nPublic: op.btoi(vkBytes.slice(776, 784)),
-    k1: op.btoi(vkBytes.slice(784, 792)),
-    k2: op.btoi(vkBytes.slice(792, 800)),
-    X_2: vkBytes.slice(800, 992).toFixed({ length: 192 }),
-  };
-}
-
 /**
  * Verify proof using verification key from template variable with debug logging
  */
@@ -324,7 +307,12 @@ export function verifyFromTemplateWithLogs(
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verifyWithLogs(decodeVk(vkBytes), signals, proof, lw);
+  return verifyWithLogs(
+    decodeArc4<VerificationKey>(vkBytes),
+    signals,
+    proof,
+    lw,
+  );
 }
 
 /**
@@ -337,7 +325,7 @@ export function verifyFromTemplate(
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verify(decodeVk(vkBytes), signals, proof, lw);
+  return verify(decodeArc4<VerificationKey>(vkBytes), signals, proof, lw);
 }
 
 function groupCheck(p: bytes<96>): boolean {

@@ -4,7 +4,7 @@
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
     intcblock 0 1 32
-    // contracts/verifier.algo.ts:138
+    // contracts/verifier.algo.ts:66
     // export class SignalsAndProof extends Contract {
     txn NumAppArgs
     bz main___algots__.defaultCreate@5
@@ -14,7 +14,7 @@ main:
     err
 
 main_signalsAndProof_route@3:
-    // contracts/verifier.algo.ts:139-143
+    // contracts/verifier.algo.ts:67-71
     // public signalsAndProof(
     //   signals: Uint256[],
     //   proof: Proof,
@@ -28,7 +28,7 @@ main_signalsAndProof_route@3:
     b signalsAndProof
 
 main___algots__.defaultCreate@5:
-    // contracts/verifier.algo.ts:138
+    // contracts/verifier.algo.ts:66
     // export class SignalsAndProof extends Contract {
     txn OnCompletion
     !
@@ -42,7 +42,7 @@ main___algots__.defaultCreate@5:
 
 // contracts/verifier.algo.ts::SignalsAndProof.signalsAndProof[routing]() -> void:
 signalsAndProof:
-    // contracts/verifier.algo.ts:139-143
+    // contracts/verifier.algo.ts:67-71
     // public signalsAndProof(
     //   signals: Uint256[],
     //   proof: Proof,
