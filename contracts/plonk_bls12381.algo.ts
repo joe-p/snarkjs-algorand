@@ -11,7 +11,10 @@ import {
   clone,
   TemplateVar,
 } from "@algorandfoundation/algorand-typescript";
-import { Uint256 } from "@algorandfoundation/algorand-typescript/arc4";
+import {
+  decodeArc4,
+  Uint256,
+} from "@algorandfoundation/algorand-typescript/arc4";
 
 /**
  * PLONK verifier for BLS12-381 (SNARKJS-compatible)
@@ -294,26 +297,6 @@ export type VerificationKey = {
   X_2: bytes<192>;
 };
 
-export function decodeVk(vkBytes: bytes): VerificationKey {
-  // Serialized VK layout (BE):
-  // Qm||Ql||Qr||Qo||Qc||S1||S2||S3||power||nPublic||k1||k2||X_2
-  return {
-    Qm: vkBytes.slice(0, 96).toFixed({ length: 96 }),
-    Ql: vkBytes.slice(96, 192).toFixed({ length: 96 }),
-    Qr: vkBytes.slice(192, 288).toFixed({ length: 96 }),
-    Qo: vkBytes.slice(288, 384).toFixed({ length: 96 }),
-    Qc: vkBytes.slice(384, 480).toFixed({ length: 96 }),
-    S1: vkBytes.slice(480, 576).toFixed({ length: 96 }),
-    S2: vkBytes.slice(576, 672).toFixed({ length: 96 }),
-    S3: vkBytes.slice(672, 768).toFixed({ length: 96 }),
-    power: op.btoi(vkBytes.slice(768, 776)),
-    nPublic: op.btoi(vkBytes.slice(776, 784)),
-    k1: op.btoi(vkBytes.slice(784, 792)),
-    k2: op.btoi(vkBytes.slice(792, 800)),
-    X_2: vkBytes.slice(800, 992).toFixed({ length: 192 }),
-  };
-}
-
 /**
  * Verify proof using verification key from template variable with debug logging
  */
@@ -324,7 +307,12 @@ export function verifyFromTemplateWithLogs(
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verifyWithLogs(decodeVk(vkBytes), signals, proof, lw);
+  return verifyWithLogs(
+    decodeArc4<VerificationKey>(vkBytes),
+    signals,
+    proof,
+    lw,
+  );
 }
 
 /**
@@ -337,7 +325,7 @@ export function verifyFromTemplate(
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verify(decodeVk(vkBytes), signals, proof, lw);
+  return verify(decodeArc4<VerificationKey>(vkBytes), signals, proof, lw);
 }
 
 function groupCheck(p: bytes<96>): boolean {
@@ -345,7 +333,7 @@ function groupCheck(p: bytes<96>): boolean {
 }
 
 function inField(value: Uint256): boolean {
-  return value.native < BLS12_381_SCALAR_MODULUS;
+  return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
 }
 
 function assertLwInField(lw: LagrangeWitness) {
@@ -365,24 +353,24 @@ export function validateLagrangeWitness(
 
   // Compute n = 2^power and xi^n to compare against provided xin
   let nPow: uint64 = 1;
-  let xin = challenges.xi.native;
+  let xin = challenges.xi.asBigUint();
   for (let i: uint64 = 0; i < vk.power; i++) {
     xin = frMul(xin, xin);
     nPow *= 2;
   }
   const xinExpected = new Uint256(xin);
-  assert(lw.xin.native === xinExpected.native, "lw.xin != xi^n");
+  assert(lw.xin.asBigUint() === xinExpected.asBigUint(), "lw.xin != xi^n");
 
   // zh = xi^n - 1
-  const zhExpected = new Uint256(frSub(xinExpected.native, BigUint(1)));
-  assert(lw.zh.native === zhExpected.native, "lw.zh != xi^n - 1");
+  const zhExpected = new Uint256(frSub(xinExpected.asBigUint(), BigUint(1)));
+  assert(lw.zh.asBigUint() === zhExpected.asBigUint(), "lw.zh != xi^n - 1");
 
   // Require L length rules: if nPublic == 0 then require exactly L[1] present; else require at least nPublic entries
   const required: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
   assert(lw.L.length >= required + 1, "lw.L length too short"); // L[0] unused; start at index 1
 
   // Basic guard against xi == 1 (would cause division-by-zero in classic formula); forbid to keep semantics
-  assert(challenges.xi.native !== BigUint(1), "invalid xi (equals 1)");
+  assert(challenges.xi.asBigUint() !== BigUint(1), "invalid xi (equals 1)");
 }
 
 function assertSignalsInField(vk: VerificationKey, signals: PublicSignals) {
@@ -540,7 +528,7 @@ export function computeChallenges(
   td = op.concat(td, vk.S3);
 
   for (const signal of signals) {
-    td = op.concat(td, b32(frScalar(signal.native)));
+    td = op.concat(td, b32(frScalar(signal.asBigUint())));
   }
 
   // Add round 1 commitments
@@ -589,7 +577,9 @@ export function computeChallenges(
   const v = new FixedArray<Uint256, 6>();
   v[1] = getChallenge(td); // v1
   for (let i: uint64 = 2; i < 6; i++) {
-    v[i] = new Uint256(frMul((v[i - 1] as Uint256).native, v[1].native)); // v[i] = v1^i
+    v[i] = new Uint256(
+      frMul((v[i - 1] as Uint256).asBigUint(), v[1].asBigUint()),
+    ); // v[i] = v1^i
   }
 
   ////////////////////////////
@@ -620,7 +610,7 @@ export function calculateLagrangeEvaluations(
   vk: VerificationKey,
 ): { L: Uint256[]; challenges: Challenges } {
   const challenges = clone(challengesInput);
-  let xin = challenges.xi.native;
+  let xin = challenges.xi.asBigUint();
 
   // Compute xi^n where n = 2^power (domain size)
   let domainSize: uint64 = 1;
@@ -655,8 +645,8 @@ export function calculateLagrangeEvaluations(
     L.push(
       new Uint256(
         frDiv(
-          frMul(w, challenges.zh.native),
-          frMul(n, frSub(challenges.xi.native, w)),
+          frMul(w, challenges.zh.asBigUint()),
+          frMul(n, frSub(challenges.xi.asBigUint(), w)),
         ),
       ),
     );
@@ -674,8 +664,8 @@ export function calculatePI(
 ): Uint256 {
   let pi = BigUint(0);
   for (let i: uint64 = 0; i < publicSignals.length; i++) {
-    const w = frScalar((publicSignals[i] as Uint256).native);
-    pi = frSub(pi, frMul(w, (L[i + 1] as Uint256).native));
+    const w = frScalar((publicSignals[i] as Uint256).asBigUint());
+    pi = frSub(pi, frMul(w, (L[i + 1] as Uint256).asBigUint()));
   }
   return new Uint256(pi);
 }
@@ -693,33 +683,33 @@ export function calculateR0(
   l1: Uint256,
 ): Uint256 {
   // e1: Public input polynomial evaluation PI(ξ)
-  const e1 = pi.native;
+  const e1 = pi.asBigUint();
 
   // e2: Boundary constraint L1(ξ) * α² (enforces Z(1) = 1)
   const e2 = frMul(
-    l1.native,
-    frMul(challenges.alpha.native, challenges.alpha.native),
+    l1.asBigUint(),
+    frMul(challenges.alpha.asBigUint(), challenges.alpha.asBigUint()),
   );
 
   // e3: Permutation check contribution (numerator part)
   // α * Z(ξ·ω) * [(a + β*s1 + γ)(b + β*s2 + γ)(c + γ)]
   let e3a = frAdd(
-    proof.eval_a.native,
-    frMul(challenges.beta.native, proof.eval_s1.native),
+    proof.eval_a.asBigUint(),
+    frMul(challenges.beta.asBigUint(), proof.eval_s1.asBigUint()),
   );
-  e3a = frAdd(e3a, challenges.gamma.native);
+  e3a = frAdd(e3a, challenges.gamma.asBigUint());
 
   let e3b = frAdd(
-    proof.eval_b.native,
-    frMul(challenges.beta.native, proof.eval_s2.native),
+    proof.eval_b.asBigUint(),
+    frMul(challenges.beta.asBigUint(), proof.eval_s2.asBigUint()),
   );
-  e3b = frAdd(e3b, challenges.gamma.native);
+  e3b = frAdd(e3b, challenges.gamma.asBigUint());
 
-  let e3c = frAdd(proof.eval_c.native, challenges.gamma.native);
+  let e3c = frAdd(proof.eval_c.asBigUint(), challenges.gamma.asBigUint());
 
   let e3 = frMul(frMul(e3a, e3b), e3c);
-  e3 = frMul(e3, proof.eval_zw.native);
-  e3 = frMul(e3, challenges.alpha.native);
+  e3 = frMul(e3, proof.eval_zw.asBigUint());
+  e3 = frMul(e3, challenges.alpha.asBigUint());
 
   // r0 = e1 - e2 - e3
   const r0 = frSub(frSub(e1, e2), e3);
@@ -757,64 +747,67 @@ export function calculateF(
   points = op.concat(points, vk.Qc);
 
   // Gate constraint scalars
-  const gateScalar1 = frMul(proof.eval_a.native, proof.eval_b.native); // Qm coefficient
-  const gateScalar2 = proof.eval_a.native; // Ql coefficient
-  const gateScalar3 = proof.eval_b.native; // Qr coefficient
-  const gateScalar4 = proof.eval_c.native; // Qo coefficient
+  const gateScalar1 = frMul(proof.eval_a.asBigUint(), proof.eval_b.asBigUint()); // Qm coefficient
+  const gateScalar2 = proof.eval_a.asBigUint(); // Ql coefficient
+  const gateScalar3 = proof.eval_b.asBigUint(); // Qr coefficient
+  const gateScalar4 = proof.eval_c.asBigUint(); // Qo coefficient
 
   // Quotient scalars for −T(ξ) · Z_H(ξ), with T(ξ) = T1 + xin·T2 + xin²·T3
-  const quotientScalar1 = frSub(BigUint(0), challenges.zh.native); // −zh (applies to T1)
+  const quotientScalar1 = frSub(BigUint(0), challenges.zh.asBigUint()); // −zh (applies to T1)
   const quotientScalar2 = frSub(
     BigUint(0),
-    frMul(challenges.xin.native, challenges.zh.native),
+    frMul(challenges.xin.asBigUint(), challenges.zh.asBigUint()),
   ); // −xin·zh (applies to T2)
   const quotientScalar3 = frSub(
     BigUint(0),
     frMul(
-      frMul(challenges.xin.native, challenges.xin.native),
-      challenges.zh.native,
+      frMul(challenges.xin.asBigUint(), challenges.xin.asBigUint()),
+      challenges.zh.asBigUint(),
     ),
   ); // −xin²·zh (applies to T3)
 
   // Z scalar (permutation numerator folded into Z)
-  const betaxi = frMul(challenges.beta.native, challenges.xi.native);
+  const betaxi = frMul(challenges.beta.asBigUint(), challenges.xi.asBigUint());
   const d2a1 = frAdd(
-    frAdd(proof.eval_a.native, betaxi),
-    challenges.gamma.native,
+    frAdd(proof.eval_a.asBigUint(), betaxi),
+    challenges.gamma.asBigUint(),
   );
   const d2a2 = frAdd(
-    frAdd(proof.eval_b.native, frMul(betaxi, BigUint(vk.k1))),
-    challenges.gamma.native,
+    frAdd(proof.eval_b.asBigUint(), frMul(betaxi, BigUint(vk.k1))),
+    challenges.gamma.asBigUint(),
   );
   const d2a3 = frAdd(
-    frAdd(proof.eval_c.native, frMul(betaxi, BigUint(vk.k2))),
-    challenges.gamma.native,
+    frAdd(proof.eval_c.asBigUint(), frMul(betaxi, BigUint(vk.k2))),
+    challenges.gamma.asBigUint(),
   );
-  const d2a = frMul(frMul(frMul(d2a1, d2a2), d2a3), challenges.alpha.native);
+  const d2a = frMul(
+    frMul(frMul(d2a1, d2a2), d2a3),
+    challenges.alpha.asBigUint(),
+  );
   const d2b = frMul(
-    l1.native,
-    frMul(challenges.alpha.native, challenges.alpha.native),
+    l1.asBigUint(),
+    frMul(challenges.alpha.asBigUint(), challenges.alpha.asBigUint()),
   );
-  const zScalar = frAdd(frAdd(d2a, d2b), challenges.u.native);
+  const zScalar = frAdd(frAdd(d2a, d2b), challenges.u.asBigUint());
 
   // S3 scalar (permutation denominator)
   const d3a = frAdd(
     frAdd(
-      proof.eval_a.native,
-      frMul(challenges.beta.native, proof.eval_s1.native),
+      proof.eval_a.asBigUint(),
+      frMul(challenges.beta.asBigUint(), proof.eval_s1.asBigUint()),
     ),
-    challenges.gamma.native,
+    challenges.gamma.asBigUint(),
   );
   const d3b = frAdd(
     frAdd(
-      proof.eval_b.native,
-      frMul(challenges.beta.native, proof.eval_s2.native),
+      proof.eval_b.asBigUint(),
+      frMul(challenges.beta.asBigUint(), proof.eval_s2.asBigUint()),
     ),
-    challenges.gamma.native,
+    challenges.gamma.asBigUint(),
   );
   const d3c = frMul(
-    frMul(challenges.alpha.native, challenges.beta.native),
-    proof.eval_zw.native,
+    frMul(challenges.alpha.asBigUint(), challenges.beta.asBigUint()),
+    proof.eval_zw.asBigUint(),
   );
   const s3Scalar = frMul(frMul(d3a, d3b), d3c);
 
@@ -865,20 +858,26 @@ export function calculateE(
   r0: Uint256,
 ): bytes<96> {
   let e = frSub(
-    frMul((challenges.v[1] as Uint256).native, proof.eval_a.native),
-    r0.native,
-  );
-  e = frAdd(e, frMul((challenges.v[2] as Uint256).native, proof.eval_b.native));
-  e = frAdd(e, frMul((challenges.v[3] as Uint256).native, proof.eval_c.native));
-  e = frAdd(
-    e,
-    frMul((challenges.v[4] as Uint256).native, proof.eval_s1.native),
+    frMul((challenges.v[1] as Uint256).asBigUint(), proof.eval_a.asBigUint()),
+    r0.asBigUint(),
   );
   e = frAdd(
     e,
-    frMul((challenges.v[5] as Uint256).native, proof.eval_s2.native),
+    frMul((challenges.v[2] as Uint256).asBigUint(), proof.eval_b.asBigUint()),
   );
-  e = frAdd(e, frMul(challenges.u.native, proof.eval_zw.native));
+  e = frAdd(
+    e,
+    frMul((challenges.v[3] as Uint256).asBigUint(), proof.eval_c.asBigUint()),
+  );
+  e = frAdd(
+    e,
+    frMul((challenges.v[4] as Uint256).asBigUint(), proof.eval_s1.asBigUint()),
+  );
+  e = frAdd(
+    e,
+    frMul((challenges.v[5] as Uint256).asBigUint(), proof.eval_s2.asBigUint()),
+  );
+  e = frAdd(e, frMul(challenges.u.asBigUint(), proof.eval_zw.asBigUint()));
 
   const res = g1TimesFr(G1_ONE.toFixed({ length: 96 }), e);
   return res;
@@ -903,7 +902,7 @@ export function isValidPairing(
 ): boolean {
   // A1 = Wxi + u * Wxiw (combined opening proofs for xi and xi*ω)
   let A1 = proof.Wxi;
-  A1 = g1Add(A1, g1TimesFr(proof.Wxiw, challenges.u.native));
+  A1 = g1Add(A1, g1TimesFr(proof.Wxiw, challenges.u.asBigUint()));
 
   // B1 = xi*Wxi + u*xi*ω*Wxiw + F - E
   // Concatenate points: Wxi || Wxiw
@@ -911,7 +910,7 @@ export function isValidPairing(
 
   // Concatenate scalars: xi || (u * xi * ω)
   const s = frMul(
-    frMul(challenges.u.native, challenges.xi.native),
+    frMul(challenges.u.asBigUint(), challenges.xi.asBigUint()),
     ROOT_OF_UNITY,
   );
   const pairingScalars = op.concat(challenges.xi.bytes, b32(s));

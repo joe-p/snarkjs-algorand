@@ -149,21 +149,52 @@
             "sourceInfo": [
                 {
                     "pc": [
-                        23
+                        42
                     ],
-                    "errorMessage": "OnCompletion is not NoOp"
+                    "errorMessage": "OnCompletion must be NoOp && can only call when creating"
                 },
                 {
                     "pc": [
-                        38
+                        31
                     ],
-                    "errorMessage": "can only call when creating"
+                    "errorMessage": "OnCompletion must be NoOp && can only call when not creating"
                 },
                 {
                     "pc": [
-                        26
+                        50,
+                        90
                     ],
-                    "errorMessage": "can only call when not creating"
+                    "errorMessage": "invalid array length header"
+                },
+                {
+                    "pc": [
+                        59
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.dynamic_array<arc4.uint256>"
+                },
+                {
+                    "pc": [
+                        97
+                    ],
+                    "errorMessage": "invalid number of bytes for contracts/plonk_bls12381.algo.ts::LagrangeWitness"
+                },
+                {
+                    "pc": [
+                        68
+                    ],
+                    "errorMessage": "invalid number of bytes for contracts/plonk_bls12381.algo.ts::Proof"
+                },
+                {
+                    "pc": [
+                        82
+                    ],
+                    "errorMessage": "invalid tail pointer at index 0 of ((len+uint256[]),uint256,uint256)"
+                },
+                {
+                    "pc": [
+                        77
+                    ],
+                    "errorMessage": "invalid tuple encoding"
                 }
             ],
             "pcOffsetMethod": "none"
@@ -174,19 +205,19 @@
         }
     },
     "source": {
-        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYXJjNC9pbmRleC5kLnRzOjpDb250cmFjdC5hcHByb3ZhbFByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICAvLyBjb250cmFjdHMvdmVyaWZpZXIuYWxnby50czoxMjYKICAgIC8vIGV4cG9ydCBjbGFzcyBTaWduYWxzQW5kUHJvb2YgZXh0ZW5kcyBDb250cmFjdCB7CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogbWFpbl9iYXJlX3JvdXRpbmdANgogICAgcHVzaGJ5dGVzIDB4YWMzYmY3NzAgLy8gbWV0aG9kICJzaWduYWxzQW5kUHJvb2YodWludDI1NltdLChieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSxieXRlWzk2XSx1aW50MjU2LHVpbnQyNTYsdWludDI1Nix1aW50MjU2LHVpbnQyNTYsdWludDI1NiksKHVpbnQyNTZbXSx1aW50MjU2LHVpbnQyNTYpKXZvaWQiCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAwCiAgICBtYXRjaCBtYWluX3NpZ25hbHNBbmRQcm9vZl9yb3V0ZUAzCgptYWluX2FmdGVyX2lmX2Vsc2VAMTA6CiAgICBlcnIKCm1haW5fc2lnbmFsc0FuZFByb29mX3JvdXRlQDM6CiAgICAvLyBjb250cmFjdHMvdmVyaWZpZXIuYWxnby50czoxMjctMTMxCiAgICAvLyBwdWJsaWMgc2lnbmFsc0FuZFByb29mKAogICAgLy8gICBzaWduYWxzOiBVaW50MjU2W10sCiAgICAvLyAgIHByb29mOiBQcm9vZiwKICAgIC8vICAgbHc6IExhZ3JhbmdlV2l0bmVzcywKICAgIC8vICk6IHZvaWQge30KICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgcHVzaGludCAxIC8vIDEKICAgIHJldHVybgoKbWFpbl9iYXJlX3JvdXRpbmdANjoKICAgIC8vIGNvbnRyYWN0cy92ZXJpZmllci5hbGdvLnRzOjEyNgogICAgLy8gZXhwb3J0IGNsYXNzIFNpZ25hbHNBbmRQcm9vZiBleHRlbmRzIENvbnRyYWN0IHsKICAgIHR4biBPbkNvbXBsZXRpb24KICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMTAKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg==",
-        "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYmFzZS1jb250cmFjdC5kLnRzOjpCYXNlQ29udHJhY3QuY2xlYXJTdGF0ZVByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg=="
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYXJjNC9pbmRleC5kLnRzOjpDb250cmFjdC5hcHByb3ZhbFByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBpbnRjYmxvY2sgMCAxIDMyCiAgICAvLyBjb250cmFjdHMvdmVyaWZpZXIuYWxnby50czo2NgogICAgLy8gZXhwb3J0IGNsYXNzIFNpZ25hbHNBbmRQcm9vZiBleHRlbmRzIENvbnRyYWN0IHsKICAgIHR4biBOdW1BcHBBcmdzCiAgICBieiBtYWluX19fYWxnb3RzX18uZGVmYXVsdENyZWF0ZUA1CiAgICBwdXNoYnl0ZXMgMHhhYzNiZjc3MCAvLyBtZXRob2QgInNpZ25hbHNBbmRQcm9vZih1aW50MjU2W10sKGJ5dGVbOTZdLGJ5dGVbOTZdLGJ5dGVbOTZdLGJ5dGVbOTZdLGJ5dGVbOTZdLGJ5dGVbOTZdLGJ5dGVbOTZdLGJ5dGVbOTZdLGJ5dGVbOTZdLHVpbnQyNTYsdWludDI1Nix1aW50MjU2LHVpbnQyNTYsdWludDI1Nix1aW50MjU2KSwodWludDI1NltdLHVpbnQyNTYsdWludDI1Nikpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fc2lnbmFsc0FuZFByb29mX3JvdXRlQDMKICAgIGVycgoKbWFpbl9zaWduYWxzQW5kUHJvb2Zfcm91dGVAMzoKICAgIC8vIGNvbnRyYWN0cy92ZXJpZmllci5hbGdvLnRzOjY3LTcxCiAgICAvLyBwdWJsaWMgc2lnbmFsc0FuZFByb29mKAogICAgLy8gICBzaWduYWxzOiBVaW50MjU2W10sCiAgICAvLyAgIHByb29mOiBQcm9vZiwKICAgIC8vICAgbHc6IExhZ3JhbmdlV2l0bmVzcywKICAgIC8vICk6IHZvaWQge30KICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAmJgogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBtdXN0IGJlIE5vT3AgJiYgY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgYiBzaWduYWxzQW5kUHJvb2YKCm1haW5fX19hbGdvdHNfXy5kZWZhdWx0Q3JlYXRlQDU6CiAgICAvLyBjb250cmFjdHMvdmVyaWZpZXIuYWxnby50czo2NgogICAgLy8gZXhwb3J0IGNsYXNzIFNpZ25hbHNBbmRQcm9vZiBleHRlbmRzIENvbnRyYWN0IHsKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICAmJgogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBtdXN0IGJlIE5vT3AgJiYgY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICBpbnRjXzEgLy8gMQogICAgcmV0dXJuCgoKLy8gY29udHJhY3RzL3ZlcmlmaWVyLmFsZ28udHM6OlNpZ25hbHNBbmRQcm9vZi5zaWduYWxzQW5kUHJvb2Zbcm91dGluZ10oKSAtPiB2b2lkOgpzaWduYWxzQW5kUHJvb2Y6CiAgICAvLyBjb250cmFjdHMvdmVyaWZpZXIuYWxnby50czo2Ny03MQogICAgLy8gcHVibGljIHNpZ25hbHNBbmRQcm9vZigKICAgIC8vICAgc2lnbmFsczogVWludDI1NltdLAogICAgLy8gICBwcm9vZjogUHJvb2YsCiAgICAvLyAgIGx3OiBMYWdyYW5nZVdpdG5lc3MsCiAgICAvLyApOiB2b2lkIHt9CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGludGNfMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzIgLy8gMzIKICAgICoKICAgIHB1c2hpbnQgMiAvLyAyCiAgICArCiAgICBzd2FwCiAgICBsZW4KICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuZHluYW1pY19hcnJheTxhcmM0LnVpbnQyNTY+CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAyCiAgICBsZW4KICAgIHB1c2hpbnQgMTA1NiAvLyAxMDU2CiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBjb250cmFjdHMvcGxvbmtfYmxzMTIzODEuYWxnby50czo6UHJvb2YKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDMKICAgIGR1cAogICAgbGVuCiAgICBkaWcgMQogICAgaW50Y18wIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIHR1cGxlIGVuY29kaW5nCiAgICBkdXAKICAgIHB1c2hpbnQgNjYgLy8gNjYKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCB0YWlsIHBvaW50ZXIgYXQgaW5kZXggMCBvZiAoKGxlbit1aW50MjU2W10pLHVpbnQyNTYsdWludDI1NikKICAgIHVuY292ZXIgMgogICAgc3dhcAogICAgZGlnIDIKICAgIHN1YnN0cmluZzMKICAgIGludGNfMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzIgLy8gMzIKICAgICoKICAgIHB1c2hpbnQgNjggLy8gNjgKICAgICsKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGNvbnRyYWN0cy9wbG9ua19ibHMxMjM4MS5hbGdvLnRzOjpMYWdyYW5nZVdpdG5lc3MKICAgIGludGNfMSAvLyAxCiAgICByZXR1cm4K",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYmFzZS1jb250cmFjdC5kLnRzOjpCYXNlQ29udHJhY3QuY2xlYXJTdGF0ZVByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg=="
     },
     "byteCode": {
-        "approval": "CjEbQQAYgASsO/dwNhoAjgEAAQAxGRREMRhEgQFDMRlA//AxGBREgQFD",
-        "clear": "CoEBQw=="
+        "approval": "CyADAAEgMRtBABiABKw793A2GgCOAQABADEZFDEYEERCAAoxGRQxGBQQRCNDNhoBSSJZJAuBAghMFRJENhoCFYGgCBJENhoDSRVLASJZSYFCEkRPAkxLAlIiWSQLgUQIEkQjQw==",
+        "clear": "C4EBQw=="
     },
     "compilerInfo": {
         "compiler": "puya",
         "compilerVersion": {
             "major": 5,
-            "minor": 0,
-            "patch": 0
+            "minor": 3,
+            "patch": 2
         }
     },
     "events": [],
