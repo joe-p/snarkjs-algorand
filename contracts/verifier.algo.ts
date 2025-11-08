@@ -12,7 +12,7 @@ import {
 } from "@algorandfoundation/algorand-typescript";
 import {
   abimethod,
-  interpretAsArc4,
+  convertBytes,
   Uint256,
 } from "@algorandfoundation/algorand-typescript/arc4";
 import {
@@ -84,17 +84,30 @@ export class PlonkVerifierLsig extends LogicSig {
       T3: proofBytes.slice(576, 672).toFixed({ length: 96 }),
       Wxi: proofBytes.slice(672, 768).toFixed({ length: 96 }),
       Wxiw: proofBytes.slice(768, 864).toFixed({ length: 96 }),
-      eval_a: interpretAsArc4<Uint256>(proofBytes.slice(864, 896)),
-      eval_b: interpretAsArc4<Uint256>(proofBytes.slice(896, 928)),
-      eval_c: interpretAsArc4<Uint256>(proofBytes.slice(928, 960)),
-      eval_s1: interpretAsArc4<Uint256>(proofBytes.slice(960, 992)),
-      eval_s2: interpretAsArc4<Uint256>(proofBytes.slice(992, 1024)),
-      eval_zw: interpretAsArc4<Uint256>(proofBytes.slice(1024, 1056)),
+      eval_a: convertBytes<Uint256>(proofBytes.slice(864, 896), {
+        strategy: "unsafe-cast",
+      }),
+      eval_b: convertBytes<Uint256>(proofBytes.slice(896, 928), {
+        strategy: "unsafe-cast",
+      }),
+      eval_c: convertBytes<Uint256>(proofBytes.slice(928, 960), {
+        strategy: "unsafe-cast",
+      }),
+      eval_s1: convertBytes<Uint256>(proofBytes.slice(960, 992), {
+        strategy: "unsafe-cast",
+      }),
+      eval_s2: convertBytes<Uint256>(proofBytes.slice(992, 1024), {
+        strategy: "unsafe-cast",
+      }),
+      eval_zw: convertBytes<Uint256>(proofBytes.slice(1024, 1056), {
+        strategy: "unsafe-cast",
+      }),
     };
 
     const signalBytes = Txn.applicationArgs(1);
-    const signalsArc4 =
-      interpretAsArc4<arc4.DynamicArray<Uint256>>(signalBytes);
+    const signalsArc4 = convertBytes<arc4.DynamicArray<Uint256>>(signalBytes, {
+      strategy: "unsafe-cast",
+    });
 
     const signals: Uint256[] = [];
     for (const s of signalsArc4) {
@@ -102,10 +115,9 @@ export class PlonkVerifierLsig extends LogicSig {
     }
 
     const lwBytes = Txn.applicationArgs(3);
-    const lwArc4 =
-      interpretAsArc4<
-        arc4.Tuple<[arc4.DynamicArray<Uint256>, Uint256, Uint256]>
-      >(lwBytes);
+    const lwArc4 = convertBytes<
+      arc4.Tuple<[arc4.DynamicArray<Uint256>, Uint256, Uint256]>
+    >(lwBytes, { strategy: "unsafe-cast" });
 
     const lw: LagrangeWitness = {
       L: [] as Uint256[],

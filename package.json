@@ -35,8 +35,8 @@
     "typescript": "^5"
   },
   "devDependencies": {
-    "@algorandfoundation/algorand-typescript": "1.0.0-alpha.77",
-    "@algorandfoundation/puya-ts": "1.0.0-alpha.77",
+    "@algorandfoundation/algorand-typescript": "^1.0.1",
+    "@algorandfoundation/puya-ts": "^1.0.1",
     "@types/snarkjs": "^0.7.9",
     "tsup": "^8.0.0",
     "typescript": "^5.5.0",
