@@ -37,6 +37,7 @@
   "devDependencies": {
     "@algorandfoundation/algorand-typescript": "^1.0.1",
     "@algorandfoundation/puya-ts": "^1.0.1",
+    "@types/node": "^24.10.0",
     "@types/snarkjs": "^0.7.9",
     "tsup": "^8.0.0",
     "tsx": "^4.20.6",
