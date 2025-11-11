@@ -40,5 +40,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build
+        run: pnpm build
+
+      - name: Check for dirty files
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Error: Build produced uncommitted changes"
+            git status
+            git diff
+            exit 1
+          fi
+
       - name: Run tests
         run: pnpm test
