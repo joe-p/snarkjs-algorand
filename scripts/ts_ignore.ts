@@ -1,11 +1,10 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, readdirSync } from "fs";
+import { join } from "path";
 
-const files = [
-  "contracts/clients/PlonkVerifier.ts",
-  "contracts/clients/PlonkVerifierWithLogs.ts",
-  "contracts/clients/SignalsAndProof.ts",
-  "contracts/clients/LagrangeWitnessCalculator.ts",
-];
+const dir = "contracts/clients/";
+const files = readdirSync(dir)
+  .filter((file) => file.endsWith(".ts"))
+  .map((file) => join(dir, file));
 
 for (const file of files) {
   let content = readFileSync(file, "utf8");
