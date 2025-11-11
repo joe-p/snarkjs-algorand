@@ -37,6 +37,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
+      - name: Install algokit
+        run: pip install algokit
+
+      - name: start localnet
+        run: algokit localnet start
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
