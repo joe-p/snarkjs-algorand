@@ -1,10 +1,11 @@
-import { AlgorandClient } from "@algorandfoundation/algokit-utils";
+import { AlgorandClient, microAlgos } from "@algorandfoundation/algokit-utils";
 import {
   Groth16VerifierClient,
   Groth16VerifierFactory,
   type Groth16VerifierDeployParams,
   type GrothProof,
   type GrothVerificationKey,
+  APP_SPEC,
 } from "../contracts/clients/Groth16Verifier";
 import { Groth16VerifierWithLogsFactory } from "../contracts/clients/Groth16VerifierWithLogs";
 import * as snarkjs from "snarkjs";
@@ -17,6 +18,8 @@ import type { RawSimulateOptions } from "@algorandfoundation/algokit-utils/types
 import type { Transaction } from "algosdk";
 import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
 import type { Address } from "algosdk";
+import { GROTH16_LSIG_SOURCE } from "../contracts/out/lsig_source";
+import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
 import { stringValuesToBigints } from "./index.ts";
 
 export {
@@ -141,6 +144,116 @@ export type Groth16Witness = {
   proof: GrothProof;
   signals: bigint[];
 };
+
+export class Groth16LsigVerifier {
+  curve?: any;
+
+  constructor(
+    public algorand: AlgorandClient,
+    public zKey: snarkjs.ZKArtifact,
+    public wasmProver: snarkjs.ZKArtifact,
+    public totalLsigs: number = 6,
+  ) {}
+
+  private async ensureCurveInstanttiation() {
+    if (!this.curve) {
+      // @ts-expect-error curves is not typed
+      this.curve = await snarkjs.curves.getCurveFromName("bls12381");
+    }
+  }
+
+  async proofAndSignals(
+    inputs: snarkjs.CircuitSignals,
+  ): Promise<Groth16Witness> {
+    await this.ensureCurveInstanttiation();
+
+    const { proof: rawProof, publicSignals: rawSignals } =
+      await snarkjs.groth16.fullProve(inputs, this.wasmProver, this.zKey);
+
+    const proof = encodeGroth16Proof(rawProof, this.curve);
+    const signals = encodeGroth16Signals(...rawSignals);
+
+    return {
+      proof,
+      signals,
+    };
+  }
+
+  async lsigAccount() {
+    await this.ensureCurveInstanttiation();
+
+    const vk = await getGroth16Vkey(this.zKey, this.curve);
+    const vkBytes = encodeGroth16Vk(vk, APP_SPEC);
+
+    const compilation = await this.algorand.app.compileTealTemplate(
+      GROTH16_LSIG_SOURCE,
+      {
+        VERIFICATION_KEY: vkBytes,
+      },
+    );
+
+    return this.algorand.account.logicsig(compilation.compiledBase64ToBytes);
+  }
+
+  async verificationParams({
+    inputs,
+    composer,
+    paramsCallback,
+    addExtraLsigs = true,
+  }: {
+    inputs: snarkjs.CircuitSignals;
+    composer: {
+      addTransaction: (txn: Transaction) => unknown;
+    };
+    addExtraLsigs?: boolean;
+    paramsCallback: (params: {
+      appParams: {
+        sender: Address;
+        staticFee: AlgoAmount;
+        args: { signals: bigint[]; proof: GrothProof };
+      };
+      lsigsFee: AlgoAmount;
+      extraLsigsTxns: Transaction[];
+    }) => Promise<void>;
+  }): Promise<void> {
+    const { proof, signals } = await this.proofAndSignals(inputs);
+
+    const params = {
+      appParams: {
+        sender: await this.lsigAccount(),
+        staticFee: microAlgos(0),
+        args: { signals, proof },
+      },
+      lsigsFee: microAlgos(1000 * this.totalLsigs),
+      extraLsigsTxns: [] as Transaction[],
+    };
+
+    const compilation = await this.algorand.app.compileTeal(
+      "#pragma version 11\n txn RekeyTo; global ZeroAddress; ==",
+    );
+    const extraLsig = this.algorand.account.logicsig(
+      compilation.compiledBase64ToBytes,
+    );
+
+    await paramsCallback(params);
+
+    for (let i = 0; i < this.totalLsigs - 1; i++) {
+      const lsigPay = await this.algorand.createTransaction.payment({
+        sender: extraLsig,
+        amount: microAlgos(0),
+        staticFee: microAlgos(0),
+        receiver: extraLsig,
+        note: `Extra lsig ${i + 1} of ${this.totalLsigs - 1}`,
+      });
+
+      params.extraLsigsTxns.push(lsigPay);
+
+      if (addExtraLsigs) {
+        composer.addTransaction(lsigPay);
+      }
+    }
+  }
+}
 
 export class Groth16AppVerifier {
   appClient?: Groth16VerifierClient;
