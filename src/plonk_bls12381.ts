@@ -87,7 +87,7 @@ export function encodePlonkVk(
   vkey: PlonkVerificationKey,
   appSpec: Arc56Contract,
 ): Uint8Array {
-  return getABIEncodedValue(vkey, "VerificationKey", appSpec.structs);
+  return getABIEncodedValue(vkey, "PlonkVerificationKey", appSpec.structs);
 }
 
 export async function getPlonkProof(
