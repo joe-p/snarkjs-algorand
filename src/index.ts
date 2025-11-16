@@ -50,7 +50,7 @@ export {
   type PlonkVerifierDeployParams,
 } from "../contracts/clients/PlonkVerifier";
 
-export async function getVkey(
+export async function getPlonkVkey(
   zKey: snarkjs.ZKArtifact,
   curve: any,
 ): Promise<PlonkVerificationKey> {
@@ -94,19 +94,22 @@ export async function getVkey(
   };
 }
 
-export function encodeVk(
+export function encodePlonkVk(
   vkey: PlonkVerificationKey,
   appSpec: Arc56Contract,
 ): Uint8Array {
   return getABIEncodedValue(vkey, "VerificationKey", appSpec.structs);
 }
 
-export async function getProof(path: string, curve: any): Promise<PlonkProof> {
+export async function getPlonkProof(
+  path: string,
+  curve: any,
+): Promise<PlonkProof> {
   const proof = JSON.parse(readFileSync(path, "utf8"));
-  return encodeProof(proof, curve);
+  return encodePlonkProof(proof, curve);
 }
 
-export function encodeProof(proof: any, curve: any): PlonkProof {
+export function encodePlonkProof(proof: any, curve: any): PlonkProof {
   ["A", "B", "C", "Z", "T1", "T2", "T3", "Wxi", "Wxiw"].forEach((p) => {
     stringValuesToBigints(proof[p]);
     const point = curve.G1.fromObject(proof[p]);
@@ -190,7 +193,7 @@ export type Witness = {
   };
 };
 
-export class LsigVerifier {
+export class PlonkLsigVerifier {
   curve?: any;
 
   constructor(
@@ -213,11 +216,11 @@ export class LsigVerifier {
     const { proof: rawProof, publicSignals: rawSignals } =
       await snarkjs.plonk.fullProve(inputs, this.wasmProver, this.zKey);
 
-    const proof = encodeProof(rawProof, this.curve);
+    const proof = encodePlonkProof(rawProof, this.curve);
     const signals = encodeSignals(...rawSignals);
 
-    const vk = await getVkey(this.zKey, this.curve);
-    const vkBytes = encodeVk(vk, APP_SPEC);
+    const vk = await getPlonkVkey(this.zKey, this.curve);
+    const vkBytes = encodePlonkVk(vk, APP_SPEC);
 
     const rootOfUnity = Buffer.from(
       this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
@@ -242,8 +245,8 @@ export class LsigVerifier {
   async lsigAccount() {
     await this.ensureCurveInstanttiation();
 
-    const vk = await getVkey(this.zKey, this.curve);
-    const vkBytes = encodeVk(vk, APP_SPEC);
+    const vk = await getPlonkVkey(this.zKey, this.curve);
+    const vkBytes = encodePlonkVk(vk, APP_SPEC);
 
     const compilation = await this.algorand.app.compileTealTemplate(
       LSIG_SOURCE,
@@ -321,7 +324,7 @@ export class LsigVerifier {
   }
 }
 
-export class AppVerifier {
+export class PlonkAppVerifier {
   appClient?: PlonkVerifierClient;
   curve?: any;
 
@@ -364,8 +367,8 @@ export class AppVerifier {
       });
     }
 
-    const vk = await getVkey(this.zKey, this.curve);
-    const vkBytes = encodeVk(vk, factory.appSpec);
+    const vk = await getPlonkVkey(this.zKey, this.curve);
+    const vkBytes = encodePlonkVk(vk, factory.appSpec);
 
     const rootOfUnity = Buffer.from(
       this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
@@ -392,10 +395,10 @@ export class AppVerifier {
     const { proof: rawProof, publicSignals: rawSignals } =
       await snarkjs.plonk.fullProve(inputs, this.wasmProver, this.zKey);
 
-    const proof = encodeProof(rawProof, this.curve);
+    const proof = encodePlonkProof(rawProof, this.curve);
     const signals = encodeSignals(...rawSignals);
-    const vk = await getVkey(this.zKey, this.curve);
-    const vkBytes = encodeVk(vk, APP_SPEC);
+    const vk = await getPlonkVkey(this.zKey, this.curve);
+    const vkBytes = encodePlonkVk(vk, APP_SPEC);
 
     const rootOfUnity = Buffer.from(
       this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
@@ -431,8 +434,8 @@ export class AppVerifier {
   ) {
     this.assertDeployed();
 
-    const vk = await getVkey(this.zKey, this.curve);
-    const vkBytes = encodeVk(vk, APP_SPEC);
+    const vk = await getPlonkVkey(this.zKey, this.curve);
+    const vkBytes = encodePlonkVk(vk, APP_SPEC);
 
     const rootOfUnity = Buffer.from(
       this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
