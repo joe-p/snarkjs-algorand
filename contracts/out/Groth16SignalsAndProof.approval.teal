@@ -3,7 +3,7 @@
 
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
-    // contracts/groth16_verifier.algo.ts:58
+    // contracts/groth16_verifier.algo.ts:55
     // export class Groth16SignalsAndProof extends Contract {
     txn NumAppArgs
     bz main___algots__.defaultCreate@5
@@ -13,8 +13,8 @@ main:
     err
 
 main_signalsAndProof_route@3:
-    // contracts/groth16_verifier.algo.ts:59
-    // public signalsAndProof(signals: PublicSignals, proof: Proof): void {}
+    // contracts/groth16_verifier.algo.ts:56
+    // public signalsAndProof(signals: PublicSignals, proof: GrothProof): void {}
     txn OnCompletion
     !
     txn ApplicationID
@@ -23,7 +23,7 @@ main_signalsAndProof_route@3:
     b signalsAndProof
 
 main___algots__.defaultCreate@5:
-    // contracts/groth16_verifier.algo.ts:58
+    // contracts/groth16_verifier.algo.ts:55
     // export class Groth16SignalsAndProof extends Contract {
     txn OnCompletion
     !
@@ -37,8 +37,8 @@ main___algots__.defaultCreate@5:
 
 // contracts/groth16_verifier.algo.ts::Groth16SignalsAndProof.signalsAndProof[routing]() -> void:
 signalsAndProof:
-    // contracts/groth16_verifier.algo.ts:59
-    // public signalsAndProof(signals: PublicSignals, proof: Proof): void {}
+    // contracts/groth16_verifier.algo.ts:56
+    // public signalsAndProof(signals: PublicSignals, proof: GrothProof): void {}
     txna ApplicationArgs 1
     dup
     pushint 0 // 0
@@ -55,6 +55,6 @@ signalsAndProof:
     len
     pushint 384 // 384
     ==
-    assert // invalid number of bytes for contracts/groth16_bls12381.algo.ts::Proof
+    assert // invalid number of bytes for contracts/groth16_bls12381.algo.ts::GrothProof
     pushint 1 // 1
     return

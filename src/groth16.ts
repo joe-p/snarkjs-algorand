@@ -3,8 +3,8 @@ import {
   Groth16VerifierClient,
   Groth16VerifierFactory,
   type Groth16VerifierDeployParams,
-  type Proof,
-  type VerificationKey,
+  type GrothProof,
+  type GrothVerificationKey,
 } from "../contracts/clients/Groth16Verifier";
 import { Groth16VerifierWithLogsFactory } from "../contracts/clients/Groth16VerifierWithLogs";
 import * as snarkjs from "snarkjs";
@@ -26,15 +26,15 @@ export {
 
 export {
   Groth16VerifierClient,
-  type Proof,
-  type VerificationKey,
+  type GrothProof,
+  type GrothVerificationKey,
   type Groth16VerifierDeployParams,
 } from "../contracts/clients/Groth16Verifier";
 
 export async function getGroth16Vkey(
   zKey: snarkjs.ZKArtifact,
   curve: any,
-): Promise<VerificationKey> {
+): Promise<GrothVerificationKey> {
   const vkey = await snarkjs.zKey.exportVerificationKey(zKey, console);
 
   // Convert G1 points (IC array + alpha)
@@ -85,21 +85,21 @@ export async function getGroth16Vkey(
 }
 
 export function encodeGroth16Vk(
-  vkey: VerificationKey,
+  vkey: GrothVerificationKey,
   appSpec: Arc56Contract,
 ): Uint8Array {
-  return getABIEncodedValue(vkey, "VerificationKey", appSpec.structs);
+  return getABIEncodedValue(vkey, "GrothVerificationKey", appSpec.structs);
 }
 
 export async function getGroth16Proof(
   path: string,
   curve: any,
-): Promise<Proof> {
+): Promise<GrothProof> {
   const proof = JSON.parse(readFileSync(path, "utf8"));
   return encodeGroth16Proof(proof, curve);
 }
 
-export function encodeGroth16Proof(proof: any, curve: any): Proof {
+export function encodeGroth16Proof(proof: any, curve: any): GrothProof {
   // Convert G1 points (pi_a, pi_c)
   ["pi_a", "pi_c"].forEach((p) => {
     stringValuesToBigints(proof[p]);
@@ -138,7 +138,7 @@ export function encodeGroth16Signals(...inputs: string[]) {
 }
 
 export type Groth16Witness = {
-  proof: Proof;
+  proof: GrothProof;
   signals: bigint[];
 };
 
@@ -199,7 +199,9 @@ export class Groth16AppVerifier {
     return appClient;
   }
 
-  async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<Groth16Witness> {
+  async proofAndSignals(
+    inputs: snarkjs.CircuitSignals,
+  ): Promise<Groth16Witness> {
     await this.ensureCurveInstanttiation();
 
     const { proof: rawProof, publicSignals: rawSignals } =
@@ -225,7 +227,7 @@ export class Groth16AppVerifier {
   // Methods that take in proof and signals directly
 
   async simulateVerificationWithProofAndSignals(
-    proofAndSignals: { proof: Proof; signals: bigint[] },
+    proofAndSignals: { proof: GrothProof; signals: bigint[] },
     simParams?: RawSimulateOptions,
   ) {
     this.assertDeployed();

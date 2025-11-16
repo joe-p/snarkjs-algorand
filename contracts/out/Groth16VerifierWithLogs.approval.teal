@@ -16,7 +16,7 @@ main:
 
 main_verify_route@4:
     // contracts/groth16_verifier.algo.ts:27
-    // verify(signals: PublicSignals, proof: Proof): void {
+    // verify(signals: PublicSignals, proof: GrothProof): void {
     txn OnCompletion
     !
     txn ApplicationID
@@ -73,7 +73,7 @@ _dummy:
     pushint 684 // 684
     +
     ==
-    assert // invalid number of bytes for contracts/groth16_bls12381.algo.ts::VerificationKey
+    assert // invalid number of bytes for contracts/groth16_bls12381.algo.ts::GrothVerificationKey
     intc_1 // 1
     return
 
@@ -84,7 +84,7 @@ verify:
     dup
     bytec_0 // ""
     // contracts/groth16_verifier.algo.ts:27
-    // verify(signals: PublicSignals, proof: Proof): void {
+    // verify(signals: PublicSignals, proof: GrothProof): void {
     txna ApplicationArgs 1
     dupn 2
     intc_3 // 0
@@ -105,9 +105,9 @@ verify:
     len
     pushint 384 // 384
     ==
-    assert // invalid number of bytes for contracts/groth16_bls12381.algo.ts::Proof
-    // contracts/groth16_bls12381.algo.ts:261
-    // return verifyWithLogs(decodeArc4<VerificationKey>(vkBytes), signals, proof);
+    assert // invalid number of bytes for contracts/groth16_bls12381.algo.ts::GrothProof
+    // contracts/groth16_bls12381.algo.ts:265
+    // decodeArc4<GrothVerificationKey>(vkBytes),
     bytec_2 // TMPL_VERIFICATION_KEY
     dup
     cover 2
@@ -186,11 +186,11 @@ verify_for_header@2:
     b verify_for_header@2
 
 verify_after_for@4:
-    // contracts/groth16_bls12381.algo.ts:125
+    // contracts/groth16_bls12381.algo.ts:128
     // if (signals.length === 0) {
     dig 5
     bnz verify_after_if_else@6
-    // contracts/groth16_bls12381.algo.ts:127
+    // contracts/groth16_bls12381.algo.ts:130
     // return vk.IC[0] as bytes<96>;
     dig 4
     dup
@@ -202,7 +202,7 @@ verify_after_for@4:
     extract 2 96
 
 verify_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
-    // contracts/groth16_bls12381.algo.ts:210
+    // contracts/groth16_bls12381.algo.ts:213
     // debugLog("cpub", cpub);
     pushbytes "cpub"
     // contracts/bls12381_common.algo.ts:52
@@ -212,7 +212,7 @@ verify_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     // log(value);
     dup
     log
-    // contracts/groth16_bls12381.algo.ts:213
+    // contracts/groth16_bls12381.algo.ts:216
     // debugLog("pi_a", proof.pi_a);
     pushbytes "pi_a"
     // contracts/bls12381_common.algo.ts:52
@@ -223,7 +223,7 @@ verify_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     dig 4
     dup
     log
-    // contracts/groth16_bls12381.algo.ts:214
+    // contracts/groth16_bls12381.algo.ts:217
     // debugLog("pi_b", proof.pi_b);
     pushbytes "pi_b"
     // contracts/bls12381_common.algo.ts:52
@@ -235,7 +235,7 @@ verify_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     dup
     cover 3
     log
-    // contracts/groth16_bls12381.algo.ts:215
+    // contracts/groth16_bls12381.algo.ts:218
     // debugLog("pi_c", proof.pi_c);
     pushbytes "pi_c"
     // contracts/bls12381_common.algo.ts:52
@@ -262,22 +262,22 @@ verify_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     intc_2 // 96
     ==
     assert // Length must be 96
-    // contracts/groth16_bls12381.algo.ts:219
+    // contracts/groth16_bls12381.algo.ts:222
     // let g1Points = op.concat(negPiA, cpub);
     uncover 2
     concat
-    // contracts/groth16_bls12381.algo.ts:220
+    // contracts/groth16_bls12381.algo.ts:223
     // g1Points = op.concat(g1Points, proof.pi_c);
     swap
     concat
-    // contracts/groth16_bls12381.algo.ts:221
+    // contracts/groth16_bls12381.algo.ts:224
     // g1Points = op.concat(g1Points, vk.vk_alpha_1);
     dig 6
     dup
     cover 2
     extract 0 96
     concat
-    // contracts/groth16_bls12381.algo.ts:224
+    // contracts/groth16_bls12381.algo.ts:227
     // let g2Points = op.concat(proof.pi_b, vk.vk_gamma_2);
     dig 1
     pushints 288 192 // 288, 192
@@ -285,25 +285,25 @@ verify_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     uncover 3
     swap
     concat
-    // contracts/groth16_bls12381.algo.ts:225
+    // contracts/groth16_bls12381.algo.ts:228
     // g2Points = op.concat(g2Points, vk.vk_delta_2);
     dig 2
     pushints 480 192 // 480, 192
     extract3
     concat
-    // contracts/groth16_bls12381.algo.ts:226
+    // contracts/groth16_bls12381.algo.ts:229
     // g2Points = op.concat(g2Points, vk.vk_beta_2);
     uncover 2
     extract 96 192
     concat
-    // contracts/groth16_bls12381.algo.ts:229-233
+    // contracts/groth16_bls12381.algo.ts:232-236
     // const res = op.EllipticCurve.pairingCheck(
     //   op.Ec.BLS12_381g1,
     //   g1Points,
     //   g2Points,
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/groth16_bls12381.algo.ts:235
+    // contracts/groth16_bls12381.algo.ts:238
     // debugLog("pairing result", res ? Bytes.fromHex("01") : Bytes.fromHex("00"));
     pushbytess 0x00 0x01 // 0x00, 0x01
     dig 2
@@ -315,35 +315,32 @@ verify_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     // contracts/bls12381_common.algo.ts:53
     // log(value);
     log
-    // contracts/groth16_verifier.algo.ts:28-31
-    // assert(
-    //   verifyFromTemplateWithLogs(signals, proof),
-    //   "Verification failed",
-    // );
+    // contracts/groth16_verifier.algo.ts:28
+    // assert(verifyFromTemplateWithLogs(signals, proof), "Verification failed");
     assert // Verification failed
     // contracts/groth16_verifier.algo.ts:27
-    // verify(signals: PublicSignals, proof: Proof): void {
+    // verify(signals: PublicSignals, proof: GrothProof): void {
     intc_1 // 1
     return
 
 verify_after_if_else@6:
-    // contracts/groth16_bls12381.algo.ts:131
+    // contracts/groth16_bls12381.algo.ts:134
     // let icPoints = Bytes();
     bytec_0 // 0x
     bury 10
-    // contracts/groth16_bls12381.algo.ts:132
+    // contracts/groth16_bls12381.algo.ts:135
     // for (let i: uint64 = 1; i <= signals.length; i++) {
     intc_1 // 1
     bury 8
 
 verify_while_top@7:
-    // contracts/groth16_bls12381.algo.ts:132
+    // contracts/groth16_bls12381.algo.ts:135
     // for (let i: uint64 = 1; i <= signals.length; i++) {
     dig 7
     dig 6
     <=
     bz verify_after_while@9
-    // contracts/groth16_bls12381.algo.ts:133
+    // contracts/groth16_bls12381.algo.ts:136
     // icPoints = op.concat(icPoints, vk.IC[i] as bytes<96>);
     dig 4
     dup
@@ -364,7 +361,7 @@ verify_while_top@7:
     swap
     concat
     bury 11
-    // contracts/groth16_bls12381.algo.ts:132
+    // contracts/groth16_bls12381.algo.ts:135
     // for (let i: uint64 = 1; i <= signals.length; i++) {
     intc_1 // 1
     +
@@ -372,7 +369,7 @@ verify_while_top@7:
     b verify_while_top@7
 
 verify_after_while@9:
-    // contracts/groth16_bls12381.algo.ts:137
+    // contracts/groth16_bls12381.algo.ts:140
     // let scalars = Bytes();
     bytec_0 // 0x
     bury 9
@@ -380,7 +377,7 @@ verify_after_while@9:
     bury 1
 
 verify_for_header@10:
-    // contracts/groth16_bls12381.algo.ts:138
+    // contracts/groth16_bls12381.algo.ts:141
     // for (const signal of signals) {
     dup
     dig 6
@@ -414,7 +411,7 @@ verify_for_header@10:
     intc_0 // 32
     ==
     assert // Length must be 32
-    // contracts/groth16_bls12381.algo.ts:139
+    // contracts/groth16_bls12381.algo.ts:142
     // scalars = op.concat(scalars, b32(frScalar(signal.asBigUint())));
     dig 10
     swap
@@ -426,7 +423,7 @@ verify_for_header@10:
     b verify_for_header@10
 
 verify_after_for@12:
-    // contracts/groth16_bls12381.algo.ts:143-147
+    // contracts/groth16_bls12381.algo.ts:146-150
     // let cpub = op.EllipticCurve.scalarMulMulti(
     //   op.Ec.BLS12_381g1,
     //   icPoints,
@@ -440,7 +437,7 @@ verify_after_for@12:
     intc_2 // 96
     ==
     assert // Length must be 96
-    // contracts/groth16_bls12381.algo.ts:150
+    // contracts/groth16_bls12381.algo.ts:153
     // cpub = g1Add(cpub, vk.IC[0] as bytes<96>);
     dig 5
     dup
@@ -462,6 +459,6 @@ verify_after_for@12:
     intc_2 // 96
     ==
     assert // Length must be 96
-    // contracts/groth16_bls12381.algo.ts:209
+    // contracts/groth16_bls12381.algo.ts:212
     // const cpub = computeCpub(vk, signals);
     b verify_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13
