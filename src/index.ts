@@ -7,3 +7,6 @@ export function stringValuesToBigints(obj: any): any {
     }
   }
 }
+
+export * from "./plonk";
+export * from "./groth16";
