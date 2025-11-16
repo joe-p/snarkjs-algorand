@@ -5,7 +5,7 @@
 main:
     intcblock 32 96 1 0 384
     bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x 0x01 0x068101 TMPL_VERIFICATION_KEY TMPL_ROOT_OF_UNITY
-    // contracts/verifier.algo.ts:74
+    // contracts/plonk_verifier.algo.ts:74
     // export class LagrangeWitnessCalculator extends Contract {
     pushbytes 0x87396824 // method "calculateLagrangeWitness(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))(uint256[],uint256,uint256)"
     txna ApplicationArgs 0
@@ -13,7 +13,7 @@ main:
     err
 
 main_calculateLagrangeWitness_route@2:
-    // contracts/verifier.algo.ts:75
+    // contracts/plonk_verifier.algo.ts:75
     // @abimethod({ onCreate: "require", allowActions: "DeleteApplication" })
     txn OnCompletion
     pushint 5 // DeleteApplication
@@ -78,13 +78,13 @@ getChallenge:
     retsub
 
 
-// contracts/verifier.algo.ts::LagrangeWitnessCalculator.calculateLagrangeWitness[routing]() -> void:
+// contracts/plonk_verifier.algo.ts::LagrangeWitnessCalculator.calculateLagrangeWitness[routing]() -> void:
 calculateLagrangeWitness:
     intc_3 // 0
     dupn 14
     bytec_1 // ""
     dupn 5
-    // contracts/verifier.algo.ts:75
+    // contracts/plonk_verifier.algo.ts:75
     // @abimethod({ onCreate: "require", allowActions: "DeleteApplication" })
     txna ApplicationArgs 1
     dupn 2
@@ -127,7 +127,7 @@ calculateLagrangeWitness_while_top@2:
     b calculateLagrangeWitness_while_top@2
 
 calculateLagrangeWitness_after_while@7:
-    // contracts/verifier.algo.ts:83
+    // contracts/plonk_verifier.algo.ts:83
     // const vk = decodeArc4<VerificationKey>(vkBytes);
     bytec 4 // TMPL_VERIFICATION_KEY
     dup
@@ -756,7 +756,7 @@ calculateLagrangeWitness_after_while@31:
     concat
     dig 24
     concat
-    // contracts/verifier.algo.ts:90
+    // contracts/plonk_verifier.algo.ts:90
     // L: calc.L,
     dup
     intc_3 // 0
@@ -766,7 +766,7 @@ calculateLagrangeWitness_after_while@31:
     dig 2
     cover 2
     substring3
-    // contracts/verifier.algo.ts:91
+    // contracts/plonk_verifier.algo.ts:91
     // xin: calc.challenges.xin,
     swap
     pushints 2 416 // 2, 416
@@ -775,14 +775,14 @@ calculateLagrangeWitness_after_while@31:
     pushint 352 // 352
     intc_0 // 32
     extract3
-    // contracts/verifier.algo.ts:91-92
+    // contracts/plonk_verifier.algo.ts:91-92
     // xin: calc.challenges.xin,
     // zh: calc.challenges.zh,
     swap
     intc 4 // 384
     intc_0 // 32
     extract3
-    // contracts/verifier.algo.ts:89-93
+    // contracts/plonk_verifier.algo.ts:89-93
     // return {
     //   L: calc.L,
     //   xin: calc.challenges.xin,
@@ -795,7 +795,7 @@ calculateLagrangeWitness_after_while@31:
     concat
     swap
     concat
-    // contracts/verifier.algo.ts:75
+    // contracts/plonk_verifier.algo.ts:75
     // @abimethod({ onCreate: "require", allowActions: "DeleteApplication" })
     pushbytes 0x151f7c75
     swap

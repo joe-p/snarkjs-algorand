@@ -14,27 +14,22 @@ import {
   type Arc56Contract,
 } from "@algorandfoundation/algokit-utils/types/app-arc56";
 import { readFileSync } from "fs";
-import type {
-  RawSimulateOptions,
-  TransactionComposer,
-} from "@algorandfoundation/algokit-utils/types/composer";
+import type { RawSimulateOptions } from "@algorandfoundation/algokit-utils/types/composer";
 import type { Transaction } from "algosdk";
 import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
 import algosdk, { OnApplicationComplete, type Address } from "algosdk";
 import { LSIG_SOURCE } from "../contracts/out/lsig_source";
 import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
 import {
-  LagrangeWitnessCalculatorClient,
   LagrangeWitnessCalculatorFactory,
   LagrangeWitnessFromTuple,
   type LagrangeWitness,
 } from "../contracts/clients/LagrangeWitnessCalculator";
-import { OnCompleteAction } from "@algorandfoundation/algorand-typescript";
 
 export {
-  SignalsAndProofFactory,
-  SignalsAndProofClient,
-} from "../contracts/clients/SignalsAndProof.ts";
+  PlonkSignalsAndProofFactory,
+  PlonkSignalsAndProofClient,
+} from "../contracts/clients/PlonkSignalsAndProof.ts";
 
 export type { Proof as OnChainProof } from "../contracts/plonk_bls12381.algo.ts";
 

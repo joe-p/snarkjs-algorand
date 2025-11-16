@@ -19,7 +19,7 @@ import {
   verifyFromTemplateWithLogs,
   type VerificationKey,
   type PublicSignals,
-  type Proof,
+  type Proof as PlonkProof,
   verifyFromTemplate,
   type LagrangeWitness,
   calculateLagrangeEvaluations,
@@ -31,7 +31,7 @@ export class PlonkVerifierWithLogs extends Contract {
   @abimethod({ allowActions: "CloseOut" })
   public _dummy(_vk: VerificationKey): void {}
 
-  verify(signals: PublicSignals, proof: Proof, lw: LagrangeWitness): void {
+  verify(signals: PublicSignals, proof: PlonkProof, lw: LagrangeWitness): void {
     assert(
       verifyFromTemplateWithLogs(signals, proof, lw),
       "Verification failed",
@@ -44,7 +44,7 @@ export class PlonkVerifier extends Contract {
   @abimethod({ allowActions: "CloseOut" })
   public _dummy(_vk: VerificationKey): void {}
 
-  verify(signals: PublicSignals, proof: Proof, lw: LagrangeWitness): void {
+  verify(signals: PublicSignals, proof: PlonkProof, lw: LagrangeWitness): void {
     assert(verifyFromTemplate(signals, proof, lw), "Verification failed");
   }
 }
@@ -54,7 +54,7 @@ export class PlonkVerifierLsig extends LogicSig {
     assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
 
     const lw = decodeArc4<LagrangeWitness>(Txn.applicationArgs(3));
-    const proof = decodeArc4<Proof>(Txn.applicationArgs(2));
+    const proof = decodeArc4<PlonkProof>(Txn.applicationArgs(2));
     const signals = decodeArc4<Uint256[]>(Txn.applicationArgs(1));
 
     assert(verifyFromTemplate(signals, proof, lw), "Verification failed");
@@ -63,10 +63,10 @@ export class PlonkVerifierLsig extends LogicSig {
   }
 }
 
-export class SignalsAndProof extends Contract {
+export class PlonkSignalsAndProof extends Contract {
   public signalsAndProof(
     signals: Uint256[],
-    proof: Proof,
+    proof: PlonkProof,
     lw: LagrangeWitness,
   ): void {}
 }
@@ -75,7 +75,7 @@ export class LagrangeWitnessCalculator extends Contract {
   @abimethod({ onCreate: "require", allowActions: "DeleteApplication" })
   public calculateLagrangeWitness(
     signals: PublicSignals,
-    proof: Proof,
+    proof: PlonkProof,
   ): LagrangeWitness {
     ensureBudget(700 * 250);
     const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");

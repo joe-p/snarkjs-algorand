@@ -4,8 +4,8 @@
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
     intcblock 0 1 32
-    // contracts/verifier.algo.ts:66
-    // export class SignalsAndProof extends Contract {
+    // contracts/plonk_verifier.algo.ts:66
+    // export class PlonkSignalsAndProof extends Contract {
     txn NumAppArgs
     bz main___algots__.defaultCreate@5
     pushbytes 0xac3bf770 // method "signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void"
@@ -14,10 +14,10 @@ main:
     err
 
 main_signalsAndProof_route@3:
-    // contracts/verifier.algo.ts:67-71
+    // contracts/plonk_verifier.algo.ts:67-71
     // public signalsAndProof(
     //   signals: Uint256[],
-    //   proof: Proof,
+    //   proof: PlonkProof,
     //   lw: LagrangeWitness,
     // ): void {}
     txn OnCompletion
@@ -28,8 +28,8 @@ main_signalsAndProof_route@3:
     b signalsAndProof
 
 main___algots__.defaultCreate@5:
-    // contracts/verifier.algo.ts:66
-    // export class SignalsAndProof extends Contract {
+    // contracts/plonk_verifier.algo.ts:66
+    // export class PlonkSignalsAndProof extends Contract {
     txn OnCompletion
     !
     txn ApplicationID
@@ -40,12 +40,12 @@ main___algots__.defaultCreate@5:
     return
 
 
-// contracts/verifier.algo.ts::SignalsAndProof.signalsAndProof[routing]() -> void:
+// contracts/plonk_verifier.algo.ts::PlonkSignalsAndProof.signalsAndProof[routing]() -> void:
 signalsAndProof:
-    // contracts/verifier.algo.ts:67-71
+    // contracts/plonk_verifier.algo.ts:67-71
     // public signalsAndProof(
     //   signals: Uint256[],
-    //   proof: Proof,
+    //   proof: PlonkProof,
     //   lw: LagrangeWitness,
     // ): void {}
     txna ApplicationArgs 1

@@ -5,7 +5,7 @@
 main:
     intcblock 32 96 1 0 384
     bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x 0x01 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000 TMPL_VERIFICATION_KEY TMPL_ROOT_OF_UNITY
-    // contracts/verifier.algo.ts:29
+    // contracts/plonk_verifier.algo.ts:29
     // export class PlonkVerifierWithLogs extends Contract {
     txn NumAppArgs
     bz main___algots__.defaultCreate@6
@@ -15,8 +15,8 @@ main:
     err
 
 main_verify_route@4:
-    // contracts/verifier.algo.ts:34
-    // verify(signals: PublicSignals, proof: Proof, lw: LagrangeWitness): void {
+    // contracts/plonk_verifier.algo.ts:34
+    // verify(signals: PublicSignals, proof: PlonkProof, lw: LagrangeWitness): void {
     txn OnCompletion
     !
     txn ApplicationID
@@ -25,7 +25,7 @@ main_verify_route@4:
     b verify
 
 main__dummy_route@3:
-    // contracts/verifier.algo.ts:31
+    // contracts/plonk_verifier.algo.ts:31
     // @abimethod({ allowActions: "CloseOut" })
     txn OnCompletion
     pushint 2 // CloseOut
@@ -36,7 +36,7 @@ main__dummy_route@3:
     b _dummy
 
 main___algots__.defaultCreate@6:
-    // contracts/verifier.algo.ts:29
+    // contracts/plonk_verifier.algo.ts:29
     // export class PlonkVerifierWithLogs extends Contract {
     txn OnCompletion
     !
@@ -125,9 +125,9 @@ getChallenge:
     retsub
 
 
-// contracts/verifier.algo.ts::PlonkVerifierWithLogs._dummy[routing]() -> void:
+// contracts/plonk_verifier.algo.ts::PlonkVerifierWithLogs._dummy[routing]() -> void:
 _dummy:
-    // contracts/verifier.algo.ts:31
+    // contracts/plonk_verifier.algo.ts:31
     // @abimethod({ allowActions: "CloseOut" })
     txna ApplicationArgs 1
     len
@@ -138,14 +138,14 @@ _dummy:
     return
 
 
-// contracts/verifier.algo.ts::PlonkVerifierWithLogs.verify[routing]() -> void:
+// contracts/plonk_verifier.algo.ts::PlonkVerifierWithLogs.verify[routing]() -> void:
 verify:
     intc_3 // 0
     dupn 20
     bytec_1 // ""
     dup
-    // contracts/verifier.algo.ts:34
-    // verify(signals: PublicSignals, proof: Proof, lw: LagrangeWitness): void {
+    // contracts/plonk_verifier.algo.ts:34
+    // verify(signals: PublicSignals, proof: PlonkProof, lw: LagrangeWitness): void {
     txna ApplicationArgs 1
     dupn 2
     intc_3 // 0
@@ -1975,14 +1975,14 @@ verify_after_while@22:
     //   op.concat(vk.X_2, G2_ONE), // G2 points
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/verifier.algo.ts:35-38
+    // contracts/plonk_verifier.algo.ts:35-38
     // assert(
     //   verifyFromTemplateWithLogs(signals, proof, lw),
     //   "Verification failed",
     // );
     assert // Verification failed
-    // contracts/verifier.algo.ts:34
-    // verify(signals: PublicSignals, proof: Proof, lw: LagrangeWitness): void {
+    // contracts/plonk_verifier.algo.ts:34
+    // verify(signals: PublicSignals, proof: PlonkProof, lw: LagrangeWitness): void {
     intc_2 // 1
     return
 

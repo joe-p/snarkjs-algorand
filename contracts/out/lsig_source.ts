@@ -1,7 +1,7 @@
 export const LSIG_SOURCE = `#pragma version 11
 #pragma typetrack false
 
-// contracts/verifier.algo.ts::program() -> uint64:
+// contracts/plonk_verifier.algo.ts::program() -> uint64:
 main:
     intcblock 32 96 1 0 384
     bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x 0x01 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000 TMPL_VERIFICATION_KEY TMPL_ROOT_OF_UNITY
@@ -9,7 +9,7 @@ main:
     dupn 17
     bytec_1 // ""
     dupn 2
-    // contracts/verifier.algo.ts:54
+    // contracts/plonk_verifier.algo.ts:54
     // assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
     txn Fee
     !
@@ -18,15 +18,15 @@ main:
     ==
     &&
     assert // assert target is match for conditions
-    // contracts/verifier.algo.ts:56
+    // contracts/plonk_verifier.algo.ts:56
     // const lw = decodeArc4<LagrangeWitness>(Txn.applicationArgs(3));
     pushint 3 // 3
     txnas ApplicationArgs
-    // contracts/verifier.algo.ts:57
-    // const proof = decodeArc4<Proof>(Txn.applicationArgs(2));
+    // contracts/plonk_verifier.algo.ts:57
+    // const proof = decodeArc4<PlonkProof>(Txn.applicationArgs(2));
     pushint 2 // 2
     txnas ApplicationArgs
-    // contracts/verifier.algo.ts:58
+    // contracts/plonk_verifier.algo.ts:58
     // const signals = decodeArc4<Uint256[]>(Txn.applicationArgs(1));
     intc_2 // 1
     txnas ApplicationArgs
@@ -1640,10 +1640,10 @@ main_after_while@22:
     //   op.concat(vk.X_2, G2_ONE), // G2 points
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/verifier.algo.ts:60
+    // contracts/plonk_verifier.algo.ts:60
     // assert(verifyFromTemplate(signals, proof, lw), "Verification failed");
     assert // Verification failed
-    // contracts/verifier.algo.ts:62
+    // contracts/plonk_verifier.algo.ts:62
     // return true;
     intc_2 // 1
     return
