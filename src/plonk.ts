@@ -130,7 +130,7 @@ export function encodePlonkProof(proof: any, curve: any): PlonkProof {
   };
 }
 
-export function encodeSignals(...inputs: string[]) {
+export function encodePlonkSignals(...inputs: string[]) {
   return inputs.map((input) => {
     return BigInt(input);
   });
@@ -172,7 +172,7 @@ export async function getLagrangeWitness(
   return LagrangeWitnessFromTuple(retVal);
 }
 
-export type Witness = {
+export type PlonkWitness = {
   proof: PlonkProof;
   signals: bigint[];
   lw: {
@@ -199,14 +199,14 @@ export class PlonkLsigVerifier {
     }
   }
 
-  async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<Witness> {
+  async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<PlonkWitness> {
     await this.ensureCurveInstanttiation();
 
     const { proof: rawProof, publicSignals: rawSignals } =
       await snarkjs.plonk.fullProve(inputs, this.wasmProver, this.zKey);
 
     const proof = encodePlonkProof(rawProof, this.curve);
-    const signals = encodeSignals(...rawSignals);
+    const signals = encodePlonkSignals(...rawSignals);
 
     const vk = await getPlonkVkey(this.zKey, this.curve);
     const vkBytes = encodePlonkVk(vk, APP_SPEC);
@@ -378,14 +378,14 @@ export class PlonkAppVerifier {
     return appClient;
   }
 
-  async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<Witness> {
+  async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<PlonkWitness> {
     await this.ensureCurveInstanttiation();
 
     const { proof: rawProof, publicSignals: rawSignals } =
       await snarkjs.plonk.fullProve(inputs, this.wasmProver, this.zKey);
 
     const proof = encodePlonkProof(rawProof, this.curve);
-    const signals = encodeSignals(...rawSignals);
+    const signals = encodePlonkSignals(...rawSignals);
     const vk = await getPlonkVkey(this.zKey, this.curve);
     const vkBytes = encodePlonkVk(vk, APP_SPEC);
 
@@ -447,7 +447,7 @@ export class PlonkAppVerifier {
   }
 
   async verifyTransactionFromProofAndSignals(
-    proofAndSignals: Witness,
+    proofAndSignals: PlonkWitness,
   ): Promise<Transaction> {
     this.assertDeployed();
 
@@ -459,7 +459,7 @@ export class PlonkAppVerifier {
   }
 
   async callVerifyFromProofAndSignals(
-    proofAndSignals: Witness,
+    proofAndSignals: PlonkWitness,
     callParams?: Omit<
       AppClientMethodCallParams,
       "method" | "args" | "onComplete"

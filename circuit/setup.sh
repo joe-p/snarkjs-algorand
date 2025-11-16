@@ -1,6 +1,7 @@
 set -x 
 set -e
 
+if [ ! -f witness.wtns ]; then
 snarkjs powersoftau new bls12381 14 pot14_0000.ptau -v
 echo "blah" | snarkjs powersoftau contribute pot14_0000.ptau pot14_0001.ptau --name="First contribution" -v
 snarkjs powersoftau prepare phase2 pot14_0001.ptau pot14_final.ptau -v
@@ -40,16 +41,38 @@ EOT
 snarkjs wtns calculate circuit_js/circuit.wasm input.json witness.wtns
 
 snarkjs wtns check circuit.r1cs witness.wtns
+fi
 
-snarkjs plonk setup circuit.r1cs pot14_final.ptau circuit_final.zkey
+########
+# PLONK
+########
+
+if [ ! -f plonk_proof.json ]; then
+snarkjs plonk setup circuit.r1cs pot14_final.ptau plonk_circuit_final.zkey
+
+snarkjs zkey export verificationkey plonk_circuit_final.zkey plonk_verification_key.json
+
+snarkjs plonk fullprove input.json circuit_js/circuit.wasm plonk_circuit_final.zkey plonk_proof.json public.json
+
+snarkjs plonk verify plonk_verification_key.json public.json plonk_proof.json
+fi
+
+##########
+# Groth16
+##########
+
+if [ ! -f groth16_proof.json ]; then
+snarkjs groth16 setup circuit.r1cs pot14_final.ptau groth16_circuit_final.zkey
 
 # Export verification key
-snarkjs zkey export verificationkey circuit_final.zkey verification_key.json
+snarkjs zkey export verificationkey groth16_circuit_final.zkey groth16_verification_key.json
 
 # Prove
-snarkjs plonk fullprove input.json circuit_js/circuit.wasm circuit_final.zkey proof.json public.json
+snarkjs groth16 fullprove input.json circuit_js/circuit.wasm groth16_circuit_final.zkey groth16_proof.json public.json
 
 # Verify proof
-snarkjs plonk verify verification_key.json public.json proof.json
+snarkjs groth16 verify groth16_verification_key.json public.json groth16_proof.json
+fi
+
 
 

@@ -1,8 +1,10 @@
 # snarkjs-algorand
 
-This repo contains an Algorand TypeScript implementation of a BLS12-381 Plonk ZKP verifier. [The contract](./contracts/verifier.algo.ts) is based on the [snarkjs verifier implementation](https://github.com/iden3/snarkjs/blob/e0c7219bd69db07845560162af7e6876d15390e1/src/plonk_verify.js?plain=1#L29).
+This repo contains Algorand TypeScript implementations of BLS12-381 ZKP verifiers for both PLONK and Groth16 proof systems. The contracts are based on the [snarkjs verifier implementations](https://github.com/iden3/snarkjs).
 
-This repo not only contains the smart contract, but also a TypeScript SDK that uses [algokit-utils](https://github.com/algorandfoundation/algokit-utils). This SDK has not yet been documented, but you can see usage in the [tests](./__test__/verifier.test.ts).
+This repo not only contains the smart contracts, but also TypeScript SDKs that use [algokit-utils](https://github.com/algorandfoundation/algokit-utils). You can see usage examples in the tests:
+- [PLONK tests](./__test__/plonk_verifier.test.ts)
+- [Groth16 tests](./__test__/groth16_verifier.test.ts)
 
 ## TODO
 

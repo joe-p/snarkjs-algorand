@@ -7,7 +7,6 @@ import {
   Bytes,
   type biguint,
   assert,
-  log,
   clone,
   TemplateVar,
 } from "@algorandfoundation/algorand-typescript";
@@ -15,6 +14,17 @@ import {
   decodeArc4,
   Uint256,
 } from "@algorandfoundation/algorand-typescript/arc4";
+import {
+  BLS12_381_SCALAR_MODULUS,
+  frScalar,
+  b32,
+  debugLog,
+  g1TimesFr,
+  g1Add,
+  g1Neg,
+  inField,
+  type PublicSignals,
+} from "./bls12381_common.algo";
 
 /**
  * PLONK verifier for BLS12-381 (SNARKJS-compatible)
@@ -51,13 +61,6 @@ const G2_ONE = Bytes.fromHex(
  */
 const ROOT_OF_UNITY = TemplateVar<biguint>("ROOT_OF_UNITY");
 
-/** BLS12-381 scalar field modulus (Fr), 32-byte big-endian */
-const BLS12_381_SCALAR_MODULUS = BigUint(
-  Bytes.fromHex(
-    "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001",
-  ),
-);
-
 /**
  * Multiplication in the scalar field Fr.
  * Computes (a * b) mod r where r is the BLS12-381 scalar field modulus.
@@ -66,15 +69,6 @@ const BLS12_381_SCALAR_MODULUS = BigUint(
 function frMul(a: biguint, b: biguint): biguint {
   return (a * b) % BLS12_381_SCALAR_MODULUS;
 }
-
-/**
- * BLS12_381_SCALAR_MODULUS - 1, used for point negation
- */
-const R_MINUS_1 = BigUint(
-  Bytes.fromHex(
-    "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000",
-  ),
-);
 
 /**
  * BLS12_381_SCALAR_MODULUS - 2, used for modular inverse via Fermat's little theorem
@@ -152,25 +146,6 @@ function frAdd(a: biguint, b: biguint): biguint {
   return (aN + bN) % r;
 }
 
-/**
- * Reduce to canonical form in the scalar field Fr.
- * Computes a mod r where r is the BLS12-381 scalar field modulus.
- * Ensures the result is in the range [0, r-1].
- */
-function frScalar(a: biguint): biguint {
-  return a % BLS12_381_SCALAR_MODULUS;
-}
-
-/**
- * Convert a big unsigned integer to 32-byte big-endian representation.
- * Used for serializing field elements in the Fiat-Shamir transcript.
- */
-function b32(a: biguint): bytes<32> {
-  return new Uint256(a).bytes.toFixed({ length: 32 });
-}
-
-export type PublicSignals = Uint256[];
-
 export type LagrangeWitness = {
   // L[0..iterations-1] where iterations = max(nPublic,1); L[0] corresponds to L1(ξ)
   L: Uint256[];
@@ -215,45 +190,6 @@ export type Challenges = {
   xin: Uint256;
   zh: Uint256;
 };
-
-/**
- * Debug logging helper
- */
-function debugLog(name: string, value: bytes): void {
-  log(name);
-  log(value);
-}
-
-/**
- * Scalar multiplication on the BLS12-381 G1 group.
- * Computes s * P where P is a G1 point and s is a scalar in Fr.
- * Returns the result as a 96-byte uncompressed G1 point.
- */
-function g1TimesFr(p: bytes<96>, s: biguint): bytes<96> {
-  return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    length: 96,
-  });
-}
-
-/**
- * Point addition on the BLS12-381 G1 group.
- * Computes P1 + P2 where P1 and P2 are G1 points.
- * Returns the result as a 96-byte uncompressed G1 point.
- */
-function g1Add(p1: bytes<96>, p2: bytes<96>): bytes<96> {
-  return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    length: 96,
-  });
-}
-
-/**
- * Point negation on the BLS12-381 G1 group.
- * Computes -P where P is a G1 point by multiplying by (r-1) where r is the scalar field modulus.
- * This is equivalent to negating the y-coordinate in affine representation.
- */
-function g1Neg(p: bytes<96>): bytes<96> {
-  return g1TimesFr(p, R_MINUS_1);
-}
 
 /**
  * Point subtraction on the BLS12-381 G1 group.
@@ -330,10 +266,6 @@ export function verifyPlonkFromTemplate(
 
 function groupCheck(p: bytes<96>): boolean {
   return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
-}
-
-function inField(value: Uint256): boolean {
-  return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
 }
 
 function assertLwInField(lw: LagrangeWitness) {
