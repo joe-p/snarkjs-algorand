@@ -1,0 +1,398 @@
+import type { AlgorandClient } from "@algorandfoundation/algokit-utils";
+import type { Address, Transaction } from "algosdk";
+import type {
+  Groth16VerifierFactory,
+  GrothVerificationKey,
+} from "../contracts/clients/Groth16Verifier";
+import type { Groth16VerifierWithLogsFactory } from "../contracts/clients/Groth16VerifierWithLogs";
+import type {
+  PlonkVerifierFactory,
+  PlonkVerificationKey,
+} from "../contracts/clients/PlonkVerifier";
+import type { PlonkVerifierWithLogsFactory } from "../contracts/clients/PlonkVerifierWithLogs";
+import type { RawSimulateOptions } from "@algorandfoundation/algokit-utils/types/composer";
+import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
+import type { Groth16Witness, PlonkWitness } from ".";
+import * as snarkjs from "snarkjs";
+import { microAlgos } from "@algorandfoundation/algokit-utils";
+import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
+import type { Arc56Contract } from "@algorandfoundation/algokit-utils/types/app-arc56";
+import { readFileSync } from "fs";
+
+export function encodeSignals(...inputs: string[]): bigint[] {
+  return inputs.map((input) => BigInt(input));
+}
+
+export function reorderG2Uncompressed(uncompressed: Uint8Array): Uint8Array {
+  const x1 = uncompressed.subarray(0, 48);
+  const x0 = uncompressed.subarray(48, 96);
+  const y1 = uncompressed.subarray(96, 144);
+  const y0 = uncompressed.subarray(144, 192);
+
+  const reordered = new Uint8Array(192);
+  reordered.set(x0, 0);
+  reordered.set(x1, 48);
+  reordered.set(y0, 96);
+  reordered.set(y1, 144);
+
+  return reordered;
+}
+
+export function getProofFromFile(path: string): any {
+  return JSON.parse(readFileSync(path, "utf8"));
+}
+
+export abstract class AppVerifier<
+  Factory extends Groth16VerifierFactory | PlonkVerifierFactory,
+  LogsFactory extends
+    | Groth16VerifierWithLogsFactory
+    | PlonkVerifierWithLogsFactory,
+  Client extends ReturnType<Factory["getAppClientById"]>,
+  Witness extends { signals: any; proof: any } & Parameters<
+    Client["send"]["verify"]
+  >[0]["args"],
+  DeployTimeParams extends Parameters<Factory["deploy"]>[0],
+  VerificationKey extends ({ _vk: any } & Parameters<
+    Client["send"]["closeOut"]["_dummy"]
+  >[0]["args"])["_vk"],
+> {
+  appClient?: Client;
+  curve?: any;
+
+  constructor(
+    public algorand: AlgorandClient,
+    public zKey: snarkjs.ZKArtifact,
+    public wasmProver: snarkjs.ZKArtifact,
+  ) {}
+
+  protected abstract newFactory(o: {
+    algorand: AlgorandClient;
+    defaultSender: Address;
+  }): Factory;
+
+  protected abstract newLogsFactory(o: {
+    algorand: AlgorandClient;
+    defaultSender: Address;
+  }): LogsFactory;
+
+  protected abstract getVkey(
+    zKey: snarkjs.ZKArtifact,
+    curve: any,
+  ): Promise<VerificationKey>;
+
+  protected abstract encodeVkey(
+    vk: VerificationKey,
+    appSpec: Factory["appSpec"],
+  ): Uint8Array;
+
+  protected abstract encodeProof(proof: any, curve: any): Witness["proof"];
+
+  protected abstract fullProve(
+    inputs: snarkjs.CircuitSignals,
+    wasmProver: snarkjs.ZKArtifact,
+    zKey: snarkjs.ZKArtifact,
+  ): Promise<{ proof: any; publicSignals: any }>;
+
+  protected getAdditionalDeployParams(
+    vk: VerificationKey,
+    curve: any,
+  ): Record<string, any> {
+    return {};
+  }
+
+  private async ensureCurveInstanttiation() {
+    if (!this.curve) {
+      // @ts-expect-error curves is not typed
+      this.curve = await snarkjs.curves.getCurveFromName("bls12381");
+    }
+  }
+
+  async deploy(
+    params: Omit<DeployTimeParams, "deployTimeParams"> & {
+      defaultSender: Address;
+      debugLogging?: boolean;
+    },
+  ) {
+    if (this.appClient) {
+      throw new Error("AppVerifier already deployed");
+    }
+
+    await this.ensureCurveInstanttiation();
+
+    let factory;
+
+    if (params.debugLogging) {
+      factory = this.newLogsFactory({
+        algorand: this.algorand,
+        defaultSender: params.defaultSender,
+      });
+    } else {
+      factory = this.newFactory({
+        algorand: this.algorand,
+        defaultSender: params.defaultSender,
+      });
+    }
+
+    const vk = await this.getVkey(this.zKey, this.curve);
+    const vkBytes = this.encodeVkey(vk, factory.appSpec);
+
+    const additionalParams = this.getAdditionalDeployParams(vk, this.curve);
+
+    const { appClient } = await factory.deploy({
+      ...params,
+      deployTimeParams: {
+        VERIFICATION_KEY: vkBytes,
+        ...additionalParams,
+      },
+    });
+
+    this.appClient = appClient as Client;
+    return appClient;
+  }
+
+  async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<Witness> {
+    await this.ensureCurveInstanttiation();
+
+    const { proof: rawProof, publicSignals: rawSignals } = await this.fullProve(
+      inputs,
+      this.wasmProver,
+      this.zKey,
+    );
+
+    const proof = this.encodeProof(rawProof, this.curve);
+    const signals = encodeSignals(...rawSignals);
+
+    return {
+      proof,
+      signals,
+    } as Witness;
+  }
+
+  private assertDeployed(): asserts this is {
+    appClient: Client;
+  } {
+    if (!this.appClient) {
+      throw new Error("AppVerifier not deployed");
+    }
+  }
+
+  // Methods that take in proof and signals directly
+
+  async simulateVerificationWithProofAndSignals(
+    proofAndSignals: Witness,
+    simParams?: RawSimulateOptions,
+  ) {
+    this.assertDeployed();
+
+    return this.appClient
+      .newGroup()
+      .verify({ args: proofAndSignals })
+      .simulate(simParams ?? {});
+  }
+
+  async verifyTransactionFromProofAndSignals(
+    proofAndSignals: Witness,
+  ): Promise<Transaction> {
+    this.assertDeployed();
+
+    return (
+      await this.appClient.createTransaction.verify({
+        args: proofAndSignals,
+      })
+    ).transactions[0]!;
+  }
+
+  async callVerifyFromProofAndSignals(
+    proofAndSignals: Witness,
+    callParams?: Omit<
+      AppClientMethodCallParams,
+      "method" | "args" | "onComplete"
+    >,
+  ) {
+    this.assertDeployed();
+
+    return this.appClient.send.verify({
+      ...callParams,
+      args: proofAndSignals,
+    });
+  }
+
+  // Methods that generate proof and signals internally
+
+  async simulateVerification(
+    inputs: snarkjs.CircuitSignals,
+    simParams?: RawSimulateOptions,
+  ) {
+    return this.simulateVerificationWithProofAndSignals(
+      await this.proofAndSignals(inputs),
+      simParams,
+    );
+  }
+
+  async verifyTransaction(
+    inputs: snarkjs.CircuitSignals,
+  ): Promise<Transaction> {
+    return this.verifyTransactionFromProofAndSignals(
+      await this.proofAndSignals(inputs),
+    );
+  }
+
+  async callVerify(
+    inputs: snarkjs.CircuitSignals,
+    callParams?: Omit<
+      AppClientMethodCallParams,
+      "method" | "args" | "onComplete"
+    >,
+  ) {
+    return this.callVerifyFromProofAndSignals(
+      await this.proofAndSignals(inputs),
+      callParams,
+    );
+  }
+}
+
+export abstract class LsigVerifier<
+  VerificationKey extends GrothVerificationKey | PlonkVerificationKey,
+  Witness extends Groth16Witness | PlonkWitness,
+> {
+  curve?: any;
+
+  constructor(
+    public algorand: AlgorandClient,
+    public zKey: snarkjs.ZKArtifact,
+    public wasmProver: snarkjs.ZKArtifact,
+    public totalLsigs: number = 6,
+  ) {}
+
+  protected abstract getVkey(
+    zKey: snarkjs.ZKArtifact,
+    curve: any,
+  ): Promise<VerificationKey>;
+
+  protected abstract encodeVkey(
+    vk: VerificationKey,
+    appSpec: Arc56Contract,
+  ): Uint8Array;
+
+  protected abstract encodeProof(proof: any, curve: any): Witness["proof"];
+
+  protected abstract fullProve(
+    inputs: snarkjs.CircuitSignals,
+    wasmProver: snarkjs.ZKArtifact,
+    zKey: snarkjs.ZKArtifact,
+  ): Promise<{ proof: any; publicSignals: any }>;
+
+  protected abstract getLsigSource(): string;
+
+  protected abstract getAppSpec(): Arc56Contract;
+
+  protected getAdditionalTemplateParams(
+    vk: VerificationKey,
+    curve: any,
+  ): Record<string, any> {
+    return {};
+  }
+
+  private async ensureCurveInstanttiation() {
+    if (!this.curve) {
+      // @ts-expect-error curves is not typed
+      this.curve = await snarkjs.curves.getCurveFromName("bls12381");
+    }
+  }
+
+  async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<Witness> {
+    await this.ensureCurveInstanttiation();
+
+    const { proof: rawProof, publicSignals: rawSignals } = await this.fullProve(
+      inputs,
+      this.wasmProver,
+      this.zKey,
+    );
+
+    const proof = this.encodeProof(rawProof, this.curve);
+    const signals = encodeSignals(...rawSignals);
+
+    return {
+      proof,
+      signals,
+    } as Witness;
+  }
+
+  async lsigAccount() {
+    await this.ensureCurveInstanttiation();
+
+    const vk = await this.getVkey(this.zKey, this.curve);
+    const vkBytes = this.encodeVkey(vk, this.getAppSpec());
+
+    const additionalParams = this.getAdditionalTemplateParams(vk, this.curve);
+
+    const compilation = await this.algorand.app.compileTealTemplate(
+      this.getLsigSource(),
+      {
+        VERIFICATION_KEY: vkBytes,
+        ...additionalParams,
+      },
+    );
+
+    return this.algorand.account.logicsig(compilation.compiledBase64ToBytes);
+  }
+
+  async verificationParams({
+    inputs,
+    composer,
+    paramsCallback,
+    addExtraLsigs = true,
+  }: {
+    inputs: snarkjs.CircuitSignals;
+    composer: {
+      addTransaction: (txn: Transaction) => unknown;
+    };
+    addExtraLsigs?: boolean;
+    paramsCallback: (params: {
+      appParams: {
+        sender: Address;
+        staticFee: AlgoAmount;
+        args: { signals: Witness["signals"]; proof: Witness["proof"] };
+      };
+      lsigsFee: AlgoAmount;
+      extraLsigsTxns: Transaction[];
+    }) => Promise<void>;
+  }): Promise<void> {
+    const { proof, signals } = await this.proofAndSignals(inputs);
+
+    const params = {
+      appParams: {
+        sender: await this.lsigAccount(),
+        staticFee: microAlgos(0),
+        args: { signals, proof },
+      },
+      lsigsFee: microAlgos(1000 * this.totalLsigs),
+      extraLsigsTxns: [] as Transaction[],
+    };
+
+    const compilation = await this.algorand.app.compileTeal(
+      "#pragma version 11\n txn RekeyTo; global ZeroAddress; ==",
+    );
+    const extraLsig = this.algorand.account.logicsig(
+      compilation.compiledBase64ToBytes,
+    );
+
+    await paramsCallback(params);
+
+    for (let i = 0; i < this.totalLsigs - 1; i++) {
+      const lsigPay = await this.algorand.createTransaction.payment({
+        sender: extraLsig,
+        amount: microAlgos(0),
+        staticFee: microAlgos(0),
+        receiver: extraLsig,
+        note: `Extra lsig ${i + 1} of ${this.totalLsigs - 1}`,
+      });
+
+      params.extraLsigsTxns.push(lsigPay);
+
+      if (addExtraLsigs) {
+        composer.addTransaction(lsigPay);
+      }
+    }
+  }
+}

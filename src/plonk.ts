@@ -13,14 +13,18 @@ import {
   getABIEncodedValue,
   type Arc56Contract,
 } from "@algorandfoundation/algokit-utils/types/app-arc56";
-import { readFileSync } from "fs";
-import type { RawSimulateOptions } from "@algorandfoundation/algokit-utils/types/composer";
 import type { Transaction } from "algosdk";
-import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
-import algosdk, { OnApplicationComplete, type Address } from "algosdk";
+import { type Address } from "algosdk";
 import { PLONK_LSIG_SOURCE } from "../contracts/out/lsig_source";
 import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
 import { stringValuesToBigints } from "./index.ts";
+import {
+  AppVerifier,
+  LsigVerifier,
+  encodeSignals,
+  reorderG2Uncompressed,
+  getProofFromFile,
+} from "./common";
 
 export {
   PlonkSignalsAndProofFactory,
@@ -49,17 +53,7 @@ export async function getPlonkVkey(
   stringValuesToBigints(vkey.X_2);
   const x2Point = curve.G2.fromObject(vkey.X_2);
   const x2Uncompressed = curve.G2.toUncompressed(x2Point);
-
-  const x1 = x2Uncompressed.subarray(0, 48);
-  const x0 = x2Uncompressed.subarray(48, 96);
-  const y1 = x2Uncompressed.subarray(96, 144);
-  const y0 = x2Uncompressed.subarray(144, 192);
-
-  const x2Bytes = new Uint8Array(192);
-  x2Bytes.set(x0, 0);
-  x2Bytes.set(x1, 48);
-  x2Bytes.set(y0, 96);
-  x2Bytes.set(y1, 144);
+  const x2Bytes = reorderG2Uncompressed(x2Uncompressed);
 
   return {
     power: vkey.power,
@@ -89,7 +83,7 @@ export async function getPlonkProof(
   path: string,
   curve: any,
 ): Promise<PlonkProof> {
-  const proof = JSON.parse(readFileSync(path, "utf8"));
+  const proof = getProofFromFile(path);
   return encodePlonkProof(proof, curve);
 }
 
@@ -126,9 +120,7 @@ export function encodePlonkProof(proof: any, curve: any): PlonkProof {
 }
 
 export function encodePlonkSignals(...inputs: string[]) {
-  return inputs.map((input) => {
-    return BigInt(input);
-  });
+  return encodeSignals(...inputs);
 }
 
 export type PlonkWitness = {
@@ -136,275 +128,126 @@ export type PlonkWitness = {
   signals: bigint[];
 };
 
-export class PlonkLsigVerifier {
-  curve?: any;
-
-  constructor(
-    public algorand: AlgorandClient,
-    public zKey: snarkjs.ZKArtifact,
-    public wasmProver: snarkjs.ZKArtifact,
-    public totalLsigs: number = 6,
-  ) {}
-
-  private async ensureCurveInstanttiation() {
-    if (!this.curve) {
-      // @ts-expect-error curves is not typed
-      this.curve = await snarkjs.curves.getCurveFromName("bls12381");
-    }
+export class PlonkLsigVerifier extends LsigVerifier<
+  PlonkVerificationKey,
+  PlonkWitness
+> {
+  protected async getVkey(
+    zKey: snarkjs.ZKArtifact,
+    curve: any,
+  ): Promise<PlonkVerificationKey> {
+    return getPlonkVkey(zKey, curve);
   }
 
-  async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<PlonkWitness> {
-    await this.ensureCurveInstanttiation();
-
-    const { proof: rawProof, publicSignals: rawSignals } =
-      await snarkjs.plonk.fullProve(inputs, this.wasmProver, this.zKey);
-
-    const proof = encodePlonkProof(rawProof, this.curve);
-    const signals = encodePlonkSignals(...rawSignals);
-
-    return {
-      proof,
-      signals,
-    };
+  protected encodeVkey(
+    vk: PlonkVerificationKey,
+    appSpec: Arc56Contract,
+  ): Uint8Array {
+    return encodePlonkVk(vk, appSpec);
   }
 
-  async lsigAccount() {
-    await this.ensureCurveInstanttiation();
-
-    const vk = await getPlonkVkey(this.zKey, this.curve);
-    const vkBytes = encodePlonkVk(vk, APP_SPEC);
-
-    const compilation = await this.algorand.app.compileTealTemplate(
-      PLONK_LSIG_SOURCE,
-      {
-        VERIFICATION_KEY: vkBytes,
-        ROOT_OF_UNITY: Buffer.from(
-          this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
-            .toString(16)
-            .padStart(64, "0"),
-          "hex",
-        ),
-      },
-    );
-
-    return this.algorand.account.logicsig(compilation.compiledBase64ToBytes);
+  protected encodeProof(proof: any, curve: any): PlonkProof {
+    return encodePlonkProof(proof, curve);
   }
 
-  async verificationParams({
-    inputs,
-    composer,
-    paramsCallback,
-    addExtraLsigs = true,
-  }: {
-    inputs: snarkjs.CircuitSignals;
-    composer: {
-      addTransaction: (txn: Transaction) => unknown;
-    };
-    addExtraLsigs?: boolean;
-    paramsCallback: (params: {
-      appParams: {
-        sender: Address;
-        staticFee: AlgoAmount;
-        args: { signals: bigint[]; proof: PlonkProof };
-      };
-      lsigsFee: AlgoAmount;
-      extraLsigsTxns: Transaction[];
-    }) => Promise<void>;
-  }): Promise<void> {
-    const { proof, signals } = await this.proofAndSignals(inputs);
-
-    const params = {
-      appParams: {
-        sender: await this.lsigAccount(),
-        staticFee: microAlgos(0),
-        args: { signals, proof },
-      },
-      lsigsFee: microAlgos(1000 * this.totalLsigs),
-      extraLsigsTxns: [] as Transaction[],
-    };
-
-    const compilation = await this.algorand.app.compileTeal(
-      "#pragma version 11\n txn RekeyTo; global ZeroAddress; ==",
-    );
-    const extraLsig = this.algorand.account.logicsig(
-      compilation.compiledBase64ToBytes,
-    );
-
-    await paramsCallback(params);
-
-    for (let i = 0; i < this.totalLsigs - 1; i++) {
-      const lsigPay = await this.algorand.createTransaction.payment({
-        sender: extraLsig,
-        amount: microAlgos(0),
-        staticFee: microAlgos(0),
-        receiver: extraLsig,
-        note: `Extra lsig ${i + 1} of ${this.totalLsigs - 1}`,
-      });
-
-      params.extraLsigsTxns.push(lsigPay);
-
-      if (addExtraLsigs) {
-        composer.addTransaction(lsigPay);
-      }
-    }
-  }
-}
-
-export class PlonkAppVerifier {
-  appClient?: PlonkVerifierClient;
-  curve?: any;
-
-  constructor(
-    public algorand: AlgorandClient,
-    public zKey: snarkjs.ZKArtifact,
-    public wasmProver: snarkjs.ZKArtifact,
-  ) {}
-
-  private async ensureCurveInstanttiation() {
-    if (!this.curve) {
-      // @ts-expect-error curves is not typed
-      this.curve = await snarkjs.curves.getCurveFromName("bls12381");
-    }
+  protected encodeSignals(...signals: string[]): bigint[] {
+    return encodePlonkSignals(...signals);
   }
 
-  async deploy(
-    params: Omit<PlonkVerifierDeployParams, "deployTimeParams"> & {
-      defaultSender: Address;
-      debugLogging?: boolean;
-    },
-  ) {
-    if (this.appClient) {
-      throw new Error("AppVerifier already deployed");
-    }
+  protected async fullProve(
+    inputs: snarkjs.CircuitSignals,
+    wasmProver: snarkjs.ZKArtifact,
+    zKey: snarkjs.ZKArtifact,
+  ): Promise<{ proof: any; publicSignals: any }> {
+    return snarkjs.plonk.fullProve(inputs, wasmProver, zKey);
+  }
 
-    await this.ensureCurveInstanttiation();
+  protected getLsigSource(): string {
+    return PLONK_LSIG_SOURCE;
+  }
 
-    let factory;
+  protected getAppSpec(): Arc56Contract {
+    return APP_SPEC;
+  }
 
-    if (params.debugLogging) {
-      factory = new PlonkVerifierWithLogsFactory({
-        algorand: this.algorand,
-        defaultSender: params.defaultSender,
-      });
-    } else {
-      factory = new PlonkVerifierFactory({
-        algorand: this.algorand,
-        defaultSender: params.defaultSender,
-      });
-    }
-
-    const vk = await getPlonkVkey(this.zKey, this.curve);
-    const vkBytes = encodePlonkVk(vk, factory.appSpec);
-
+  protected override getAdditionalTemplateParams(
+    vk: PlonkVerificationKey,
+    curve: any,
+  ): Record<string, any> {
     const rootOfUnity = Buffer.from(
-      this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
+      curve.Fr.toObject(curve.Fr.w[Number(vk.power)])
         .toString(16)
         .padStart(64, "0"),
       "hex",
     );
 
-    const { appClient } = await factory.deploy({
-      ...params,
-      deployTimeParams: {
-        VERIFICATION_KEY: vkBytes,
-        ROOT_OF_UNITY: rootOfUnity,
-      },
-    });
-
-    this.appClient = appClient;
-    return appClient;
-  }
-
-  async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<PlonkWitness> {
-    await this.ensureCurveInstanttiation();
-
-    const { proof: rawProof, publicSignals: rawSignals } =
-      await snarkjs.plonk.fullProve(inputs, this.wasmProver, this.zKey);
-
-    const proof = encodePlonkProof(rawProof, this.curve);
-    const signals = encodePlonkSignals(...rawSignals);
-    const vk = await getPlonkVkey(this.zKey, this.curve);
-
     return {
-      proof,
-      signals,
+      ROOT_OF_UNITY: rootOfUnity,
     };
   }
+}
 
-  private assertDeployed(): asserts this is { appClient: PlonkVerifierClient } {
-    if (!this.appClient) {
-      throw new Error("AppVerifier not deployed");
-    }
+export class PlonkAppVerifier extends AppVerifier<
+  PlonkVerifierFactory,
+  PlonkVerifierWithLogsFactory,
+  PlonkVerifierClient,
+  PlonkWitness,
+  PlonkVerifierDeployParams,
+  PlonkVerificationKey
+> {
+  protected newFactory(o: {
+    algorand: AlgorandClient;
+    defaultSender: Address;
+  }): PlonkVerifierFactory {
+    return new PlonkVerifierFactory(o);
   }
 
-  // Methods that take in proof and signals directly
-
-  async simulateVerificationWithProofAndSignals(
-    proofAndSignals: { proof: PlonkProof; signals: bigint[] },
-    simParams?: RawSimulateOptions,
-  ) {
-    this.assertDeployed();
-
-    return this.appClient
-      .newGroup()
-      .verify({ args: { ...proofAndSignals } })
-      .simulate(simParams ?? {});
+  protected newLogsFactory(o: {
+    algorand: AlgorandClient;
+    defaultSender: Address;
+  }): PlonkVerifierWithLogsFactory {
+    return new PlonkVerifierWithLogsFactory(o);
   }
 
-  async verifyTransactionFromProofAndSignals(
-    proofAndSignals: PlonkWitness,
-  ): Promise<Transaction> {
-    this.assertDeployed();
-
-    return (
-      await this.appClient.createTransaction.verify({
-        args: proofAndSignals,
-      })
-    ).transactions[0]!;
+  protected async getVkey(
+    zKey: snarkjs.ZKArtifact,
+    curve: any,
+  ): Promise<PlonkVerificationKey> {
+    return getPlonkVkey(zKey, curve);
   }
 
-  async callVerifyFromProofAndSignals(
-    proofAndSignals: PlonkWitness,
-    callParams?: Omit<
-      AppClientMethodCallParams,
-      "method" | "args" | "onComplete"
-    >,
-  ) {
-    this.assertDeployed();
-
-    return this.appClient.send.verify({ ...callParams, args: proofAndSignals });
+  protected encodeVkey(
+    vk: PlonkVerificationKey,
+    appSpec: Arc56Contract,
+  ): Uint8Array {
+    return encodePlonkVk(vk, appSpec);
   }
 
-  // Methods that generate proof and signals internally
+  protected encodeProof(proof: any, curve: any): PlonkProof {
+    return encodePlonkProof(proof, curve);
+  }
 
-  async simulateVerification(
+  protected async fullProve(
     inputs: snarkjs.CircuitSignals,
-    simParams?: RawSimulateOptions,
-  ) {
-    return this.simulateVerificationWithProofAndSignals(
-      await this.proofAndSignals(inputs),
-      simParams,
-    );
+    wasmProver: snarkjs.ZKArtifact,
+    zKey: snarkjs.ZKArtifact,
+  ): Promise<{ proof: any; publicSignals: any }> {
+    return snarkjs.plonk.fullProve(inputs, wasmProver, zKey);
   }
 
-  async verifyTransaction(
-    inputs: snarkjs.CircuitSignals,
-  ): Promise<Transaction> {
-    return this.verifyTransactionFromProofAndSignals(
-      await this.proofAndSignals(inputs),
+  protected override getAdditionalDeployParams(
+    vk: PlonkVerificationKey,
+    curve: any,
+  ): Record<string, any> {
+    const rootOfUnity = Buffer.from(
+      curve.Fr.toObject(curve.Fr.w[Number(vk.power)])
+        .toString(16)
+        .padStart(64, "0"),
+      "hex",
     );
-  }
 
-  async callVerify(
-    inputs: snarkjs.CircuitSignals,
-    callParams?: Omit<
-      AppClientMethodCallParams,
-      "method" | "args" | "onComplete"
-    >,
-  ) {
-    return this.callVerifyFromProofAndSignals(
-      await this.proofAndSignals(inputs),
-      callParams,
-    );
+    return {
+      ROOT_OF_UNITY: rootOfUnity,
+    };
   }
 }

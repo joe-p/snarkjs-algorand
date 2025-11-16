@@ -10,7 +10,15 @@ const plonkLsigTeal = readFileSync(
   "utf8",
 );
 
-const content = `export const PLONK_LSIG_SOURCE = \`${plonkLsigTeal}\`;\n`;
+const groth16LsigTeal = readFileSync(
+  join(__dirname, "..", "contracts", "out", "Groth16VerifierLsig.teal"),
+  "utf8",
+);
+
+const content = `
+export const PLONK_LSIG_SOURCE = \`${plonkLsigTeal}\`;
+export const GROTH16_LSIG_SOURCE = \`${groth16LsigTeal}\`;
+`;
 
 writeFileSync(
   join(__dirname, "..", "contracts", "out", "lsig_source.ts"),

@@ -1,10 +1,15 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { AlgorandClient } from "@algorandfoundation/algokit-utils";
+import { AlgorandClient, microAlgos } from "@algorandfoundation/algokit-utils";
 import * as snarkjs from "snarkjs";
 import {
   getGroth16Proof,
   Groth16AppVerifier,
+  Groth16LsigVerifier,
 } from "../src/groth16";
+import {
+  Groth16SignalsAndProofClient,
+  Groth16SignalsAndProofFactory,
+} from "../contracts/clients/Groth16SignalsAndProof";
 
 const LSIG_BUDGET = 20_000; // Budget for each logicsig
 const APP_BUDGET = 700; // Budget for the app call
@@ -102,5 +107,59 @@ describe("groth16 verifier", () => {
     );
 
     expect(simResult.simulateResponse.txnGroups[0]?.failedAt).toBeUndefined();
+  });
+});
+
+describe("groth16 verifier lsig", () => {
+  let verifier: Groth16LsigVerifier;
+  let algorand: AlgorandClient;
+  let client: Groth16SignalsAndProofClient;
+
+  beforeAll(async () => {
+    algorand = AlgorandClient.defaultLocalNet();
+    verifier = new Groth16LsigVerifier(
+      algorand,
+      "circuit/groth16_circuit_final.zkey",
+      "circuit/circuit_js/circuit.wasm",
+    );
+
+    const signalsAndProofFactory = new Groth16SignalsAndProofFactory({
+      algorand,
+      defaultSender: await algorand.account.localNetDispenser(),
+    });
+
+    const { appClient } = await signalsAndProofFactory.deploy({
+      onUpdate: "append",
+    });
+
+    client = appClient;
+  });
+
+  it("works", async () => {
+    const group = client.newGroup();
+
+    await verifier.verificationParams({
+      inputs: { a: 10, b: 21 },
+      composer: group,
+      paramsCallback: async (params) => {
+        const { appParams, lsigsFee } = params;
+
+        // Call app with signals and proof via lsig
+        group.signalsAndProof(appParams);
+
+        // Pay the required fees
+        const feePayer = await algorand.account.localNetDispenser();
+        group.addTransaction(
+          await algorand.createTransaction.payment({
+            sender: feePayer,
+            amount: microAlgos(0),
+            receiver: feePayer,
+            extraFee: lsigsFee,
+          }),
+        );
+      },
+    });
+
+    await group.send();
   });
 });
