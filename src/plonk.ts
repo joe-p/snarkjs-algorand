@@ -20,11 +20,6 @@ import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-util
 import algosdk, { OnApplicationComplete, type Address } from "algosdk";
 import { PLONK_LSIG_SOURCE } from "../contracts/out/lsig_source";
 import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
-import {
-  LagrangeWitnessCalculatorFactory,
-  LagrangeWitnessFromTuple,
-  type LagrangeWitness,
-} from "../contracts/clients/LagrangeWitnessCalculator";
 import { stringValuesToBigints } from "./index.ts";
 
 export {
@@ -136,50 +131,9 @@ export function encodePlonkSignals(...inputs: string[]) {
   });
 }
 
-export async function getLagrangeWitness(
-  proof: PlonkProof,
-  signals: bigint[],
-  algorand: AlgorandClient,
-  vkBytes: Uint8Array,
-  rootOfUnity: Uint8Array,
-): Promise<LagrangeWitness> {
-  const calcTxn = await new LagrangeWitnessCalculatorFactory({
-    algorand,
-  }).createTransaction.create.calculateLagrangeWitness({
-    args: { proof, signals },
-    deployTimeParams: {
-      VERIFICATION_KEY: vkBytes,
-      ROOT_OF_UNITY: rootOfUnity,
-    },
-    sender: await algorand.account.localNetDispenser(), // TODO: For mainnet/testnet, use feesink
-    onComplete: OnApplicationComplete.DeleteApplicationOC,
-  });
-
-  const simResult = await algorand
-    .newGroup()
-    .addTransaction(calcTxn.transactions[0]!)
-    .simulate({
-      extraOpcodeBudget: 20_000 * 16,
-      skipSignatures: true,
-    });
-
-  const log = simResult.confirmations[0]!.logs!.at(-1)!;
-
-  const abiType = algosdk.ABIType.from("(uint256[],uint256,uint256)");
-
-  const retVal = abiType.decode(log.slice(4)) as [bigint[], bigint, bigint];
-
-  return LagrangeWitnessFromTuple(retVal);
-}
-
 export type PlonkWitness = {
   proof: PlonkProof;
   signals: bigint[];
-  lw: {
-    l: bigint[];
-    xin: bigint;
-    zh: bigint;
-  };
 };
 
 export class PlonkLsigVerifier {
@@ -208,26 +162,9 @@ export class PlonkLsigVerifier {
     const proof = encodePlonkProof(rawProof, this.curve);
     const signals = encodePlonkSignals(...rawSignals);
 
-    const vk = await getPlonkVkey(this.zKey, this.curve);
-    const vkBytes = encodePlonkVk(vk, APP_SPEC);
-
-    const rootOfUnity = Buffer.from(
-      this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
-        .toString(16)
-        .padStart(64, "0"),
-      "hex",
-    );
-
     return {
       proof,
       signals,
-      lw: await getLagrangeWitness(
-        proof,
-        signals,
-        this.algorand,
-        vkBytes,
-        rootOfUnity,
-      ),
     };
   }
 
@@ -268,19 +205,19 @@ export class PlonkLsigVerifier {
       appParams: {
         sender: Address;
         staticFee: AlgoAmount;
-        args: { signals: bigint[]; proof: PlonkProof; lw: LagrangeWitness };
+        args: { signals: bigint[]; proof: PlonkProof };
       };
       lsigsFee: AlgoAmount;
       extraLsigsTxns: Transaction[];
     }) => Promise<void>;
   }): Promise<void> {
-    const { proof, signals, lw } = await this.proofAndSignals(inputs);
+    const { proof, signals } = await this.proofAndSignals(inputs);
 
     const params = {
       appParams: {
         sender: await this.lsigAccount(),
         staticFee: microAlgos(0),
-        args: { signals, proof, lw },
+        args: { signals, proof },
       },
       lsigsFee: microAlgos(1000 * this.totalLsigs),
       extraLsigsTxns: [] as Transaction[],
@@ -387,25 +324,10 @@ export class PlonkAppVerifier {
     const proof = encodePlonkProof(rawProof, this.curve);
     const signals = encodePlonkSignals(...rawSignals);
     const vk = await getPlonkVkey(this.zKey, this.curve);
-    const vkBytes = encodePlonkVk(vk, APP_SPEC);
-
-    const rootOfUnity = Buffer.from(
-      this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
-        .toString(16)
-        .padStart(64, "0"),
-      "hex",
-    );
 
     return {
       proof,
       signals,
-      lw: await getLagrangeWitness(
-        proof,
-        signals,
-        this.algorand,
-        vkBytes,
-        rootOfUnity,
-      ),
     };
   }
 
@@ -423,26 +345,9 @@ export class PlonkAppVerifier {
   ) {
     this.assertDeployed();
 
-    const vk = await getPlonkVkey(this.zKey, this.curve);
-    const vkBytes = encodePlonkVk(vk, APP_SPEC);
-
-    const rootOfUnity = Buffer.from(
-      this.curve.Fr.toObject(this.curve.Fr.w[Number(vk.power)])
-        .toString(16)
-        .padStart(64, "0"),
-      "hex",
-    );
-
-    const lw = await getLagrangeWitness(
-      proofAndSignals.proof,
-      proofAndSignals.signals,
-      this.algorand,
-      vkBytes,
-      rootOfUnity,
-    );
     return this.appClient
       .newGroup()
-      .verify({ args: { ...proofAndSignals, lw } })
+      .verify({ args: { ...proofAndSignals } })
       .simulate(simParams ?? {});
   }
 

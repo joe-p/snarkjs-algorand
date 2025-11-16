@@ -2,12 +2,9 @@ import {
   Contract,
   Global,
   LogicSig,
-  TemplateVar,
   Txn,
   assert,
   assertMatch,
-  ensureBudget,
-  type bytes,
 } from "@algorandfoundation/algorand-typescript";
 import {
   abimethod,
@@ -20,8 +17,6 @@ import {
   type PlonkProof as PlonkProof,
   verifyPlonkFromTemplate,
   type LagrangeWitness,
-  calculateLagrangeEvaluations,
-  computeChallenges,
 } from "./plonk_bls12381.algo";
 
 import { type PublicSignals } from "./bls12381_common.algo";
@@ -31,9 +26,9 @@ export class PlonkVerifierWithLogs extends Contract {
   @abimethod({ allowActions: "CloseOut" })
   public _dummy(_vk: PlonkVerificationKey): void {}
 
-  verify(signals: PublicSignals, proof: PlonkProof, lw: LagrangeWitness): void {
+  verify(signals: PublicSignals, proof: PlonkProof): void {
     assert(
-      verifyPlonkFromTemplateWithLogs(signals, proof, lw),
+      verifyPlonkFromTemplateWithLogs(signals, proof),
       "Verification failed",
     );
   }
@@ -44,8 +39,8 @@ export class PlonkVerifier extends Contract {
   @abimethod({ allowActions: "CloseOut" })
   public _dummy(_vk: PlonkVerificationKey): void {}
 
-  verify(signals: PublicSignals, proof: PlonkProof, lw: LagrangeWitness): void {
-    assert(verifyPlonkFromTemplate(signals, proof, lw), "Verification failed");
+  verify(signals: PublicSignals, proof: PlonkProof): void {
+    assert(verifyPlonkFromTemplate(signals, proof), "Verification failed");
   }
 }
 
@@ -57,39 +52,12 @@ export class PlonkVerifierLsig extends LogicSig {
     const proof = decodeArc4<PlonkProof>(Txn.applicationArgs(2));
     const signals = decodeArc4<Uint256[]>(Txn.applicationArgs(1));
 
-    assert(verifyPlonkFromTemplate(signals, proof, lw), "Verification failed");
+    assert(verifyPlonkFromTemplate(signals, proof), "Verification failed");
 
     return true;
   }
 }
 
 export class PlonkSignalsAndProof extends Contract {
-  public signalsAndProof(
-    signals: Uint256[],
-    proof: PlonkProof,
-    lw: LagrangeWitness,
-  ): void {}
-}
-
-export class LagrangeWitnessCalculator extends Contract {
-  @abimethod({ onCreate: "require", allowActions: "DeleteApplication" })
-  public calculateLagrangeWitness(
-    signals: PublicSignals,
-    proof: PlonkProof,
-  ): LagrangeWitness {
-    ensureBudget(700 * 250);
-    const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
-
-    const vk = decodeArc4<PlonkVerificationKey>(vkBytes);
-
-    let challenges = computeChallenges(vk, signals, proof);
-
-    const calc = calculateLagrangeEvaluations(challenges, vk);
-
-    return {
-      L: calc.L,
-      xin: calc.challenges.xin,
-      zh: calc.challenges.zh,
-    };
-  }
+  public signalsAndProof(signals: Uint256[], proof: PlonkProof): void {}
 }

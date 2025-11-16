@@ -24,7 +24,7 @@ import { TransactionComposer, AppCallMethodCall, AppMethodCallTransactionArgumen
 import { SendParams, SendSingleTransactionResult, SendAtomicTransactionComposerResults } from '@algorandfoundation/algokit-utils/types/transaction'
 import { Address, encodeAddress, modelsv2, OnApplicationComplete, Transaction, TransactionSigner } from 'algosdk'
 
-export const APP_SPEC: Arc56Contract = {"name":"PlonkSignalsAndProof","structs":{"LagrangeWitness":[{"name":"l","type":"uint256[]"},{"name":"xin","type":"uint256"},{"name":"zh","type":"uint256"}],"PlonkProof":[{"name":"a","type":"byte[96]"},{"name":"b","type":"byte[96]"},{"name":"c","type":"byte[96]"},{"name":"z","type":"byte[96]"},{"name":"t1","type":"byte[96]"},{"name":"t2","type":"byte[96]"},{"name":"t3","type":"byte[96]"},{"name":"wxi","type":"byte[96]"},{"name":"wxiw","type":"byte[96]"},{"name":"evalA","type":"uint256"},{"name":"evalB","type":"uint256"},{"name":"evalC","type":"uint256"},{"name":"evalS1","type":"uint256"},{"name":"evalS2","type":"uint256"},{"name":"evalZw","type":"uint256"}]},"methods":[{"name":"signalsAndProof","args":[{"type":"uint256[]","name":"signals"},{"type":"(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256)","struct":"PlonkProof","name":"proof"},{"type":"(uint256[],uint256,uint256)","struct":"LagrangeWitness","name":"lw"}],"returns":{"type":"void"},"actions":{"create":[],"call":["NoOp"]},"readonly":false,"events":[],"recommendations":{}}],"arcs":[22,28],"networks":{},"state":{"schema":{"global":{"ints":0,"bytes":0},"local":{"ints":0,"bytes":0}},"keys":{"global":{},"local":{},"box":{}},"maps":{"global":{},"local":{},"box":{}}},"bareActions":{"create":["NoOp"],"call":[]},"sourceInfo":{"approval":{"sourceInfo":[{"pc":[42],"errorMessage":"OnCompletion must be NoOp && can only call when creating"},{"pc":[31],"errorMessage":"OnCompletion must be NoOp && can only call when not creating"},{"pc":[50,90],"errorMessage":"invalid array length header"},{"pc":[59],"errorMessage":"invalid number of bytes for arc4.dynamic_array<arc4.uint256>"},{"pc":[97],"errorMessage":"invalid number of bytes for contracts/plonk_bls12381.algo.ts::LagrangeWitness"},{"pc":[68],"errorMessage":"invalid number of bytes for contracts/plonk_bls12381.algo.ts::PlonkProof"},{"pc":[82],"errorMessage":"invalid tail pointer at index 0 of ((len+uint256[]),uint256,uint256)"},{"pc":[77],"errorMessage":"invalid tuple encoding"}],"pcOffsetMethod":"none"},"clear":{"sourceInfo":[],"pcOffsetMethod":"none"}},"source":{"approval":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYXJjNC9pbmRleC5kLnRzOjpDb250cmFjdC5hcHByb3ZhbFByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBpbnRjYmxvY2sgMCAxIDMyCiAgICAvLyBjb250cmFjdHMvcGxvbmtfdmVyaWZpZXIuYWxnby50czo2NgogICAgLy8gZXhwb3J0IGNsYXNzIFBsb25rU2lnbmFsc0FuZFByb29mIGV4dGVuZHMgQ29udHJhY3QgewogICAgdHhuIE51bUFwcEFyZ3MKICAgIGJ6IG1haW5fX19hbGdvdHNfXy5kZWZhdWx0Q3JlYXRlQDUKICAgIHB1c2hieXRlcyAweGFjM2JmNzcwIC8vIG1ldGhvZCAic2lnbmFsc0FuZFByb29mKHVpbnQyNTZbXSwoYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sdWludDI1Nix1aW50MjU2LHVpbnQyNTYsdWludDI1Nix1aW50MjU2LHVpbnQyNTYpLCh1aW50MjU2W10sdWludDI1Nix1aW50MjU2KSl2b2lkIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9zaWduYWxzQW5kUHJvb2Zfcm91dGVAMwogICAgZXJyCgptYWluX3NpZ25hbHNBbmRQcm9vZl9yb3V0ZUAzOgogICAgLy8gY29udHJhY3RzL3Bsb25rX3ZlcmlmaWVyLmFsZ28udHM6NjctNzEKICAgIC8vIHB1YmxpYyBzaWduYWxzQW5kUHJvb2YoCiAgICAvLyAgIHNpZ25hbHM6IFVpbnQyNTZbXSwKICAgIC8vICAgcHJvb2Y6IFBsb25rUHJvb2YsCiAgICAvLyAgIGx3OiBMYWdyYW5nZVdpdG5lc3MsCiAgICAvLyApOiB2b2lkIHt9CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgJiYKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gbXVzdCBiZSBOb09wICYmIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIGIgc2lnbmFsc0FuZFByb29mCgptYWluX19fYWxnb3RzX18uZGVmYXVsdENyZWF0ZUA1OgogICAgLy8gY29udHJhY3RzL3Bsb25rX3ZlcmlmaWVyLmFsZ28udHM6NjYKICAgIC8vIGV4cG9ydCBjbGFzcyBQbG9ua1NpZ25hbHNBbmRQcm9vZiBleHRlbmRzIENvbnRyYWN0IHsKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICAmJgogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBtdXN0IGJlIE5vT3AgJiYgY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICBpbnRjXzEgLy8gMQogICAgcmV0dXJuCgoKLy8gY29udHJhY3RzL3Bsb25rX3ZlcmlmaWVyLmFsZ28udHM6OlBsb25rU2lnbmFsc0FuZFByb29mLnNpZ25hbHNBbmRQcm9vZltyb3V0aW5nXSgpIC0+IHZvaWQ6CnNpZ25hbHNBbmRQcm9vZjoKICAgIC8vIGNvbnRyYWN0cy9wbG9ua192ZXJpZmllci5hbGdvLnRzOjY3LTcxCiAgICAvLyBwdWJsaWMgc2lnbmFsc0FuZFByb29mKAogICAgLy8gICBzaWduYWxzOiBVaW50MjU2W10sCiAgICAvLyAgIHByb29mOiBQbG9ua1Byb29mLAogICAgLy8gICBsdzogTGFncmFuZ2VXaXRuZXNzLAogICAgLy8gKTogdm9pZCB7fQogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgZHVwCiAgICBpbnRjXzAgLy8gMAogICAgZXh0cmFjdF91aW50MTYgLy8gb24gZXJyb3I6IGludmFsaWQgYXJyYXkgbGVuZ3RoIGhlYWRlcgogICAgaW50Y18yIC8vIDMyCiAgICAqCiAgICBwdXNoaW50IDIgLy8gMgogICAgKwogICAgc3dhcAogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50MjU2PgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgogICAgbGVuCiAgICBwdXNoaW50IDEwNTYgLy8gMTA1NgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgY29udHJhY3RzL3Bsb25rX2JsczEyMzgxLmFsZ28udHM6OlBsb25rUHJvb2YKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDMKICAgIGR1cAogICAgbGVuCiAgICBkaWcgMQogICAgaW50Y18wIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIHR1cGxlIGVuY29kaW5nCiAgICBkdXAKICAgIHB1c2hpbnQgNjYgLy8gNjYKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCB0YWlsIHBvaW50ZXIgYXQgaW5kZXggMCBvZiAoKGxlbit1aW50MjU2W10pLHVpbnQyNTYsdWludDI1NikKICAgIHVuY292ZXIgMgogICAgc3dhcAogICAgZGlnIDIKICAgIHN1YnN0cmluZzMKICAgIGludGNfMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzIgLy8gMzIKICAgICoKICAgIHB1c2hpbnQgNjggLy8gNjgKICAgICsKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGNvbnRyYWN0cy9wbG9ua19ibHMxMjM4MS5hbGdvLnRzOjpMYWdyYW5nZVdpdG5lc3MKICAgIGludGNfMSAvLyAxCiAgICByZXR1cm4K","clear":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYmFzZS1jb250cmFjdC5kLnRzOjpCYXNlQ29udHJhY3QuY2xlYXJTdGF0ZVByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg=="},"byteCode":{"approval":"CyADAAEgMRtBABiABKw793A2GgCOAQABADEZFDEYEERCAAoxGRQxGBQQRCNDNhoBSSJZJAuBAghMFRJENhoCFYGgCBJENhoDSRVLASJZSYFCEkRPAkxLAlIiWSQLgUQIEkQjQw==","clear":"C4EBQw=="},"events":[],"templateVariables":{}} as unknown as Arc56Contract
+export const APP_SPEC: Arc56Contract = {"name":"PlonkSignalsAndProof","structs":{"PlonkProof":[{"name":"a","type":"byte[96]"},{"name":"b","type":"byte[96]"},{"name":"c","type":"byte[96]"},{"name":"z","type":"byte[96]"},{"name":"t1","type":"byte[96]"},{"name":"t2","type":"byte[96]"},{"name":"t3","type":"byte[96]"},{"name":"wxi","type":"byte[96]"},{"name":"wxiw","type":"byte[96]"},{"name":"evalA","type":"uint256"},{"name":"evalB","type":"uint256"},{"name":"evalC","type":"uint256"},{"name":"evalS1","type":"uint256"},{"name":"evalS2","type":"uint256"},{"name":"evalZw","type":"uint256"}]},"methods":[{"name":"signalsAndProof","args":[{"type":"uint256[]","name":"signals"},{"type":"(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256)","struct":"PlonkProof","name":"proof"}],"returns":{"type":"void"},"actions":{"create":[],"call":["NoOp"]},"readonly":false,"events":[],"recommendations":{}}],"arcs":[22,28],"networks":{},"state":{"schema":{"global":{"ints":0,"bytes":0},"local":{"ints":0,"bytes":0}},"keys":{"global":{},"local":{},"box":{}},"maps":{"global":{},"local":{},"box":{}}},"bareActions":{"create":["NoOp"],"call":[]},"sourceInfo":{"approval":{"sourceInfo":[{"pc":[37],"errorMessage":"OnCompletion must be NoOp && can only call when creating"},{"pc":[26],"errorMessage":"OnCompletion must be NoOp && can only call when not creating"},{"pc":[47],"errorMessage":"invalid array length header"},{"pc":[57],"errorMessage":"invalid number of bytes for arc4.dynamic_array<arc4.uint256>"},{"pc":[66],"errorMessage":"invalid number of bytes for contracts/plonk_bls12381.algo.ts::PlonkProof"}],"pcOffsetMethod":"none"},"clear":{"sourceInfo":[],"pcOffsetMethod":"none"}},"source":{"approval":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYXJjNC9pbmRleC5kLnRzOjpDb250cmFjdC5hcHByb3ZhbFByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICAvLyBjb250cmFjdHMvcGxvbmtfdmVyaWZpZXIuYWxnby50czo2NgogICAgLy8gZXhwb3J0IGNsYXNzIFBsb25rU2lnbmFsc0FuZFByb29mIGV4dGVuZHMgQ29udHJhY3QgewogICAgdHhuIE51bUFwcEFyZ3MKICAgIGJ6IG1haW5fX19hbGdvdHNfXy5kZWZhdWx0Q3JlYXRlQDUKICAgIHB1c2hieXRlcyAweDQ0YTQ3ODhiIC8vIG1ldGhvZCAic2lnbmFsc0FuZFByb29mKHVpbnQyNTZbXSwoYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sYnl0ZVs5Nl0sdWludDI1Nix1aW50MjU2LHVpbnQyNTYsdWludDI1Nix1aW50MjU2LHVpbnQyNTYpKXZvaWQiCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAwCiAgICBtYXRjaCBtYWluX3NpZ25hbHNBbmRQcm9vZl9yb3V0ZUAzCiAgICBlcnIKCm1haW5fc2lnbmFsc0FuZFByb29mX3JvdXRlQDM6CiAgICAvLyBjb250cmFjdHMvcGxvbmtfdmVyaWZpZXIuYWxnby50czo2NwogICAgLy8gcHVibGljIHNpZ25hbHNBbmRQcm9vZihzaWduYWxzOiBVaW50MjU2W10sIHByb29mOiBQbG9ua1Byb29mKTogdm9pZCB7fQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICYmCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIG11c3QgYmUgTm9PcCAmJiBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBiIHNpZ25hbHNBbmRQcm9vZgoKbWFpbl9fX2FsZ290c19fLmRlZmF1bHRDcmVhdGVANToKICAgIC8vIGNvbnRyYWN0cy9wbG9ua192ZXJpZmllci5hbGdvLnRzOjY2CiAgICAvLyBleHBvcnQgY2xhc3MgUGxvbmtTaWduYWxzQW5kUHJvb2YgZXh0ZW5kcyBDb250cmFjdCB7CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgJiYKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gbXVzdCBiZSBOb09wICYmIGNhbiBvbmx5IGNhbGwgd2hlbiBjcmVhdGluZwogICAgcHVzaGludCAxIC8vIDEKICAgIHJldHVybgoKCi8vIGNvbnRyYWN0cy9wbG9ua192ZXJpZmllci5hbGdvLnRzOjpQbG9ua1NpZ25hbHNBbmRQcm9vZi5zaWduYWxzQW5kUHJvb2Zbcm91dGluZ10oKSAtPiB2b2lkOgpzaWduYWxzQW5kUHJvb2Y6CiAgICAvLyBjb250cmFjdHMvcGxvbmtfdmVyaWZpZXIuYWxnby50czo2NwogICAgLy8gcHVibGljIHNpZ25hbHNBbmRQcm9vZihzaWduYWxzOiBVaW50MjU2W10sIHByb29mOiBQbG9ua1Byb29mKTogdm9pZCB7fQogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgZHVwCiAgICBwdXNoaW50IDAgLy8gMAogICAgZXh0cmFjdF91aW50MTYgLy8gb24gZXJyb3I6IGludmFsaWQgYXJyYXkgbGVuZ3RoIGhlYWRlcgogICAgcHVzaGludCAzMiAvLyAzMgogICAgKgogICAgcHVzaGludCAyIC8vIDIKICAgICsKICAgIHN3YXAKICAgIGxlbgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5keW5hbWljX2FycmF5PGFyYzQudWludDI1Nj4KICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIGxlbgogICAgcHVzaGludCAxMDU2IC8vIDEwNTYKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGNvbnRyYWN0cy9wbG9ua19ibHMxMjM4MS5hbGdvLnRzOjpQbG9ua1Byb29mCiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg==","clear":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYmFzZS1jb250cmFjdC5kLnRzOjpCYXNlQ29udHJhY3QuY2xlYXJTdGF0ZVByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg=="},"byteCode":{"approval":"CzEbQQAYgAREpHiLNhoAjgEAAQAxGRQxGBBEQgALMRkUMRgUEESBAUM2GgFJgQBZgSALgQIITBUSRDYaAhWBoAgSRIEBQw==","clear":"C4EBQw=="},"events":[],"templateVariables":{}} as unknown as Arc56Contract
 
 /**
  * A state record containing binary data
@@ -65,20 +65,6 @@ export type Expand<T> = T extends (...args: infer A) => infer R
 
 // Type definitions for ARC-56 structs
 
-export type LagrangeWitness = {
-  l: bigint[],
-  xin: bigint,
-  zh: bigint
-}
-
-
-/**
- * Converts the ABI tuple representation of a LagrangeWitness to the struct representation
- */
-export function LagrangeWitnessFromTuple(abiTuple: [bigint[], bigint, bigint]) {
-  return getABIStructFromABITuple(abiTuple, APP_SPEC.structs.LagrangeWitness, APP_SPEC.structs) as LagrangeWitness
-}
-
 export type PlonkProof = {
   a: Uint8Array,
   b: Uint8Array,
@@ -113,17 +99,16 @@ export type PlonkSignalsAndProofArgs = {
    * The object representation of the arguments for each method
    */
   obj: {
-    'signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void': {
+    'signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void': {
       signals: bigint[] | number[]
       proof: PlonkProof
-      lw: LagrangeWitness
     }
   }
   /**
    * The tuple representation of the arguments for each method
    */
   tuple: {
-    'signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void': [signals: bigint[] | number[], proof: PlonkProof, lw: LagrangeWitness]
+    'signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void': [signals: bigint[] | number[], proof: PlonkProof]
   }
 }
 
@@ -131,7 +116,7 @@ export type PlonkSignalsAndProofArgs = {
  * The return type for each method
  */
 export type PlonkSignalsAndProofReturns = {
-  'signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void': void
+  'signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void': void
 }
 
 /**
@@ -142,10 +127,10 @@ export type PlonkSignalsAndProofTypes = {
    * Maps method signatures / names to their argument and return types.
    */
   methods:
-    & Record<'signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void' | 'signalsAndProof', {
-      argsObj: PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void']
-      argsTuple: PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void']
-      returns: PlonkSignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void']
+    & Record<'signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void' | 'signalsAndProof', {
+      argsObj: PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void']
+      argsTuple: PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void']
+      returns: PlonkSignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void']
     }>
 }
 
@@ -198,16 +183,16 @@ export type PlonkSignalsAndProofDeployParams = Expand<Omit<AppFactoryDeployParam
  */
 export abstract class PlonkSignalsAndProofParamsFactory {
   /**
-   * Constructs a no op call for the signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void ABI method
+   * Constructs a no op call for the signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void ABI method
    *
    * @param params Parameters for the call
    * @returns An `AppClientMethodCallParams` object for the call
    */
-  static signalsAndProof(params: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void']> & CallOnComplete): AppClientMethodCallParams & CallOnComplete {
+  static signalsAndProof(params: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void']> & CallOnComplete): AppClientMethodCallParams & CallOnComplete {
     return {
       ...params,
-      method: 'signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void' as const,
-      args: Array.isArray(params.args) ? params.args : [params.args.signals, params.args.proof, params.args.lw],
+      method: 'signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void' as const,
+      args: Array.isArray(params.args) ? params.args : [params.args.signals, params.args.proof],
     }
   }
 }
@@ -451,12 +436,12 @@ export class PlonkSignalsAndProofClient {
     },
 
     /**
-     * Makes a call to the PlonkSignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void` ABI method.
+     * Makes a call to the PlonkSignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void` ABI method.
      *
      * @param params The params for the smart contract call
      * @returns The call params
      */
-    signalsAndProof: (params: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+    signalsAndProof: (params: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) => {
       return this.appClient.params.call(PlonkSignalsAndProofParamsFactory.signalsAndProof(params))
     },
 
@@ -477,12 +462,12 @@ export class PlonkSignalsAndProofClient {
     },
 
     /**
-     * Makes a call to the PlonkSignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void` ABI method.
+     * Makes a call to the PlonkSignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void` ABI method.
      *
      * @param params The params for the smart contract call
      * @returns The call transaction
      */
-    signalsAndProof: (params: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+    signalsAndProof: (params: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) => {
       return this.appClient.createTransaction.call(PlonkSignalsAndProofParamsFactory.signalsAndProof(params))
     },
 
@@ -503,14 +488,14 @@ export class PlonkSignalsAndProofClient {
     },
 
     /**
-     * Makes a call to the PlonkSignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void` ABI method.
+     * Makes a call to the PlonkSignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void` ABI method.
      *
      * @param params The params for the smart contract call
      * @returns The call result
      */
-    signalsAndProof: async (params: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void']> & SendParams & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+    signalsAndProof: async (params: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void']> & SendParams & {onComplete?: OnApplicationComplete.NoOpOC}) => {
       const result = await this.appClient.send.call(PlonkSignalsAndProofParamsFactory.signalsAndProof(params))
-      return {...result, return: result.return as unknown as (undefined | PlonkSignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void'])}
+      return {...result, return: result.return as unknown as (undefined | PlonkSignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void'])}
     },
 
   }
@@ -538,9 +523,9 @@ export class PlonkSignalsAndProofClient {
     const resultMappers: Array<undefined | ((x: ABIReturn | undefined) => any)> = []
     return {
       /**
-       * Add a signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void method call against the PlonkSignalsAndProof contract
+       * Add a signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void method call against the PlonkSignalsAndProof contract
        */
-      signalsAndProof(params: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) {
+      signalsAndProof(params: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) {
         promiseChain = promiseChain.then(async () => composer.addAppCallMethodCall(await client.params.signalsAndProof(params)))
         resultMappers.push(undefined)
         return this
@@ -581,13 +566,13 @@ export class PlonkSignalsAndProofClient {
 }
 export type PlonkSignalsAndProofComposer<TReturns extends [...any[]] = []> = {
   /**
-   * Calls the signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void ABI method.
+   * Calls the signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void ABI method.
    *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
    */
-  signalsAndProof(params?: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void']>): PlonkSignalsAndProofComposer<[...TReturns, PlonkSignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256),(uint256[],uint256,uint256))void'] | undefined]>
+  signalsAndProof(params?: CallParams<PlonkSignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void'] | PlonkSignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void']>): PlonkSignalsAndProofComposer<[...TReturns, PlonkSignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],byte[96],uint256,uint256,uint256,uint256,uint256,uint256))void'] | undefined]>
 
   /**
    * Makes a clear_state call to an existing instance of the PlonkSignalsAndProof smart contract.
