@@ -9,7 +9,7 @@ main:
     dupn 22
     bytec_1 // ""
     dupn 3
-    // contracts/plonk_verifier.algo.ts:54
+    // contracts/plonk_verifier.algo.ts:49
     // assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
     txn Fee
     !
@@ -18,11 +18,11 @@ main:
     ==
     &&
     assert // assert target is match for conditions
-    // contracts/plonk_verifier.algo.ts:57
+    // contracts/plonk_verifier.algo.ts:52
     // const proof = decodeArc4<PlonkProof>(Txn.applicationArgs(2));
     pushint 2 // 2
     txnas ApplicationArgs
-    // contracts/plonk_verifier.algo.ts:58
+    // contracts/plonk_verifier.algo.ts:53
     // const signals = decodeArc4<Uint256[]>(Txn.applicationArgs(1));
     intc_2 // 1
     txnas ApplicationArgs
@@ -1765,10 +1765,10 @@ main_after_while@22:
     //   op.concat(vk.X_2, G2_ONE), // G2 points
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/plonk_verifier.algo.ts:60
+    // contracts/plonk_verifier.algo.ts:55
     // assert(verifyPlonkFromTemplate(signals, proof), "Verification failed");
     assert // Verification failed
-    // contracts/plonk_verifier.algo.ts:62
+    // contracts/plonk_verifier.algo.ts:57
     // return true;
     intc_2 // 1
     return

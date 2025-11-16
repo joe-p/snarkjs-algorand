@@ -1,6 +1,6 @@
 {
   "name": "snarkjs-algorand",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -14,7 +14,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build:contracts": "algokit compile ts contracts",
