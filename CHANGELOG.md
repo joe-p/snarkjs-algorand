@@ -1,3 +1,9 @@
+# UNRELEASED: 0.9.0
+
+## BREAKING CHANGES
+
+- `VerificationKey` and `Proof` for Groth16 have been renamed to `GrothVerificationKey` and `GrothProof` respectively to avoid confusion with PLONK types.
+
 # 0.8.0
 
 ## SECURITY
@@ -7,7 +13,6 @@
 ## BREAKING CHANGES
 
 - Many of the method and class names have changed to accommodate differentiation between PLONK and Groth16.
-- All previously existing functions are now imported from the `/plonk` module rather than the root module.
 
 ## Features
 
