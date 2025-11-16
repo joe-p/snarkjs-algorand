@@ -35,7 +35,7 @@ import {
  * Groth16 proof structure
  * Contains three commitments that prove knowledge of a satisfying assignment
  */
-export type Proof = {
+export type GrothProof = {
   /** Prover's first commitment (G1 point) */
   pi_a: bytes<96>;
   /** Prover's second commitment (G2 point) */
@@ -48,7 +48,7 @@ export type Proof = {
  * Groth16 verification key structure
  * Contains preprocessed circuit information for efficient verification
  */
-export type VerificationKey = {
+export type GrothVerificationKey = {
   /** Alpha parameter in G1 */
   vk_alpha_1: bytes<96>;
   /** Beta parameter in G2 */
@@ -80,7 +80,7 @@ function g2GroupCheck(p: bytes<192>): boolean {
 /**
  * Validate that all proof points are in correct subgroups
  */
-function assertProofInSubgroup(proof: Proof): void {
+function assertProofInSubgroup(proof: GrothProof): void {
   assert(g1GroupCheck(proof.pi_a), "pi_a not in G1");
   assert(g2GroupCheck(proof.pi_b), "pi_b not in G2");
   assert(g1GroupCheck(proof.pi_c), "pi_c not in G1");
@@ -90,7 +90,7 @@ function assertProofInSubgroup(proof: Proof): void {
  * Validate that all public signals are in the scalar field Fr
  */
 function assertSignalsInField(
-  vk: VerificationKey,
+  vk: GrothVerificationKey,
   signals: PublicSignals,
 ): void {
   assert(signals.length === vk.nPublic, "Invalid number of public inputs");
@@ -104,9 +104,9 @@ function assertSignalsInField(
  * Validate proof inputs (subgroup membership and field membership)
  */
 export function validateInput(
-  vk: VerificationKey,
+  vk: GrothVerificationKey,
   signals: PublicSignals,
-  proof: Proof,
+  proof: GrothProof,
 ): void {
   assertProofInSubgroup(proof);
   assertSignalsInField(vk, signals);
@@ -118,7 +118,10 @@ export function validateInput(
  *
  * This uses multi-scalar multiplication for efficiency.
  */
-function computeCpub(vk: VerificationKey, signals: PublicSignals): bytes<96> {
+function computeCpub(
+  vk: GrothVerificationKey,
+  signals: PublicSignals,
+): bytes<96> {
   // IC array contains (nPublic + 1) G1 points
   // IC[0] is the constant term, IC[1..nPublic] correspond to public inputs
 
@@ -161,9 +164,9 @@ function computeCpub(vk: VerificationKey, signals: PublicSignals): bytes<96> {
  * Where cpub = IC[0] + Σ(publicSignals[i] * IC[i+1])
  */
 export function verify(
-  vk: VerificationKey,
+  vk: GrothVerificationKey,
   signals: PublicSignals,
-  proof: Proof,
+  proof: GrothProof,
 ): boolean {
   // Validate inputs
   validateInput(vk, signals, proof);
@@ -198,9 +201,9 @@ export function verify(
  * Main Groth16 verification function with debug logging
  */
 export function verifyWithLogs(
-  vk: VerificationKey,
+  vk: GrothVerificationKey,
   signals: PublicSignals,
-  proof: Proof,
+  proof: GrothProof,
 ): boolean {
   // Validate inputs
   validateInput(vk, signals, proof);
@@ -242,11 +245,11 @@ export function verifyWithLogs(
  */
 export function verifyFromTemplate(
   signals: PublicSignals,
-  proof: Proof,
+  proof: GrothProof,
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verify(decodeArc4<VerificationKey>(vkBytes), signals, proof);
+  return verify(decodeArc4<GrothVerificationKey>(vkBytes), signals, proof);
 }
 
 /**
@@ -254,11 +257,15 @@ export function verifyFromTemplate(
  */
 export function verifyFromTemplateWithLogs(
   signals: PublicSignals,
-  proof: Proof,
+  proof: GrothProof,
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verifyWithLogs(decodeArc4<VerificationKey>(vkBytes), signals, proof);
+  return verifyWithLogs(
+    decodeArc4<GrothVerificationKey>(vkBytes),
+    signals,
+    proof,
+  );
 }
 
 /**
