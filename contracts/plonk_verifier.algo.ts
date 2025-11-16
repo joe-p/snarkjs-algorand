@@ -4,7 +4,6 @@ import {
   LogicSig,
   TemplateVar,
   Txn,
-  arc4,
   assert,
   assertMatch,
   ensureBudget,
@@ -18,13 +17,14 @@ import {
 import {
   verifyPlonkFromTemplateWithLogs,
   type PlonkVerificationKey,
-  type PublicSignals,
   type PlonkProof as PlonkProof,
   verifyPlonkFromTemplate,
   type LagrangeWitness,
   calculateLagrangeEvaluations,
   computeChallenges,
 } from "./plonk_bls12381.algo";
+
+import { type PublicSignals } from "./bls12381_common.algo";
 
 export class PlonkVerifierWithLogs extends Contract {
   /** Dummy function that only exists so we can have the VerificationKey type in the generated client */
