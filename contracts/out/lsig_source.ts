@@ -4,11 +4,11 @@ export const PLONK_LSIG_SOURCE = `#pragma version 11
 // contracts/plonk_verifier.algo.ts::program() -> uint64:
 main:
     intcblock 32 96 1 0 384
-    bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x 0x01 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000 TMPL_VERIFICATION_KEY TMPL_ROOT_OF_UNITY
+    bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x 0x01 TMPL_ROOT_OF_UNITY 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000 TMPL_VERIFICATION_KEY
     intc_3 // 0
-    dupn 17
+    dupn 22
     bytec_1 // ""
-    dupn 2
+    dupn 3
     // contracts/plonk_verifier.algo.ts:54
     // assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
     txn Fee
@@ -18,10 +18,6 @@ main:
     ==
     &&
     assert // assert target is match for conditions
-    // contracts/plonk_verifier.algo.ts:56
-    // const lw = decodeArc4<LagrangeWitness>(Txn.applicationArgs(3));
-    pushint 3 // 3
-    txnas ApplicationArgs
     // contracts/plonk_verifier.algo.ts:57
     // const proof = decodeArc4<PlonkProof>(Txn.applicationArgs(2));
     pushint 2 // 2
@@ -32,49 +28,49 @@ main:
     txnas ApplicationArgs
     dup
     uncover 2
-    // contracts/plonk_bls12381.algo.ts:264
-    // return verify(decodeArc4<PlonkVerificationKey>(vkBytes), signals, proof, lw);
-    bytec 4 // TMPL_VERIFICATION_KEY
+    // contracts/plonk_bls12381.algo.ts:261
+    // return verify(decodeArc4<PlonkVerificationKey>(vkBytes), signals, proof);
+    bytec 5 // TMPL_VERIFICATION_KEY
     dup
     cover 3
     cover 3
-    // contracts/plonk_bls12381.algo.ts:329
+    // contracts/plonk_bls12381.algo.ts:289
     // assert(groupCheck(proof.A), "A not in G1");
     dup
     extract 0 96
     dup
     cover 4
-    // contracts/plonk_bls12381.algo.ts:268
+    // contracts/plonk_bls12381.algo.ts:265
     // return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
     ec_subgroup_check BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:329
+    // contracts/plonk_bls12381.algo.ts:289
     // assert(groupCheck(proof.A), "A not in G1");
     assert // A not in G1
-    // contracts/plonk_bls12381.algo.ts:330
+    // contracts/plonk_bls12381.algo.ts:290
     // assert(groupCheck(proof.B), "B not in G1");
     dup
     extract 96 96
     dup
     cover 4
-    // contracts/plonk_bls12381.algo.ts:268
+    // contracts/plonk_bls12381.algo.ts:265
     // return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
     ec_subgroup_check BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:330
+    // contracts/plonk_bls12381.algo.ts:290
     // assert(groupCheck(proof.B), "B not in G1");
     assert // B not in G1
-    // contracts/plonk_bls12381.algo.ts:331
+    // contracts/plonk_bls12381.algo.ts:291
     // assert(groupCheck(proof.C), "C not in G1");
     dup
     extract 192 96
     dup
     cover 4
-    // contracts/plonk_bls12381.algo.ts:268
+    // contracts/plonk_bls12381.algo.ts:265
     // return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
     ec_subgroup_check BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:331
+    // contracts/plonk_bls12381.algo.ts:291
     // assert(groupCheck(proof.C), "C not in G1");
     assert // C not in G1
-    // contracts/plonk_bls12381.algo.ts:332
+    // contracts/plonk_bls12381.algo.ts:292
     // assert(groupCheck(proof.Z), "Z not in G1");
     dup
     pushint 288 // 288
@@ -82,13 +78,13 @@ main:
     extract3
     dup
     cover 4
-    // contracts/plonk_bls12381.algo.ts:268
+    // contracts/plonk_bls12381.algo.ts:265
     // return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
     ec_subgroup_check BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:332
+    // contracts/plonk_bls12381.algo.ts:292
     // assert(groupCheck(proof.Z), "Z not in G1");
     assert // Z not in G1
-    // contracts/plonk_bls12381.algo.ts:333
+    // contracts/plonk_bls12381.algo.ts:293
     // assert(groupCheck(proof.T1), "T1 not in G1");
     dup
     intc 4 // 384
@@ -96,13 +92,13 @@ main:
     extract3
     dup
     cover 4
-    // contracts/plonk_bls12381.algo.ts:268
+    // contracts/plonk_bls12381.algo.ts:265
     // return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
     ec_subgroup_check BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:333
+    // contracts/plonk_bls12381.algo.ts:293
     // assert(groupCheck(proof.T1), "T1 not in G1");
     assert // T1 not in G1
-    // contracts/plonk_bls12381.algo.ts:334
+    // contracts/plonk_bls12381.algo.ts:294
     // assert(groupCheck(proof.T2), "T2 not in G1");
     dup
     pushint 480 // 480
@@ -110,13 +106,13 @@ main:
     extract3
     dup
     cover 4
-    // contracts/plonk_bls12381.algo.ts:268
+    // contracts/plonk_bls12381.algo.ts:265
     // return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
     ec_subgroup_check BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:334
+    // contracts/plonk_bls12381.algo.ts:294
     // assert(groupCheck(proof.T2), "T2 not in G1");
     assert // T2 not in G1
-    // contracts/plonk_bls12381.algo.ts:335
+    // contracts/plonk_bls12381.algo.ts:295
     // assert(groupCheck(proof.T3), "T3 not in G1");
     dup
     pushint 576 // 576
@@ -124,13 +120,13 @@ main:
     extract3
     dup
     cover 4
-    // contracts/plonk_bls12381.algo.ts:268
+    // contracts/plonk_bls12381.algo.ts:265
     // return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
     ec_subgroup_check BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:335
+    // contracts/plonk_bls12381.algo.ts:295
     // assert(groupCheck(proof.T3), "T3 not in G1");
     assert // T3 not in G1
-    // contracts/plonk_bls12381.algo.ts:336
+    // contracts/plonk_bls12381.algo.ts:296
     // assert(groupCheck(proof.Wxi), "Wxi not in G1");
     dup
     pushint 672 // 672
@@ -138,13 +134,13 @@ main:
     extract3
     dup
     cover 4
-    // contracts/plonk_bls12381.algo.ts:268
+    // contracts/plonk_bls12381.algo.ts:265
     // return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
     ec_subgroup_check BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:336
+    // contracts/plonk_bls12381.algo.ts:296
     // assert(groupCheck(proof.Wxi), "Wxi not in G1");
     assert // Wxi not in G1
-    // contracts/plonk_bls12381.algo.ts:337
+    // contracts/plonk_bls12381.algo.ts:297
     // assert(groupCheck(proof.Wxiw), "Wxiw not in G1");
     dup
     pushint 768 // 768
@@ -152,13 +148,13 @@ main:
     extract3
     dup
     cover 4
-    // contracts/plonk_bls12381.algo.ts:268
+    // contracts/plonk_bls12381.algo.ts:265
     // return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
     ec_subgroup_check BLS12_381g1
-    // contracts/plonk_bls12381.algo.ts:337
+    // contracts/plonk_bls12381.algo.ts:297
     // assert(groupCheck(proof.Wxiw), "Wxiw not in G1");
     assert // Wxiw not in G1
-    // contracts/plonk_bls12381.algo.ts:320
+    // contracts/plonk_bls12381.algo.ts:280
     // assert(inField(proof.eval_a), "eval_a not in Fr");
     dup
     pushint 864 // 864
@@ -170,10 +166,10 @@ main:
     // return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b<
-    // contracts/plonk_bls12381.algo.ts:320
+    // contracts/plonk_bls12381.algo.ts:280
     // assert(inField(proof.eval_a), "eval_a not in Fr");
     assert // eval_a not in Fr
-    // contracts/plonk_bls12381.algo.ts:321
+    // contracts/plonk_bls12381.algo.ts:281
     // assert(inField(proof.eval_b), "eval_b not in Fr");
     dup
     pushint 896 // 896
@@ -185,10 +181,10 @@ main:
     // return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b<
-    // contracts/plonk_bls12381.algo.ts:321
+    // contracts/plonk_bls12381.algo.ts:281
     // assert(inField(proof.eval_b), "eval_b not in Fr");
     assert // eval_b not in Fr
-    // contracts/plonk_bls12381.algo.ts:322
+    // contracts/plonk_bls12381.algo.ts:282
     // assert(inField(proof.eval_c), "eval_c not in Fr");
     dup
     pushint 928 // 928
@@ -200,10 +196,10 @@ main:
     // return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b<
-    // contracts/plonk_bls12381.algo.ts:322
+    // contracts/plonk_bls12381.algo.ts:282
     // assert(inField(proof.eval_c), "eval_c not in Fr");
     assert // eval_c not in Fr
-    // contracts/plonk_bls12381.algo.ts:323
+    // contracts/plonk_bls12381.algo.ts:283
     // assert(inField(proof.eval_s1), "eval_s1 not in Fr");
     dup
     pushint 960 // 960
@@ -215,10 +211,10 @@ main:
     // return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b<
-    // contracts/plonk_bls12381.algo.ts:323
+    // contracts/plonk_bls12381.algo.ts:283
     // assert(inField(proof.eval_s1), "eval_s1 not in Fr");
     assert // eval_s1 not in Fr
-    // contracts/plonk_bls12381.algo.ts:324
+    // contracts/plonk_bls12381.algo.ts:284
     // assert(inField(proof.eval_s2), "eval_s2 not in Fr");
     dup
     pushint 992 // 992
@@ -230,10 +226,10 @@ main:
     // return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b<
-    // contracts/plonk_bls12381.algo.ts:324
+    // contracts/plonk_bls12381.algo.ts:284
     // assert(inField(proof.eval_s2), "eval_s2 not in Fr");
     assert // eval_s2 not in Fr
-    // contracts/plonk_bls12381.algo.ts:325
+    // contracts/plonk_bls12381.algo.ts:285
     // assert(inField(proof.eval_zw), "eval_zw not in Fr");
     pushint 1024 // 1024
     intc_0 // 32
@@ -244,10 +240,10 @@ main:
     // return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b<
-    // contracts/plonk_bls12381.algo.ts:325
+    // contracts/plonk_bls12381.algo.ts:285
     // assert(inField(proof.eval_zw), "eval_zw not in Fr");
     assert // eval_zw not in Fr
-    // contracts/plonk_bls12381.algo.ts:312
+    // contracts/plonk_bls12381.algo.ts:272
     // assert(signals.length === vk.nPublic, "Invalid number of public inputs");
     intc_3 // 0
     extract_uint16 // on error: invalid array length header
@@ -262,7 +258,7 @@ main:
     intc_3 // 0
 
 main_for_header@2:
-    // contracts/plonk_bls12381.algo.ts:314
+    // contracts/plonk_bls12381.algo.ts:274
     // for (const signal of signals) {
     dup
     dig 3
@@ -281,7 +277,7 @@ main_for_header@2:
     // return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b<
-    // contracts/plonk_bls12381.algo.ts:315
+    // contracts/plonk_bls12381.algo.ts:275
     // assert(inField(signal), "public signal not in Fr");
     assert // public signal not in Fr
     intc_2 // 1
@@ -290,7 +286,7 @@ main_for_header@2:
     b main_for_header@2
 
 main_after_for@4:
-    // contracts/plonk_bls12381.algo.ts:457
+    // contracts/plonk_bls12381.algo.ts:414
     // let td = op.concat(vk.Qm, vk.Ql);
     dig 18
     dup
@@ -298,12 +294,12 @@ main_after_for@4:
     dig 1
     extract 96 96
     concat
-    // contracts/plonk_bls12381.algo.ts:458
+    // contracts/plonk_bls12381.algo.ts:415
     // td = op.concat(td, vk.Qr);
     dig 1
     extract 192 96
     concat
-    // contracts/plonk_bls12381.algo.ts:459
+    // contracts/plonk_bls12381.algo.ts:416
     // td = op.concat(td, vk.Qo);
     dig 1
     pushint 288 // 288
@@ -311,49 +307,49 @@ main_after_for@4:
     extract3
     concat
     dup
-    bury 35
-    // contracts/plonk_bls12381.algo.ts:460
+    bury 33
+    // contracts/plonk_bls12381.algo.ts:417
     // td = op.concat(td, vk.Qc);
     dig 1
     intc 4 // 384
     intc_1 // 96
     extract3
     dup
-    bury 43
+    bury 47
     concat
-    // contracts/plonk_bls12381.algo.ts:461
+    // contracts/plonk_bls12381.algo.ts:418
     // td = op.concat(td, vk.S1);
     dig 1
     pushint 480 // 480
     intc_1 // 96
     extract3
     dup
-    bury 42
+    bury 46
     concat
-    // contracts/plonk_bls12381.algo.ts:462
+    // contracts/plonk_bls12381.algo.ts:419
     // td = op.concat(td, vk.S2);
     dig 1
     pushint 576 // 576
     intc_1 // 96
     extract3
     dup
-    bury 41
+    bury 45
     concat
-    // contracts/plonk_bls12381.algo.ts:463
+    // contracts/plonk_bls12381.algo.ts:420
     // td = op.concat(td, vk.S3);
     swap
     pushint 672 // 672
     intc_1 // 96
     extract3
     dup
-    bury 39
+    bury 43
     concat
-    bury 31
+    bury 29
     intc_3 // 0
     bury 1
 
 main_for_header@5:
-    // contracts/plonk_bls12381.algo.ts:465
+    // contracts/plonk_bls12381.algo.ts:422
     // for (const signal of signals) {
     dup
     dig 3
@@ -372,117 +368,117 @@ main_for_header@5:
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:466
+    // contracts/plonk_bls12381.algo.ts:423
     // td = op.concat(td, b32(frScalar(signal.asBigUint())));
     callsub b32
-    dig 32
+    dig 30
     swap
     concat
-    bury 32
+    bury 30
     intc_2 // 1
     +
     bury 1
     b main_for_header@5
 
 main_after_for@7:
-    // contracts/plonk_bls12381.algo.ts:470
+    // contracts/plonk_bls12381.algo.ts:427
     // td = op.concat(td, proof.A);
-    dig 30
+    dig 28
     dig 18
     concat
-    // contracts/plonk_bls12381.algo.ts:471
+    // contracts/plonk_bls12381.algo.ts:428
     // td = op.concat(td, proof.B);
     dig 17
     concat
-    // contracts/plonk_bls12381.algo.ts:472
+    // contracts/plonk_bls12381.algo.ts:429
     // td = op.concat(td, proof.C);
     dig 16
     concat
-    // contracts/plonk_bls12381.algo.ts:474
+    // contracts/plonk_bls12381.algo.ts:431
     // const beta = getChallenge(td);
     callsub getChallenge
-    // contracts/plonk_bls12381.algo.ts:479
+    // contracts/plonk_bls12381.algo.ts:436
     // const gamma = getChallenge(td);
     dup
     callsub getChallenge
-    // contracts/plonk_bls12381.algo.ts:486
+    // contracts/plonk_bls12381.algo.ts:443
     // td = op.concat(td, gamma.bytes);
     concat
     dup
-    bury 32
-    // contracts/plonk_bls12381.algo.ts:487
+    bury 30
+    // contracts/plonk_bls12381.algo.ts:444
     // td = op.concat(td, proof.Z);
     dig 15
     concat
-    // contracts/plonk_bls12381.algo.ts:488
+    // contracts/plonk_bls12381.algo.ts:445
     // const alpha = getChallenge(td);
     callsub getChallenge
     dup
-    bury 37
-    // contracts/plonk_bls12381.algo.ts:495
+    bury 41
+    // contracts/plonk_bls12381.algo.ts:452
     // td = op.concat(td, proof.T1);
     dig 14
     concat
-    // contracts/plonk_bls12381.algo.ts:496
+    // contracts/plonk_bls12381.algo.ts:453
     // td = op.concat(td, proof.T2);
     dig 13
     concat
-    // contracts/plonk_bls12381.algo.ts:497
+    // contracts/plonk_bls12381.algo.ts:454
     // td = op.concat(td, proof.T3);
     dig 12
     concat
-    // contracts/plonk_bls12381.algo.ts:498
+    // contracts/plonk_bls12381.algo.ts:455
     // const xi = getChallenge(td);
     callsub getChallenge
     dup
-    bury 28
-    // contracts/plonk_bls12381.algo.ts:505
+    bury 27
+    // contracts/plonk_bls12381.algo.ts:462
     // td = op.concat(td, proof.eval_a.bytes);
     dig 9
     concat
-    // contracts/plonk_bls12381.algo.ts:506
+    // contracts/plonk_bls12381.algo.ts:463
     // td = op.concat(td, proof.eval_b.bytes);
     dig 8
     concat
-    // contracts/plonk_bls12381.algo.ts:507
+    // contracts/plonk_bls12381.algo.ts:464
     // td = op.concat(td, proof.eval_c.bytes);
     dig 7
     concat
-    // contracts/plonk_bls12381.algo.ts:508
+    // contracts/plonk_bls12381.algo.ts:465
     // td = op.concat(td, proof.eval_s1.bytes);
     dig 6
     concat
-    // contracts/plonk_bls12381.algo.ts:509
+    // contracts/plonk_bls12381.algo.ts:466
     // td = op.concat(td, proof.eval_s2.bytes);
     dig 5
     concat
-    // contracts/plonk_bls12381.algo.ts:510
+    // contracts/plonk_bls12381.algo.ts:467
     // td = op.concat(td, proof.eval_zw.bytes);
     dig 4
     concat
-    // contracts/plonk_bls12381.algo.ts:512
+    // contracts/plonk_bls12381.algo.ts:469
     // const v = new FixedArray<Uint256, 6>();
     pushint 192 // 192
     bzero
-    // contracts/plonk_bls12381.algo.ts:513
+    // contracts/plonk_bls12381.algo.ts:470
     // v[1] = getChallenge(td); // v1
     swap
     callsub getChallenge
     replace2 32 // on error: index access is out of bounds
-    bury 30
-    // contracts/plonk_bls12381.algo.ts:514
+    bury 28
+    // contracts/plonk_bls12381.algo.ts:471
     // for (let i: uint64 = 2; i < 6; i++) {
     pushint 2 // 2
     bury 23
 
 main_while_top@8:
-    // contracts/plonk_bls12381.algo.ts:514
+    // contracts/plonk_bls12381.algo.ts:471
     // for (let i: uint64 = 2; i < 6; i++) {
     dig 22
     pushint 6 // 6
     <
     bz main_after_while@10
-    // contracts/plonk_bls12381.algo.ts:516
+    // contracts/plonk_bls12381.algo.ts:473
     // frMul((v[i - 1] as Uint256).asBigUint(), v[1].asBigUint()),
     dig 22
     dup
@@ -490,7 +486,7 @@ main_while_top@8:
     -
     intc_0 // 32
     *
-    dig 31
+    dig 29
     dup
     uncover 2
     intc_0 // 32
@@ -502,7 +498,7 @@ main_while_top@8:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:515-517
+    // contracts/plonk_bls12381.algo.ts:472-474
     // v[i] = new Uint256(
     //   frMul((v[i - 1] as Uint256).asBigUint(), v[1].asBigUint()),
     // ); // v[i] = v1^i
@@ -519,8 +515,8 @@ main_while_top@8:
     *
     swap
     replace3 // on error: index access is out of bounds
-    bury 31
-    // contracts/plonk_bls12381.algo.ts:514
+    bury 29
+    // contracts/plonk_bls12381.algo.ts:471
     // for (let i: uint64 = 2; i < 6; i++) {
     intc_2 // 1
     +
@@ -528,17 +524,17 @@ main_while_top@8:
     b main_while_top@8
 
 main_after_while@10:
-    // contracts/plonk_bls12381.algo.ts:525
+    // contracts/plonk_bls12381.algo.ts:482
     // td = op.concat(td, proof.Wxiw);
     dig 10
     dig 10
     concat
     dup
-    bury 33
-    // contracts/plonk_bls12381.algo.ts:526
+    bury 31
+    // contracts/plonk_bls12381.algo.ts:483
     // const u = getChallenge(td);
     callsub getChallenge
-    // contracts/plonk_bls12381.algo.ts:528-537
+    // contracts/plonk_bls12381.algo.ts:485-494
     // return {
     //   beta,
     //   gamma,
@@ -549,120 +545,41 @@ main_after_while@10:
     //   xin: new Uint256(),
     //   zh: new Uint256(),
     // };
-    dig 31
-    dig 37
+    dig 29
+    dig 41
     concat
-    dig 28
+    dig 27
     concat
-    dig 31
+    dig 29
     concat
     swap
     concat
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
-    bury 35
-    // contracts/plonk_bls12381.algo.ts:272
-    // assert(inField(lw.xin), "lw.xin not in Fr");
-    dig 20
     dup
-    extract 2 32
-    dup
-    bury 31
-    // contracts/bls12381_common.algo.ts:91
-    // return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
-    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-    b<
-    // contracts/plonk_bls12381.algo.ts:272
-    // assert(inField(lw.xin), "lw.xin not in Fr");
-    assert // lw.xin not in Fr
-    // contracts/plonk_bls12381.algo.ts:273
-    // assert(inField(lw.zh), "lw.zh not in Fr");
-    extract 34 32
-    dup
-    bury 29
-    // contracts/bls12381_common.algo.ts:91
-    // return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
-    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-    b<
-    // contracts/plonk_bls12381.algo.ts:273
-    // assert(inField(lw.zh), "lw.zh not in Fr");
-    assert // lw.zh not in Fr
-    // contracts/plonk_bls12381.algo.ts:274
-    // for (let i: uint64 = 0; i < lw.L.length; i++) {
+    bury 37
+    // contracts/plonk_bls12381.algo.ts:505
+    // let xin = challenges.xi.asBigUint();
+    extract 96 32
+    bury 25
+    // contracts/plonk_bls12381.algo.ts:508
+    // let domainSize: uint64 = 1;
+    intc_2 // 1
+    bury 24
+    // contracts/plonk_bls12381.algo.ts:509
+    // for (let i: uint64 = 0; i < vk.power; i++) {
     intc_3 // 0
     bury 23
 
 main_while_top@11:
-    // contracts/plonk_bls12381.algo.ts:274
-    // for (let i: uint64 = 0; i < lw.L.length; i++) {
-    dig 20
-    dup
-    intc_3 // 0
-    extract_uint16
-    dig 1
-    len
-    substring3
-    dup
-    bury 43
-    intc_3 // 0
-    extract_uint16 // on error: invalid array length header
-    dup
-    bury 25
-    dig 23
-    >
-    bz main_after_while@13
-    // contracts/plonk_bls12381.algo.ts:274-275
-    // for (let i: uint64 = 0; i < lw.L.length; i++) {
-    //   assert(inField(lw.L[i] as Uint256), "lw.L not in Fr");
-    dig 41
-    extract 2 0
-    dig 23
-    dup
-    cover 2
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    // contracts/bls12381_common.algo.ts:91
-    // return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
-    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-    b<
-    // contracts/plonk_bls12381.algo.ts:275
-    // assert(inField(lw.L[i] as Uint256), "lw.L not in Fr");
-    assert // lw.L not in Fr
-    // contracts/plonk_bls12381.algo.ts:274
-    // for (let i: uint64 = 0; i < lw.L.length; i++) {
-    intc_2 // 1
-    +
-    bury 23
-    b main_while_top@11
-
-main_after_while@13:
-    // contracts/plonk_bls12381.algo.ts:287
-    // let nPow: uint64 = 1;
-    intc_2 // 1
-    bury 22
-    // contracts/plonk_bls12381.algo.ts:288
-    // let xin = challenges.xi.asBigUint();
-    dig 34
-    extract 96 32
-    dup
-    bury 27
-    // contracts/plonk_bls12381.algo.ts:289
-    // for (let i: uint64 = 0; i < vk.power; i++) {
-    intc_3 // 0
-    bury 24
-    bury 25
-
-main_while_top@14:
-    // contracts/plonk_bls12381.algo.ts:289
+    // contracts/plonk_bls12381.algo.ts:509
     // for (let i: uint64 = 0; i < vk.power; i++) {
     dig 18
     pushint 768 // 768
     extract_uint64
     dig 23
     >
-    bz main_after_while@16
+    bz main_after_while@13
     // contracts/plonk_bls12381.algo.ts:70
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     dig 24
@@ -671,23 +588,23 @@ main_while_top@14:
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
     bury 25
-    // contracts/plonk_bls12381.algo.ts:291
-    // nPow *= 2;
-    dig 21
+    // contracts/plonk_bls12381.algo.ts:511
+    // domainSize *= 2;
+    dig 23
     pushint 2 // 2
     *
-    bury 22
-    // contracts/plonk_bls12381.algo.ts:289
+    bury 24
+    // contracts/plonk_bls12381.algo.ts:509
     // for (let i: uint64 = 0; i < vk.power; i++) {
     dig 22
     intc_2 // 1
     +
     bury 23
-    b main_while_top@14
+    b main_while_top@11
 
-main_after_while@16:
-    // contracts/plonk_bls12381.algo.ts:293
-    // const xinExpected = new Uint256(xin);
+main_after_while@13:
+    // contracts/plonk_bls12381.algo.ts:514
+    // challenges.xin = new Uint256(xin);
     dig 24
     dup
     len
@@ -697,18 +614,16 @@ main_after_while@16:
     intc_0 // 32
     bzero
     dup
-    bury 43
-    swap
-    dig 1
+    bury 47
+    dup2
     b|
-    // contracts/plonk_bls12381.algo.ts:294
-    // assert(lw.xin.asBigUint() === xinExpected.asBigUint(), "lw.xin != xi^n");
-    dig 30
-    dig 1
-    b==
-    assert // lw.xin != xi^n
-    // contracts/plonk_bls12381.algo.ts:297
-    // const zhExpected = new Uint256(frSub(xinExpected.asBigUint(), BigUint(1)));
+    dig 38
+    pushint 352 // 352
+    uncover 2
+    replace3
+    // contracts/plonk_bls12381.algo.ts:515
+    // challenges.zh = new Uint256(frSub(xin, BigUint(1))); // Vanishing polynomial Z_H(ξ) = ξ^n - 1
+    uncover 2
     bytec_2 // 0x01
     callsub frSub
     dup
@@ -716,61 +631,256 @@ main_after_while@16:
     intc_0 // 32
     <=
     assert // overflow
+    uncover 2
     b|
-    // contracts/plonk_bls12381.algo.ts:298
-    // assert(lw.zh.asBigUint() === zhExpected.asBigUint(), "lw.zh != xi^n - 1");
-    dig 28
-    b==
-    assert // lw.zh != xi^n - 1
-    // contracts/plonk_bls12381.algo.ts:301
-    // const required: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
+    intc 4 // 384
+    swap
+    replace3
+    bury 38
+    // contracts/plonk_bls12381.algo.ts:517
+    // const n = frScalar(BigUint(domainSize));
+    dig 23
+    itob
+    // contracts/bls12381_common.algo.ts:37
+    // return a % BLS12_381_SCALAR_MODULUS;
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    bury 34
+    // contracts/plonk_bls12381.algo.ts:523
+    // let w = BigUint(1);
+    bytec_2 // 0x01
+    bury 27
+    // contracts/plonk_bls12381.algo.ts:532
+    // const L: Uint256[] = [new Uint256()];
+    pushbytes 0x00010000000000000000000000000000000000000000000000000000000000000000
+    bury 47
+    // contracts/plonk_bls12381.algo.ts:535
+    // const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
     dig 1
-    bnz main_ternary_false@18
+    bnz main_ternary_false@15
     intc_2 // 1
+    bury 22
 
-main_ternary_merge@19:
-    // contracts/plonk_bls12381.algo.ts:302
-    // assert(lw.L.length >= required + 1, "lw.L length too short"); // L[0] unused; start at index 1
+main_ternary_merge@16:
+    // contracts/plonk_bls12381.algo.ts:536
+    // for (let i: uint64 = 1; i <= iterations; i++) {
+    intc_2 // 1
+    bury 21
+
+main_while_top@17:
+    // contracts/plonk_bls12381.algo.ts:536
+    // for (let i: uint64 = 1; i <= iterations; i++) {
+    dig 20
+    dig 22
+    <=
+    bz main_after_while@19
+    // contracts/plonk_bls12381.algo.ts:540
+    // frMul(w, challenges.zh.asBigUint()),
+    dig 37
+    dup
+    intc 4 // 384
+    intc_0 // 32
+    extract3
+    // contracts/plonk_bls12381.algo.ts:70
+    // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    dig 28
+    dup
+    uncover 2
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/plonk_bls12381.algo.ts:541
+    // frMul(n, frSub(challenges.xi.asBigUint(), w)),
+    uncover 2
+    extract 96 32
+    uncover 2
+    callsub frSub
+    // contracts/plonk_bls12381.algo.ts:70
+    // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    dig 35
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/bls12381_common.algo.ts:37
+    // return a % BLS12_381_SCALAR_MODULUS;
+    swap
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    bury 47
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/plonk_bls12381.algo.ts:108
+    // assert(x !== (0n as biguint), "Fr inverse of zero");
+    dup
+    bytec_1 // 0x
+    b!=
+    assert // Fr inverse of zero
+    // contracts/plonk_bls12381.algo.ts:109
+    // const inv = modPow(x, BLS12_381_R_MINUS_2, r);
+    pushbytes 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfefffffffeffffffff
+    // contracts/plonk_bls12381.algo.ts:87
+    // let result = 1n as biguint;
+    bytec_2 // 0x01
+    bury 34
+    // contracts/plonk_bls12381.algo.ts:88
+    // let b: biguint = base % mod;
+    swap
+    // contracts/plonk_bls12381.algo.ts:109
+    // const inv = modPow(x, BLS12_381_R_MINUS_2, r);
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    // contracts/plonk_bls12381.algo.ts:88
+    // let b: biguint = base % mod;
+    b%
+    bury 40
+    bury 37
+
+main_while_top@26:
+    // contracts/plonk_bls12381.algo.ts:90
+    // while (e > (0n as biguint)) {
+    dig 36
+    bytec_1 // 0x
+    b>
+    // contracts/plonk_bls12381.algo.ts:90-96
+    // while (e > (0n as biguint)) {
+    //   if ((e & (1n as biguint)) !== (0n as biguint)) {
+    //     result = (result * b) % mod;
+    //   }
+    //   b = (b * b) % mod;
+    //   e = e / BigUint(2);
+    // }
+    bz main_after_while@30
+    // contracts/plonk_bls12381.algo.ts:91
+    // if ((e & (1n as biguint)) !== (0n as biguint)) {
+    dig 36
+    bytec_2 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz main_after_if_else@29
+    // contracts/plonk_bls12381.algo.ts:92
+    // result = (result * b) % mod;
+    dig 31
+    dig 39
+    b*
+    // contracts/plonk_bls12381.algo.ts:109
+    // const inv = modPow(x, BLS12_381_R_MINUS_2, r);
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    // contracts/plonk_bls12381.algo.ts:92
+    // result = (result * b) % mod;
+    b%
+    bury 32
+
+main_after_if_else@29:
+    // contracts/plonk_bls12381.algo.ts:94
+    // b = (b * b) % mod;
+    dig 38
+    dup
+    b*
+    // contracts/plonk_bls12381.algo.ts:109
+    // const inv = modPow(x, BLS12_381_R_MINUS_2, r);
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    // contracts/plonk_bls12381.algo.ts:94
+    // b = (b * b) % mod;
+    b%
+    bury 39
+    // contracts/plonk_bls12381.algo.ts:95
+    // e = e / BigUint(2);
+    dig 36
+    pushbytes 0x02
+    b/
+    bury 37
+    b main_while_top@26
+
+main_after_while@30:
+    // contracts/plonk_bls12381.algo.ts:122
+    // return (aN * bInv) % r;
+    dig 45
+    dig 32
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    // contracts/plonk_bls12381.algo.ts:538-543
+    // new Uint256(
+    //   frDiv(
+    //     frMul(w, challenges.zh.asBigUint()),
+    //     frMul(n, frSub(challenges.xi.asBigUint(), w)),
+    //   ),
+    // ),
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 45
+    b|
+    // contracts/plonk_bls12381.algo.ts:537-544
+    // L.push(
+    //   new Uint256(
+    //     frDiv(
+    //       frMul(w, challenges.zh.asBigUint()),
+    //       frMul(n, frSub(challenges.xi.asBigUint(), w)),
+    //     ),
+    //   ),
+    // );
+    dig 47
+    dup
+    uncover 2
+    concat // on error: max array length exceeded
+    swap
+    intc_3 // 0
+    extract_uint16
     intc_2 // 1
     +
-    dig 24
-    <=
-    assert // lw.L length too short
-    // contracts/plonk_bls12381.algo.ts:305
-    // assert(challenges.xi.asBigUint() !== BigUint(1), "invalid xi (equals 1)");
-    dig 25
-    bytec_2 // 0x01
-    b!=
-    assert // invalid xi (equals 1)
-    // contracts/plonk_bls12381.algo.ts:366
-    // challenges.xin = lw.xin;
-    dig 34
-    pushint 352 // 352
-    dig 30
-    replace3
-    // contracts/plonk_bls12381.algo.ts:367
-    // challenges.zh = lw.zh;
-    intc 4 // 384
-    dig 29
-    replace3
+    itob
+    extract 6 2
+    replace2 0
+    bury 47
+    // contracts/plonk_bls12381.algo.ts:70
+    // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    dig 26
+    // contracts/plonk_bls12381.algo.ts:545
+    // w = frMul(w, ROOT_OF_UNITY); // Next root of unity step (ω^i)
+    bytec_3 // TMPL_ROOT_OF_UNITY
+    // contracts/plonk_bls12381.algo.ts:70
+    // return (a * b) % BLS12_381_SCALAR_MODULUS;
+    b*
+    bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    b%
+    bury 27
+    // contracts/plonk_bls12381.algo.ts:536
+    // for (let i: uint64 = 1; i <= iterations; i++) {
+    dig 20
+    intc_2 // 1
+    +
+    bury 21
+    b main_while_top@17
+
+main_after_while@19:
+    // contracts/plonk_bls12381.algo.ts:547
+    // return { L, challenges };
+    pushbytes 0x01a2
+    dig 38
+    concat
+    dig 47
+    concat
     bury 35
-    // contracts/plonk_bls12381.algo.ts:600
+    // contracts/plonk_bls12381.algo.ts:557
     // let pi = BigUint(0);
     bytec_1 // 0x
-    bury 34
-    // contracts/plonk_bls12381.algo.ts:601
+    bury 33
+    // contracts/plonk_bls12381.algo.ts:558
     // for (let i: uint64 = 0; i < publicSignals.length; i++) {
     intc_3 // 0
     bury 23
 
 main_while_top@20:
-    // contracts/plonk_bls12381.algo.ts:601
+    // contracts/plonk_bls12381.algo.ts:558
     // for (let i: uint64 = 0; i < publicSignals.length; i++) {
     dig 22
     dig 3
     <
     bz main_after_while@22
-    // contracts/plonk_bls12381.algo.ts:602
+    // contracts/plonk_bls12381.algo.ts:559
     // const w = frScalar((publicSignals[i] as Uint256).asBigUint());
     dig 19
     extract 2 0
@@ -785,14 +895,20 @@ main_while_top@20:
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:603
+    // contracts/plonk_bls12381.algo.ts:560
     // pi = frSub(pi, frMul(w, (L[i + 1] as Uint256).asBigUint()));
     swap
     intc_2 // 1
     +
     dup
     bury 25
-    dig 43
+    dig 36
+    dup
+    intc_3 // 0
+    extract_uint16
+    dig 1
+    len
+    substring3
     extract 2 0
     swap
     intc_0 // 32
@@ -804,36 +920,45 @@ main_while_top@20:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:603
+    // contracts/plonk_bls12381.algo.ts:560
     // pi = frSub(pi, frMul(w, (L[i + 1] as Uint256).asBigUint()));
-    dig 34
+    dig 33
     swap
     callsub frSub
-    bury 34
+    bury 33
     b main_while_top@20
 
 main_after_while@22:
-    // contracts/plonk_bls12381.algo.ts:605
+    // contracts/plonk_bls12381.algo.ts:562
     // return new Uint256(pi);
-    dig 33
+    dig 32
     dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    dig 41
+    dig 45
     dup
     cover 2
     b|
-    // contracts/plonk_bls12381.algo.ts:373
+    // contracts/plonk_bls12381.algo.ts:331
     // const r0 = calculateR0(proof, challenges, pi, lw.L[1] as Uint256);
-    dig 43
-    extract 34 32
-    // contracts/plonk_bls12381.algo.ts:626
-    // frMul(challenges.alpha.asBigUint(), challenges.alpha.asBigUint()),
-    dig 37
+    dig 36
     dup
+    intc_3 // 0
+    extract_uint16
+    dig 1
+    len
+    dig 2
     cover 2
+    substring3
+    extract 34 32
+    // contracts/plonk_bls12381.algo.ts:583
+    // frMul(challenges.alpha.asBigUint(), challenges.alpha.asBigUint()),
+    swap
+    pushints 2 416 // 2, 416
+    extract3
+    dup
     extract 64 32
     // contracts/plonk_bls12381.algo.ts:70
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
@@ -842,11 +967,11 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    uncover 2
+    uncover 3
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:633
+    // contracts/plonk_bls12381.algo.ts:590
     // frMul(challenges.beta.asBigUint(), proof.eval_s1.asBigUint()),
     dig 2
     extract 0 32
@@ -863,7 +988,7 @@ main_after_while@22:
     // const aN: biguint = a % r;
     dig 16
     dup
-    cover 7
+    cover 6
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
     // contracts/plonk_bls12381.algo.ts:145
@@ -877,7 +1002,7 @@ main_after_while@22:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:635
+    // contracts/plonk_bls12381.algo.ts:592
     // e3a = frAdd(e3a, challenges.gamma.asBigUint());
     dig 5
     extract 32 32
@@ -971,14 +1096,14 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:650
+    // contracts/plonk_bls12381.algo.ts:607
     // const r0 = frSub(frSub(e1, e2), e3);
-    uncover 11
+    uncover 12
     dig 9
     callsub frSub
     swap
     callsub frSub
-    // contracts/plonk_bls12381.algo.ts:651
+    // contracts/plonk_bls12381.algo.ts:608
     // return new Uint256(r0);
     dup
     len
@@ -987,22 +1112,22 @@ main_after_while@22:
     assert // overflow
     uncover 13
     b|
-    // contracts/plonk_bls12381.algo.ts:679
+    // contracts/plonk_bls12381.algo.ts:636
     // points = op.concat(points, proof.T1);
-    dig 48
+    dig 46
     dig 30
     concat
-    // contracts/plonk_bls12381.algo.ts:680
+    // contracts/plonk_bls12381.algo.ts:637
     // points = op.concat(points, proof.T2);
     dig 29
     concat
-    // contracts/plonk_bls12381.algo.ts:681
+    // contracts/plonk_bls12381.algo.ts:638
     // points = op.concat(points, proof.T3);
     dig 28
     concat
-    // contracts/plonk_bls12381.algo.ts:682
+    // contracts/plonk_bls12381.algo.ts:639
     // points = op.concat(points, vk.Qc);
-    dig 56
+    dig 60
     concat
     // contracts/plonk_bls12381.algo.ts:70
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
@@ -1011,7 +1136,7 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:691
+    // contracts/plonk_bls12381.algo.ts:648
     // const quotientScalar1 = frSub(BigUint(0), challenges.zh.asBigUint()); // −zh (applies to T1)
     dig 12
     intc 4 // 384
@@ -1020,7 +1145,7 @@ main_after_while@22:
     bytec_1 // 0x
     dig 1
     callsub frSub
-    // contracts/plonk_bls12381.algo.ts:694
+    // contracts/plonk_bls12381.algo.ts:651
     // frMul(challenges.xin.asBigUint(), challenges.zh.asBigUint()),
     dig 14
     pushint 352 // 352
@@ -1033,10 +1158,10 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:693
+    // contracts/plonk_bls12381.algo.ts:650
     // BigUint(0),
     bytec_1 // 0x
-    // contracts/plonk_bls12381.algo.ts:692-695
+    // contracts/plonk_bls12381.algo.ts:649-652
     // const quotientScalar2 = frSub(
     //   BigUint(0),
     //   frMul(challenges.xin.asBigUint(), challenges.zh.asBigUint()),
@@ -1054,10 +1179,10 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:697
+    // contracts/plonk_bls12381.algo.ts:654
     // BigUint(0),
     bytec_1 // 0x
-    // contracts/plonk_bls12381.algo.ts:696-702
+    // contracts/plonk_bls12381.algo.ts:653-659
     // const quotientScalar3 = frSub(
     //   BigUint(0),
     //   frMul(
@@ -1067,7 +1192,7 @@ main_after_while@22:
     // ); // −xin²·zh (applies to T3)
     swap
     callsub frSub
-    // contracts/plonk_bls12381.algo.ts:705
+    // contracts/plonk_bls12381.algo.ts:662
     // const betaxi = frMul(challenges.beta.asBigUint(), challenges.xi.asBigUint());
     dig 15
     extract 96 32
@@ -1099,7 +1224,7 @@ main_after_while@22:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:711
+    // contracts/plonk_bls12381.algo.ts:668
     // frAdd(proof.eval_b.asBigUint(), frMul(betaxi, BigUint(vk.k1))),
     dig 41
     dup
@@ -1132,7 +1257,7 @@ main_after_while@22:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:715
+    // contracts/plonk_bls12381.algo.ts:672
     // frAdd(proof.eval_c.asBigUint(), frMul(betaxi, BigUint(vk.k2))),
     dig 3
     pushints 792 8 // 792, 8
@@ -1190,7 +1315,7 @@ main_after_while@22:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:726
+    // contracts/plonk_bls12381.algo.ts:683
     // const zScalar = frAdd(frAdd(d2a, d2b), challenges.u.asBigUint());
     dig 13
     pushint 320 // 320
@@ -1226,85 +1351,85 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:750
+    // contracts/plonk_bls12381.algo.ts:707
     // points = op.concat(points, proof.Z);
     uncover 9
     dig 32
     concat
-    // contracts/plonk_bls12381.algo.ts:751
+    // contracts/plonk_bls12381.algo.ts:708
     // points = op.concat(points, vk.S3);
-    dig 54
+    dig 58
     concat
-    // contracts/plonk_bls12381.algo.ts:752
+    // contracts/plonk_bls12381.algo.ts:709
     // points = op.concat(points, proof.A);
     dig 35
     concat
-    // contracts/plonk_bls12381.algo.ts:753
+    // contracts/plonk_bls12381.algo.ts:710
     // points = op.concat(points, proof.B);
     dig 34
     concat
-    // contracts/plonk_bls12381.algo.ts:754
+    // contracts/plonk_bls12381.algo.ts:711
     // points = op.concat(points, proof.C);
     dig 33
     concat
-    // contracts/plonk_bls12381.algo.ts:755
+    // contracts/plonk_bls12381.algo.ts:712
     // points = op.concat(points, vk.S1);
-    dig 56
+    dig 60
     concat
-    // contracts/plonk_bls12381.algo.ts:756
+    // contracts/plonk_bls12381.algo.ts:713
     // points = op.concat(points, vk.S2);
-    dig 55
+    dig 59
     concat
-    // contracts/plonk_bls12381.algo.ts:759
+    // contracts/plonk_bls12381.algo.ts:716
     // let scalars = op.concat(b32(gateScalar1), b32(gateScalar2));
     uncover 9
     callsub b32
     dig 13
     callsub b32
     concat
-    // contracts/plonk_bls12381.algo.ts:760
+    // contracts/plonk_bls12381.algo.ts:717
     // scalars = op.concat(scalars, b32(gateScalar3));
     dig 11
     callsub b32
     concat
-    // contracts/plonk_bls12381.algo.ts:761
+    // contracts/plonk_bls12381.algo.ts:718
     // scalars = op.concat(scalars, b32(gateScalar4));
     dig 15
     callsub b32
     concat
-    // contracts/plonk_bls12381.algo.ts:762
+    // contracts/plonk_bls12381.algo.ts:719
     // scalars = op.concat(scalars, b32(quotientScalar1));
     uncover 9
     callsub b32
     concat
-    // contracts/plonk_bls12381.algo.ts:763
+    // contracts/plonk_bls12381.algo.ts:720
     // scalars = op.concat(scalars, b32(quotientScalar2));
     uncover 8
     callsub b32
     concat
-    // contracts/plonk_bls12381.algo.ts:764
+    // contracts/plonk_bls12381.algo.ts:721
     // scalars = op.concat(scalars, b32(quotientScalar3));
     uncover 7
     callsub b32
     concat
-    // contracts/plonk_bls12381.algo.ts:765
+    // contracts/plonk_bls12381.algo.ts:722
     // scalars = op.concat(scalars, b32(BigUint(1))); // Qc with scalar 1
     bytec_2 // 0x01
     callsub b32
     concat
-    // contracts/plonk_bls12381.algo.ts:766
+    // contracts/plonk_bls12381.algo.ts:723
     // scalars = op.concat(scalars, b32(zScalar)); // Z with zScalar
     uncover 3
     callsub b32
     concat
-    // contracts/plonk_bls12381.algo.ts:767
+    // contracts/plonk_bls12381.algo.ts:724
     // scalars = op.concat(scalars, b32(frSub(BigUint(0), s3Scalar))); // S3 with -s3Scalar
     bytec_1 // 0x
     uncover 3
     callsub frSub
     callsub b32
     concat
-    // contracts/plonk_bls12381.algo.ts:768
+    // contracts/plonk_bls12381.algo.ts:725
     // scalars = op.concat(scalars, (challenges.v[1] as Uint256).bytes);
     uncover 7
     extract 128 192
@@ -1313,38 +1438,38 @@ main_after_while@22:
     uncover 2
     dig 1
     concat
-    // contracts/plonk_bls12381.algo.ts:768-769
+    // contracts/plonk_bls12381.algo.ts:725-726
     // scalars = op.concat(scalars, (challenges.v[1] as Uint256).bytes);
     // scalars = op.concat(scalars, (challenges.v[2] as Uint256).bytes);
     dig 2
     extract 64 32 // on error: index access is out of bounds
-    // contracts/plonk_bls12381.algo.ts:769
+    // contracts/plonk_bls12381.algo.ts:726
     // scalars = op.concat(scalars, (challenges.v[2] as Uint256).bytes);
     swap
     dig 1
     concat
-    // contracts/plonk_bls12381.algo.ts:770
+    // contracts/plonk_bls12381.algo.ts:727
     // scalars = op.concat(scalars, (challenges.v[3] as Uint256).bytes);
     dig 3
     extract 96 32 // on error: index access is out of bounds
     swap
     dig 1
     concat
-    // contracts/plonk_bls12381.algo.ts:771
+    // contracts/plonk_bls12381.algo.ts:728
     // scalars = op.concat(scalars, (challenges.v[4] as Uint256).bytes);
     dig 4
     extract 128 32 // on error: index access is out of bounds
     swap
     dig 1
     concat
-    // contracts/plonk_bls12381.algo.ts:772
+    // contracts/plonk_bls12381.algo.ts:729
     // scalars = op.concat(scalars, (challenges.v[5] as Uint256).bytes);
     uncover 5
     extract 160 32 // on error: index access is out of bounds
     swap
     dig 1
     concat
-    // contracts/plonk_bls12381.algo.ts:775-779
+    // contracts/plonk_bls12381.algo.ts:732-736
     // const F = op.EllipticCurve.scalarMulMulti(
     //   op.Ec.BLS12_381g1,
     //   points,
@@ -1365,7 +1490,7 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:795-798
+    // contracts/plonk_bls12381.algo.ts:752-755
     // let e = frSub(
     //   frMul((challenges.v[1] as Uint256).asBigUint(), proof.eval_a.asBigUint()),
     //   r0.asBigUint(),
@@ -1482,7 +1607,7 @@ main_after_while@22:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:817
+    // contracts/plonk_bls12381.algo.ts:774
     // const res = g1TimesFr(G1_ONE.toFixed({ length: 96 }), e);
     pushbytes 0x17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1
     // contracts/bls12381_common.algo.ts:62
@@ -1533,27 +1658,27 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:849
+    // contracts/plonk_bls12381.algo.ts:806
     // ROOT_OF_UNITY,
-    bytec 5 // TMPL_ROOT_OF_UNITY
+    bytec_3 // TMPL_ROOT_OF_UNITY
     // contracts/plonk_bls12381.algo.ts:70
     // return (a * b) % BLS12_381_SCALAR_MODULUS;
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:851
+    // contracts/plonk_bls12381.algo.ts:808
     // const pairingScalars = op.concat(challenges.xi.bytes, b32(s));
     callsub b32
     uncover 5
     swap
     concat
-    // contracts/plonk_bls12381.algo.ts:853-857
+    // contracts/plonk_bls12381.algo.ts:810-814
     // let B1 = op.EllipticCurve.scalarMulMulti(
     //   op.Ec.BLS12_381g1,
     //   pairingPoints,
     //   pairingScalars,
     // ).toFixed({ length: 96 });
-    dig 36
+    dig 34
     swap
     ec_multi_scalar_mul BLS12_381g1
     dup
@@ -1579,7 +1704,7 @@ main_after_while@22:
     uncover 2
     // contracts/bls12381_common.algo.ts:84
     // return g1TimesFr(p, R_MINUS_1);
-    bytec_3 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+    bytec 4 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
     // contracts/bls12381_common.algo.ts:62
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     ec_scalar_mul BLS12_381g1
@@ -1609,7 +1734,7 @@ main_after_while@22:
     swap
     // contracts/bls12381_common.algo.ts:84
     // return g1TimesFr(p, R_MINUS_1);
-    bytec_3 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+    bytec 4 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
     // contracts/bls12381_common.algo.ts:62
     // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
     ec_scalar_mul BLS12_381g1
@@ -1622,18 +1747,18 @@ main_after_while@22:
     intc_1 // 96
     ==
     assert // Length must be 96
-    // contracts/plonk_bls12381.algo.ts:864
+    // contracts/plonk_bls12381.algo.ts:821
     // op.concat(g1Neg(A1), B1), // G1 points
     swap
     concat
-    // contracts/plonk_bls12381.algo.ts:865
+    // contracts/plonk_bls12381.algo.ts:822
     // op.concat(vk.X_2, G2_ONE), // G2 points
     swap
     pushints 800 192 // 800, 192
     extract3
     pushbytes 0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb813e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b828010606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be
     concat
-    // contracts/plonk_bls12381.algo.ts:862-866
+    // contracts/plonk_bls12381.algo.ts:819-823
     // const res = op.EllipticCurve.pairingCheck(
     //   op.Ec.BLS12_381g1,
     //   op.concat(g1Neg(A1), B1), // G1 points
@@ -1641,16 +1766,17 @@ main_after_while@22:
     // );
     ec_pairing_check BLS12_381g1
     // contracts/plonk_verifier.algo.ts:60
-    // assert(verifyPlonkFromTemplate(signals, proof, lw), "Verification failed");
+    // assert(verifyPlonkFromTemplate(signals, proof), "Verification failed");
     assert // Verification failed
     // contracts/plonk_verifier.algo.ts:62
     // return true;
     intc_2 // 1
     return
 
-main_ternary_false@18:
+main_ternary_false@15:
     dig 1
-    b main_ternary_merge@19
+    bury 22
+    b main_ternary_merge@16
 
 
 // contracts/bls12381_common.algo.ts::b32(a: bytes) -> bytes:
@@ -1706,10 +1832,10 @@ frSub:
 
 // contracts/plonk_bls12381.algo.ts::getChallenge(td: bytes) -> bytes:
 getChallenge:
-    // contracts/plonk_bls12381.algo.ts:440
+    // contracts/plonk_bls12381.algo.ts:397
     // export function getChallenge(td: bytes): Uint256 {
     proto 1 1
-    // contracts/plonk_bls12381.algo.ts:441
+    // contracts/plonk_bls12381.algo.ts:398
     // let hash = op.keccak256(td);
     frame_dig -1
     keccak256
@@ -1717,7 +1843,7 @@ getChallenge:
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:442
+    // contracts/plonk_bls12381.algo.ts:399
     // return new Uint256(frScalar(BigUint(hash)));
     dup
     len

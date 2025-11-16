@@ -239,7 +239,6 @@ export type PlonkVerificationKey = {
 export function verifyPlonkFromTemplateWithLogs(
   signals: PublicSignals,
   proof: PlonkProof,
-  lw: LagrangeWitness,
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
@@ -247,7 +246,6 @@ export function verifyPlonkFromTemplateWithLogs(
     decodeArc4<PlonkVerificationKey>(vkBytes),
     signals,
     proof,
-    lw,
   );
 }
 
@@ -257,52 +255,14 @@ export function verifyPlonkFromTemplateWithLogs(
 export function verifyPlonkFromTemplate(
   signals: PublicSignals,
   proof: PlonkProof,
-  lw: LagrangeWitness,
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verify(decodeArc4<PlonkVerificationKey>(vkBytes), signals, proof, lw);
+  return verify(decodeArc4<PlonkVerificationKey>(vkBytes), signals, proof);
 }
 
 function groupCheck(p: bytes<96>): boolean {
   return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
-}
-
-function assertLwInField(lw: LagrangeWitness) {
-  assert(inField(lw.xin), "lw.xin not in Fr");
-  assert(inField(lw.zh), "lw.zh not in Fr");
-  for (let i: uint64 = 0; i < lw.L.length; i++) {
-    assert(inField(lw.L[i] as Uint256), "lw.L not in Fr");
-  }
-}
-
-export function validateLagrangeWitness(
-  vk: PlonkVerificationKey,
-  challenges: Challenges,
-  lw: LagrangeWitness,
-): void {
-  assertLwInField(lw);
-
-  // Compute n = 2^power and xi^n to compare against provided xin
-  let nPow: uint64 = 1;
-  let xin = challenges.xi.asBigUint();
-  for (let i: uint64 = 0; i < vk.power; i++) {
-    xin = frMul(xin, xin);
-    nPow *= 2;
-  }
-  const xinExpected = new Uint256(xin);
-  assert(lw.xin.asBigUint() === xinExpected.asBigUint(), "lw.xin != xi^n");
-
-  // zh = xi^n - 1
-  const zhExpected = new Uint256(frSub(xinExpected.asBigUint(), BigUint(1)));
-  assert(lw.zh.asBigUint() === zhExpected.asBigUint(), "lw.zh != xi^n - 1");
-
-  // Require L length rules: if nPublic == 0 then require exactly L[1] present; else require at least nPublic entries
-  const required: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
-  assert(lw.L.length >= required + 1, "lw.L length too short"); // L[0] unused; start at index 1
-
-  // Basic guard against xi == 1 (would cause division-by-zero in classic formula); forbid to keep semantics
-  assert(challenges.xi.asBigUint() !== BigUint(1), "invalid xi (equals 1)");
 }
 
 function assertSignalsInField(
@@ -354,17 +314,15 @@ export function verify(
   vk: PlonkVerificationKey,
   signals: PublicSignals,
   proof: PlonkProof,
-  lw: LagrangeWitness,
 ): boolean {
   validateInput(vk, signals, proof);
 
   // 1) Fiat–Shamir challenges from transcript (SNARKJS chaining)
-  let challenges = computeChallenges(vk, signals, proof);
+  let initialChallenges = computeChallenges(vk, signals, proof);
 
   // 2) Validate provided Lagrange evaluations and associated witness (off-chain computed)
-  validateLagrangeWitness(vk, challenges, lw);
-  challenges.xin = lw.xin;
-  challenges.zh = lw.zh;
+  const lw = calculateLagrangeEvaluations(initialChallenges, vk);
+  const challenges = clone(lw.challenges);
 
   // 3) Public input polynomial at ξ using provided Lagrange evaluations
   const pi = calculatePI(signals, lw.L);
@@ -389,22 +347,21 @@ export function verifyWithLogs(
   vk: PlonkVerificationKey,
   signals: PublicSignals,
   proof: PlonkProof,
-  lw: LagrangeWitness,
 ): boolean {
   validateInput(vk, signals, proof);
 
   // 1) Fiat–Shamir challenges from transcript (SNARKJS chaining)
-  let challenges = computeChallenges(vk, signals, proof);
-  debugLog("beta", challenges.beta.bytes);
-  debugLog("gamma", challenges.gamma.bytes);
-  debugLog("alpha", challenges.alpha.bytes);
-  debugLog("xi", challenges.xi.bytes);
-  debugLog("u", challenges.u.bytes);
+  let initialChallenges = computeChallenges(vk, signals, proof);
+  debugLog("beta", initialChallenges.beta.bytes);
+  debugLog("gamma", initialChallenges.gamma.bytes);
+  debugLog("alpha", initialChallenges.alpha.bytes);
+  debugLog("xi", initialChallenges.xi.bytes);
+  debugLog("u", initialChallenges.u.bytes);
 
   // 2) Validate provided Lagrange evaluations and set xin/zh
-  validateLagrangeWitness(vk, challenges, lw);
-  challenges.xin = lw.xin;
-  challenges.zh = lw.zh;
+  const lw = calculateLagrangeEvaluations(initialChallenges, vk);
+  const challenges = clone(lw.challenges);
+
   debugLog("xin", challenges.xin.bytes);
   debugLog("zh", challenges.zh.bytes);
   debugLog("v[1]", (challenges.v[1] as Uint256).bytes);
