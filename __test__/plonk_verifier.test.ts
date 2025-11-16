@@ -1,11 +1,15 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { AlgorandClient, microAlgos } from "@algorandfoundation/algokit-utils";
 import * as snarkjs from "snarkjs";
-import { getProof, AppVerifier, LsigVerifier } from "../src/index";
 import {
-  SignalsAndProofClient,
-  SignalsAndProofFactory,
-} from "../contracts/clients/SignalsAndProof";
+  getPlonkProof,
+  PlonkAppVerifier,
+  PlonkLsigVerifier,
+} from "../src/plonk";
+import {
+  PlonkSignalsAndProofClient,
+  PlonkSignalsAndProofFactory,
+} from "../contracts/clients/PlonkSignalsAndProof";
 
 const LSIG_BUDGET = 20_000; // Budget for each logicsig
 const APP_BUDGET = 700; // Budget for the app call
@@ -62,8 +66,8 @@ function parseLogs(logs: Uint8Array[]): LogValues {
 }
 
 describe("verifier", () => {
-  let debugVerifier: AppVerifier;
-  let verifier: AppVerifier;
+  let debugVerifier: PlonkAppVerifier;
+  let verifier: PlonkAppVerifier;
   let curve: any;
 
   beforeAll(async () => {
@@ -71,7 +75,7 @@ describe("verifier", () => {
 
     // @ts-expect-error curves is not typed
     curve = await snarkjs.curves.getCurveFromName("bls12381");
-    debugVerifier = new AppVerifier(
+    debugVerifier = new PlonkAppVerifier(
       algorand,
       "circuit/circuit_final.zkey",
       "circuit/circuit_js/circuit.wasm",
@@ -82,7 +86,7 @@ describe("verifier", () => {
       defaultSender,
     });
 
-    verifier = new AppVerifier(
+    verifier = new PlonkAppVerifier(
       algorand,
       "circuit/circuit_final.zkey",
       "circuit/circuit_js/circuit.wasm",
@@ -98,7 +102,7 @@ describe("verifier", () => {
   });
 
   it("fails with wrong signal", async () => {
-    const proof = await getProof("circuit/proof.json", curve);
+    const proof = await getPlonkProof("circuit/proof.json", curve);
     const signals = [1337n];
 
     const simResult = debugVerifier.simulateVerificationWithProofAndSignals(
@@ -113,7 +117,7 @@ describe("verifier", () => {
   });
 
   it("works", async () => {
-    const proof = await getProof("circuit/proof.json", curve);
+    const proof = await getPlonkProof("circuit/proof.json", curve);
     const signals = [
       15744006038856998268181219516291113434365469909648022488288672656450282844855n,
     ];
@@ -142,7 +146,7 @@ describe("verifier", () => {
   });
 
   it("works with logging", async () => {
-    const proof = await getProof("circuit/proof.json", curve);
+    const proof = await getPlonkProof("circuit/proof.json", curve);
     const signals = [
       15744006038856998268181219516291113434365469909648022488288672656450282844855n,
     ];
@@ -252,19 +256,19 @@ describe("verifier", () => {
 });
 
 describe("verifier lsig", () => {
-  let verifier: LsigVerifier;
+  let verifier: PlonkLsigVerifier;
   let algorand: AlgorandClient;
-  let client: SignalsAndProofClient;
+  let client: PlonkSignalsAndProofClient;
 
   beforeAll(async () => {
     algorand = AlgorandClient.defaultLocalNet();
-    verifier = new LsigVerifier(
+    verifier = new PlonkLsigVerifier(
       algorand,
       "circuit/circuit_final.zkey",
       "circuit/circuit_js/circuit.wasm",
     );
 
-    const signalsAndProofFactory = new SignalsAndProofFactory({
+    const signalsAndProofFactory = new PlonkSignalsAndProofFactory({
       algorand,
       defaultSender: await algorand.account.localNetDispenser(),
     });

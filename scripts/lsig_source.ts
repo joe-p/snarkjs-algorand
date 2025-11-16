@@ -5,12 +5,12 @@ import { dirname, join } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const lsigTeal = readFileSync(
+const plonkLsigTeal = readFileSync(
   join(__dirname, "..", "contracts", "out", "PlonkVerifierLsig.teal"),
   "utf8",
 );
 
-const content = `export const LSIG_SOURCE = \`${lsigTeal}\`;\n`;
+const content = `export const PLONK_LSIG_SOURCE = \`${plonkLsigTeal}\`;\n`;
 
 writeFileSync(
   join(__dirname, "..", "contracts", "out", "lsig_source.ts"),
