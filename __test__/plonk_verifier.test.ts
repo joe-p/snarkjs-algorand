@@ -5,7 +5,7 @@ import {
   getPlonkProof,
   PlonkAppVerifier,
   PlonkLsigVerifier,
-} from "../src/plonk_bls12381";
+} from "../src/plonk";
 import {
   PlonkSignalsAndProofClient,
   PlonkSignalsAndProofFactory,
