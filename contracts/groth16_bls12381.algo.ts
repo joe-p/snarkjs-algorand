@@ -1,18 +1,21 @@
 import {
   type bytes,
   op,
-  BigUint,
   type uint64,
   Bytes,
-  type biguint,
   assert,
-  log,
   TemplateVar,
 } from "@algorandfoundation/algorand-typescript";
+import { decodeArc4 } from "@algorandfoundation/algorand-typescript/arc4";
 import {
-  decodeArc4,
-  Uint256,
-} from "@algorandfoundation/algorand-typescript/arc4";
+  frScalar,
+  b32,
+  debugLog,
+  g1Add,
+  g1Neg,
+  inField,
+  type PublicSignals,
+} from "./bls12381_common.algo";
 
 /**
  * Groth16 verifier for BLS12-381 (SNARKJS-compatible)
@@ -27,41 +30,6 @@ import {
  *
  * Field operations are over BLS12-381 Fr; commitments are on G1/G2.
  */
-
-/** BLS12-381 scalar field modulus (Fr), 32-byte big-endian */
-const BLS12_381_SCALAR_MODULUS = BigUint(
-  Bytes.fromHex(
-    "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001",
-  ),
-);
-
-/**
- * BLS12_381_SCALAR_MODULUS - 1, used for point negation
- */
-const R_MINUS_1 = BigUint(
-  Bytes.fromHex(
-    "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000",
-  ),
-);
-
-/**
- * Reduce to canonical form in the scalar field Fr.
- * Computes a mod r where r is the BLS12-381 scalar field modulus.
- * Ensures the result is in the range [0, r-1].
- */
-function frScalar(a: biguint): biguint {
-  return a % BLS12_381_SCALAR_MODULUS;
-}
-
-/**
- * Convert a big unsigned integer to 32-byte big-endian representation.
- * Used for serializing field elements.
- */
-function b32(a: biguint): bytes<32> {
-  return new Uint256(a).bytes.toFixed({ length: 32 });
-}
-
-export type PublicSignals = Uint256[];
 
 /**
  * Groth16 proof structure
@@ -96,45 +64,6 @@ export type VerificationKey = {
 };
 
 /**
- * Debug logging helper
- */
-function debugLog(name: string, value: bytes): void {
-  log(name);
-  log(value);
-}
-
-/**
- * Scalar multiplication on the BLS12-381 G1 group.
- * Computes s * P where P is a G1 point and s is a scalar in Fr.
- * Returns the result as a 96-byte uncompressed G1 point.
- */
-function g1TimesFr(p: bytes<96>, s: biguint): bytes<96> {
-  return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    length: 96,
-  });
-}
-
-/**
- * Point addition on the BLS12-381 G1 group.
- * Computes P1 + P2 where P1 and P2 are G1 points.
- * Returns the result as a 96-byte uncompressed G1 point.
- */
-function g1Add(p1: bytes<96>, p2: bytes<96>): bytes<96> {
-  return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    length: 96,
-  });
-}
-
-/**
- * Point negation on the BLS12-381 G1 group.
- * Computes -P where P is a G1 point by multiplying by (r-1) where r is the scalar field modulus.
- * This is equivalent to negating the y-coordinate in affine representation.
- */
-function g1Neg(p: bytes<96>): bytes<96> {
-  return g1TimesFr(p, R_MINUS_1);
-}
-
-/**
  * Check if a G1 point is in the correct subgroup
  */
 function g1GroupCheck(p: bytes<96>): boolean {
@@ -149,13 +78,6 @@ function g2GroupCheck(p: bytes<192>): boolean {
 }
 
 /**
- * Check if a value is in the scalar field Fr
- */
-function inField(value: Uint256): boolean {
-  return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
-}
-
-/**
  * Validate that all proof points are in correct subgroups
  */
 function assertProofInSubgroup(proof: Proof): void {
@@ -167,7 +89,10 @@ function assertProofInSubgroup(proof: Proof): void {
 /**
  * Validate that all public signals are in the scalar field Fr
  */
-function assertSignalsInField(vk: VerificationKey, signals: PublicSignals): void {
+function assertSignalsInField(
+  vk: VerificationKey,
+  signals: PublicSignals,
+): void {
   assert(signals.length === vk.nPublic, "Invalid number of public inputs");
 
   for (const signal of signals) {
@@ -190,13 +115,13 @@ export function validateInput(
 /**
  * Compute the linear combination of IC points with public signals
  * cpub = IC[0] + Σ(publicSignals[i] * IC[i+1])
- * 
+ *
  * This uses multi-scalar multiplication for efficiency.
  */
 function computeCpub(vk: VerificationKey, signals: PublicSignals): bytes<96> {
   // IC array contains (nPublic + 1) G1 points
   // IC[0] is the constant term, IC[1..nPublic] correspond to public inputs
-  
+
   if (signals.length === 0) {
     // No public inputs, just return IC[0]
     return vk.IC[0] as bytes<96>;
@@ -207,7 +132,7 @@ function computeCpub(vk: VerificationKey, signals: PublicSignals): bytes<96> {
   for (let i: uint64 = 1; i <= signals.length; i++) {
     icPoints = op.concat(icPoints, vk.IC[i] as bytes<96>);
   }
-  
+
   // Build scalars array from public signals
   let scalars = Bytes();
   for (const signal of signals) {
@@ -229,10 +154,10 @@ function computeCpub(vk: VerificationKey, signals: PublicSignals): bytes<96> {
 
 /**
  * Main Groth16 verification function
- * 
+ *
  * Verifies a Groth16 proof by checking the pairing equation:
  * e(-pi_a, pi_b) * e(cpub, vk_gamma_2) * e(pi_c, vk_delta_2) * e(vk_alpha_1, vk_beta_2) = 1
- * 
+ *
  * Where cpub = IC[0] + Σ(publicSignals[i] * IC[i+1])
  */
 export function verify(
