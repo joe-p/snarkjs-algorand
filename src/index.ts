@@ -3,8 +3,8 @@ import {
   PlonkVerifierClient,
   PlonkVerifierFactory,
   type PlonkVerifierDeployParams,
-  type Proof,
-  type VerificationKey,
+  type PlonkProof,
+  type PlonkVerificationKey,
   APP_SPEC,
 } from "../contracts/clients/PlonkVerifier";
 import { PlonkVerifierWithLogsFactory } from "../contracts/clients/PlonkVerifierWithLogs";
@@ -31,7 +31,7 @@ export {
   PlonkSignalsAndProofClient,
 } from "../contracts/clients/PlonkSignalsAndProof.ts";
 
-export type { Proof as OnChainProof } from "../contracts/plonk_bls12381.algo.ts";
+export type { PlonkProof as OnChainProof } from "../contracts/plonk_bls12381.algo.ts";
 
 function stringValuesToBigints(obj: any): any {
   for (const key in obj) {
@@ -45,15 +45,15 @@ function stringValuesToBigints(obj: any): any {
 
 export {
   PlonkVerifierClient,
-  type Proof,
-  type VerificationKey,
+  type PlonkProof,
+  type PlonkVerificationKey,
   type PlonkVerifierDeployParams,
 } from "../contracts/clients/PlonkVerifier";
 
 export async function getVkey(
   zKey: snarkjs.ZKArtifact,
   curve: any,
-): Promise<VerificationKey> {
+): Promise<PlonkVerificationKey> {
   const vkey = await snarkjs.zKey.exportVerificationKey(zKey, console);
 
   ["Ql", "Qr", "Qo", "Qm", "Qc", "S1", "S2", "S3"].forEach((p) => {
@@ -95,18 +95,18 @@ export async function getVkey(
 }
 
 export function encodeVk(
-  vkey: VerificationKey,
+  vkey: PlonkVerificationKey,
   appSpec: Arc56Contract,
 ): Uint8Array {
   return getABIEncodedValue(vkey, "VerificationKey", appSpec.structs);
 }
 
-export async function getProof(path: string, curve: any): Promise<Proof> {
+export async function getProof(path: string, curve: any): Promise<PlonkProof> {
   const proof = JSON.parse(readFileSync(path, "utf8"));
   return encodeProof(proof, curve);
 }
 
-export function encodeProof(proof: any, curve: any): Proof {
+export function encodeProof(proof: any, curve: any): PlonkProof {
   ["A", "B", "C", "Z", "T1", "T2", "T3", "Wxi", "Wxiw"].forEach((p) => {
     stringValuesToBigints(proof[p]);
     const point = curve.G1.fromObject(proof[p]);
@@ -145,7 +145,7 @@ export function encodeSignals(...inputs: string[]) {
 }
 
 export async function getLagrangeWitness(
-  proof: Proof,
+  proof: PlonkProof,
   signals: bigint[],
   algorand: AlgorandClient,
   vkBytes: Uint8Array,
@@ -181,7 +181,7 @@ export async function getLagrangeWitness(
 }
 
 export type Witness = {
-  proof: Proof;
+  proof: PlonkProof;
   signals: bigint[];
   lw: {
     l: bigint[];
@@ -276,7 +276,7 @@ export class LsigVerifier {
       appParams: {
         sender: Address;
         staticFee: AlgoAmount;
-        args: { signals: bigint[]; proof: Proof; lw: LagrangeWitness };
+        args: { signals: bigint[]; proof: PlonkProof; lw: LagrangeWitness };
       };
       lsigsFee: AlgoAmount;
       extraLsigsTxns: Transaction[];
@@ -426,7 +426,7 @@ export class AppVerifier {
   // Methods that take in proof and signals directly
 
   async simulateVerificationWithProofAndSignals(
-    proofAndSignals: { proof: Proof; signals: bigint[] },
+    proofAndSignals: { proof: PlonkProof; signals: bigint[] },
     simParams?: RawSimulateOptions,
   ) {
     this.assertDeployed();

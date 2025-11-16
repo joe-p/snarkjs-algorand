@@ -64,7 +64,7 @@ signalsAndProof:
     len
     pushint 1056 // 1056
     ==
-    assert // invalid number of bytes for contracts/plonk_bls12381.algo.ts::Proof
+    assert // invalid number of bytes for contracts/plonk_bls12381.algo.ts::PlonkProof
     txna ApplicationArgs 3
     dup
     len

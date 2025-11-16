@@ -181,7 +181,7 @@ export type LagrangeWitness = {
 /**
  * PLONK proof structure: G1 points (96B BE) and field evals (32B BE)
  */
-export type Proof = {
+export type PlonkProof = {
   // Uncompressed G1 points
   A: bytes<96>;
   B: bytes<96>;
@@ -268,7 +268,7 @@ function g1Sub(p: bytes<96>, q: bytes<96>): bytes<96> {
  * PLONK verification key structure with big-endian encodings.
  * Contains all the preprocessed circuit information needed for verification.
  */
-export type VerificationKey = {
+export type PlonkVerificationKey = {
   /** Multiplication gate selector polynomial commitment [Qm(x)]_1 */
   Qm: bytes<96>;
   /** Left wire selector polynomial commitment [Ql(x)]_1 */
@@ -300,15 +300,15 @@ export type VerificationKey = {
 /**
  * Verify proof using verification key from template variable with debug logging
  */
-export function verifyFromTemplateWithLogs(
+export function verifyPlonkFromTemplateWithLogs(
   signals: PublicSignals,
-  proof: Proof,
+  proof: PlonkProof,
   lw: LagrangeWitness,
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
   return verifyWithLogs(
-    decodeArc4<VerificationKey>(vkBytes),
+    decodeArc4<PlonkVerificationKey>(vkBytes),
     signals,
     proof,
     lw,
@@ -318,14 +318,14 @@ export function verifyFromTemplateWithLogs(
 /**
  * Verify proof using verification key from template variable
  */
-export function verifyFromTemplate(
+export function verifyPlonkFromTemplate(
   signals: PublicSignals,
-  proof: Proof,
+  proof: PlonkProof,
   lw: LagrangeWitness,
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verify(decodeArc4<VerificationKey>(vkBytes), signals, proof, lw);
+  return verify(decodeArc4<PlonkVerificationKey>(vkBytes), signals, proof, lw);
 }
 
 function groupCheck(p: bytes<96>): boolean {
@@ -345,7 +345,7 @@ function assertLwInField(lw: LagrangeWitness) {
 }
 
 export function validateLagrangeWitness(
-  vk: VerificationKey,
+  vk: PlonkVerificationKey,
   challenges: Challenges,
   lw: LagrangeWitness,
 ): void {
@@ -373,7 +373,10 @@ export function validateLagrangeWitness(
   assert(challenges.xi.asBigUint() !== BigUint(1), "invalid xi (equals 1)");
 }
 
-function assertSignalsInField(vk: VerificationKey, signals: PublicSignals) {
+function assertSignalsInField(
+  vk: PlonkVerificationKey,
+  signals: PublicSignals,
+) {
   assert(signals.length === vk.nPublic, "Invalid number of public inputs");
 
   for (const signal of signals) {
@@ -381,7 +384,7 @@ function assertSignalsInField(vk: VerificationKey, signals: PublicSignals) {
   }
 }
 
-function assertEvalsInField(proof: Proof) {
+function assertEvalsInField(proof: PlonkProof) {
   assert(inField(proof.eval_a), "eval_a not in Fr");
   assert(inField(proof.eval_b), "eval_b not in Fr");
   assert(inField(proof.eval_c), "eval_c not in Fr");
@@ -390,7 +393,7 @@ function assertEvalsInField(proof: Proof) {
   assert(inField(proof.eval_zw), "eval_zw not in Fr");
 }
 
-function assertProofInSubgroup(proof: Proof) {
+function assertProofInSubgroup(proof: PlonkProof) {
   assert(groupCheck(proof.A), "A not in G1");
   assert(groupCheck(proof.B), "B not in G1");
   assert(groupCheck(proof.C), "C not in G1");
@@ -403,9 +406,9 @@ function assertProofInSubgroup(proof: Proof) {
 }
 
 export function validateInput(
-  vk: VerificationKey,
+  vk: PlonkVerificationKey,
   signals: PublicSignals,
-  proof: Proof,
+  proof: PlonkProof,
 ): void {
   assertProofInSubgroup(proof);
   assertEvalsInField(proof);
@@ -416,9 +419,9 @@ export function validateInput(
  * Main PLONK verification function
  */
 export function verify(
-  vk: VerificationKey,
+  vk: PlonkVerificationKey,
   signals: PublicSignals,
-  proof: Proof,
+  proof: PlonkProof,
   lw: LagrangeWitness,
 ): boolean {
   validateInput(vk, signals, proof);
@@ -451,9 +454,9 @@ export function verify(
  * Main PLONK verification function with debug logging
  */
 export function verifyWithLogs(
-  vk: VerificationKey,
+  vk: PlonkVerificationKey,
   signals: PublicSignals,
-  proof: Proof,
+  proof: PlonkProof,
   lw: LagrangeWitness,
 ): boolean {
   validateInput(vk, signals, proof);
@@ -511,9 +514,9 @@ export function getChallenge(td: bytes): Uint256 {
  * Compute all Fiat–Shamir challenges following SNARKJS transcript chaining
  */
 export function computeChallenges(
-  vk: VerificationKey,
+  vk: PlonkVerificationKey,
   signals: PublicSignals,
-  proof: Proof,
+  proof: PlonkProof,
 ): Challenges {
   /////////////////////////////////////
   // Challenge round 2: beta and gamma
@@ -607,7 +610,7 @@ export function computeChallenges(
  */
 export function calculateLagrangeEvaluations(
   challengesInput: Challenges,
-  vk: VerificationKey,
+  vk: PlonkVerificationKey,
 ): { L: Uint256[]; challenges: Challenges } {
   const challenges = clone(challengesInput);
   let xin = challenges.xi.asBigUint();
@@ -677,7 +680,7 @@ export function calculatePI(
  *   r0 = PI(ξ) - L1(ξ)*α² - α*Z(ξ·ω)*(a+β*s1+γ)(b+β*s2+γ)(c+γ)
  */
 export function calculateR0(
-  proof: Proof,
+  proof: PlonkProof,
   challenges: Challenges,
   pi: Uint256,
   l1: Uint256,
@@ -729,9 +732,9 @@ export function calculateR0(
  * F = D + v1*A + v2*B + v3*C + v4*S1 + v5*S2, with v[i] = v1^i
  */
 export function calculateF(
-  proof: Proof,
+  proof: PlonkProof,
   challenges: Challenges,
-  vk: VerificationKey,
+  vk: PlonkVerificationKey,
   l1: Uint256,
 ): bytes<96> {
   // Prepare points for a single MSM that includes gate, quotient, Qc, Z, S3 (with a NEGATED SCALAR),
@@ -853,7 +856,7 @@ export function calculateF(
  * All field scalars are 32-byte big-endian; [1]_1 is G1_ONE.
  */
 export function calculateE(
-  proof: Proof,
+  proof: PlonkProof,
   challenges: Challenges,
   r0: Uint256,
 ): bytes<96> {
@@ -894,9 +897,9 @@ export function calculateE(
  * Assumes inputs are valid subgroup points produced by SNARKJS; AVM enforces encoding.
  */
 export function isValidPairing(
-  proof: Proof,
+  proof: PlonkProof,
   challenges: Challenges,
-  vk: VerificationKey,
+  vk: PlonkVerificationKey,
   E: bytes<96>,
   F: bytes<96>,
 ): boolean {

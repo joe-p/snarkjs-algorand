@@ -16,11 +16,11 @@ import {
   Uint256,
 } from "@algorandfoundation/algorand-typescript/arc4";
 import {
-  verifyFromTemplateWithLogs,
-  type VerificationKey,
+  verifyPlonkFromTemplateWithLogs,
+  type PlonkVerificationKey,
   type PublicSignals,
-  type Proof as PlonkProof,
-  verifyFromTemplate,
+  type PlonkProof as PlonkProof,
+  verifyPlonkFromTemplate,
   type LagrangeWitness,
   calculateLagrangeEvaluations,
   computeChallenges,
@@ -29,11 +29,11 @@ import {
 export class PlonkVerifierWithLogs extends Contract {
   /** Dummy function that only exists so we can have the VerificationKey type in the generated client */
   @abimethod({ allowActions: "CloseOut" })
-  public _dummy(_vk: VerificationKey): void {}
+  public _dummy(_vk: PlonkVerificationKey): void {}
 
   verify(signals: PublicSignals, proof: PlonkProof, lw: LagrangeWitness): void {
     assert(
-      verifyFromTemplateWithLogs(signals, proof, lw),
+      verifyPlonkFromTemplateWithLogs(signals, proof, lw),
       "Verification failed",
     );
   }
@@ -42,10 +42,10 @@ export class PlonkVerifierWithLogs extends Contract {
 export class PlonkVerifier extends Contract {
   /** Dummy function that only exists so we can have the VerificationKey type in the generated client */
   @abimethod({ allowActions: "CloseOut" })
-  public _dummy(_vk: VerificationKey): void {}
+  public _dummy(_vk: PlonkVerificationKey): void {}
 
   verify(signals: PublicSignals, proof: PlonkProof, lw: LagrangeWitness): void {
-    assert(verifyFromTemplate(signals, proof, lw), "Verification failed");
+    assert(verifyPlonkFromTemplate(signals, proof, lw), "Verification failed");
   }
 }
 
@@ -57,7 +57,7 @@ export class PlonkVerifierLsig extends LogicSig {
     const proof = decodeArc4<PlonkProof>(Txn.applicationArgs(2));
     const signals = decodeArc4<Uint256[]>(Txn.applicationArgs(1));
 
-    assert(verifyFromTemplate(signals, proof, lw), "Verification failed");
+    assert(verifyPlonkFromTemplate(signals, proof, lw), "Verification failed");
 
     return true;
   }
@@ -80,7 +80,7 @@ export class LagrangeWitnessCalculator extends Contract {
     ensureBudget(700 * 250);
     const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-    const vk = decodeArc4<VerificationKey>(vkBytes);
+    const vk = decodeArc4<PlonkVerificationKey>(vkBytes);
 
     let challenges = computeChallenges(vk, signals, proof);
 
