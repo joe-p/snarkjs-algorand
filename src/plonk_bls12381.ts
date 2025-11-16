@@ -18,7 +18,7 @@ import type { RawSimulateOptions } from "@algorandfoundation/algokit-utils/types
 import type { Transaction } from "algosdk";
 import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
 import algosdk, { OnApplicationComplete, type Address } from "algosdk";
-import { LSIG_SOURCE } from "../contracts/out/lsig_source";
+import { PLONK_LSIG_SOURCE } from "../contracts/out/lsig_source";
 import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
 import {
   LagrangeWitnessCalculatorFactory,
@@ -238,7 +238,7 @@ export class PlonkLsigVerifier {
     const vkBytes = encodePlonkVk(vk, APP_SPEC);
 
     const compilation = await this.algorand.app.compileTealTemplate(
-      LSIG_SOURCE,
+      PLONK_LSIG_SOURCE,
       {
         VERIFICATION_KEY: vkBytes,
         ROOT_OF_UNITY: Buffer.from(

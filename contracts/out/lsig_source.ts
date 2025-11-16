@@ -1,4 +1,4 @@
-export const LSIG_SOURCE = `#pragma version 11
+export const PLONK_LSIG_SOURCE = `#pragma version 11
 #pragma typetrack false
 
 // contracts/plonk_verifier.algo.ts::program() -> uint64:
