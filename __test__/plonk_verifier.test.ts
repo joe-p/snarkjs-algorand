@@ -77,7 +77,7 @@ describe("verifier", () => {
     curve = await snarkjs.curves.getCurveFromName("bls12381");
     debugVerifier = new PlonkAppVerifier(
       algorand,
-      "circuit/circuit_final.zkey",
+      "circuit/plonk_circuit_final.zkey",
       "circuit/circuit_js/circuit.wasm",
     );
     await debugVerifier.deploy({
@@ -88,7 +88,7 @@ describe("verifier", () => {
 
     verifier = new PlonkAppVerifier(
       algorand,
-      "circuit/circuit_final.zkey",
+      "circuit/plonk_circuit_final.zkey",
       "circuit/circuit_js/circuit.wasm",
     );
     await verifier.deploy({
@@ -102,7 +102,7 @@ describe("verifier", () => {
   });
 
   it("fails with wrong signal", async () => {
-    const proof = await getPlonkProof("circuit/proof.json", curve);
+    const proof = await getPlonkProof("circuit/plonk_proof.json", curve);
     const signals = [1337n];
 
     const simResult = debugVerifier.simulateVerificationWithProofAndSignals(
@@ -117,7 +117,7 @@ describe("verifier", () => {
   });
 
   it("works", async () => {
-    const proof = await getPlonkProof("circuit/proof.json", curve);
+    const proof = await getPlonkProof("circuit/plonk_proof.json", curve);
     const signals = [
       15744006038856998268181219516291113434365469909648022488288672656450282844855n,
     ];
@@ -146,7 +146,7 @@ describe("verifier", () => {
   });
 
   it("works with logging", async () => {
-    const proof = await getPlonkProof("circuit/proof.json", curve);
+    const proof = await getPlonkProof("circuit/plonk_proof.json", curve);
     const signals = [
       15744006038856998268181219516291113434365469909648022488288672656450282844855n,
     ];
@@ -264,7 +264,7 @@ describe("verifier lsig", () => {
     algorand = AlgorandClient.defaultLocalNet();
     verifier = new PlonkLsigVerifier(
       algorand,
-      "circuit/circuit_final.zkey",
+      "circuit/plonk_circuit_final.zkey",
       "circuit/circuit_js/circuit.wasm",
     );
 
