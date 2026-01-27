@@ -2,14 +2,14 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { AlgorandClient, microAlgos } from "@algorandfoundation/algokit-utils";
 import * as snarkjs from "snarkjs";
 import {
-  getGroth16Proof,
-  Groth16AppVerifier,
-  Groth16LsigVerifier,
+  getGroth16Bls12381Proof,
+  Groth16Bls12381AppVerifier,
+  Groth16Bls12381LsigVerifier,
 } from "../src/groth16";
 import {
-  Groth16SignalsAndProofClient,
-  Groth16SignalsAndProofFactory,
-} from "../contracts/clients/Groth16SignalsAndProof";
+  Groth16Bls12381SignalsAndProofClient,
+  Groth16Bls12381SignalsAndProofFactory,
+} from "../contracts/clients/Groth16Bls12381SignalsAndProof";
 
 const LSIG_BUDGET = 20_000; // Budget for each logicsig
 const APP_BUDGET = 700; // Budget for the app call
@@ -17,9 +17,9 @@ const GROUP_TXN_SIZE = 16;
 const EXTRA_OPCODE_BUDGET = LSIG_BUDGET * GROUP_TXN_SIZE - APP_BUDGET; // Max budget possible with a group of 16 lsigs
 const algorand = AlgorandClient.defaultLocalNet();
 
-describe("groth16 verifier", () => {
-  let debugVerifier: Groth16AppVerifier;
-  let verifier: Groth16AppVerifier;
+describe("groth16 BLS12-381 verifier", () => {
+  let debugVerifier: Groth16Bls12381AppVerifier;
+  let verifier: Groth16Bls12381AppVerifier;
   let curve: any;
 
   beforeAll(async () => {
@@ -27,7 +27,7 @@ describe("groth16 verifier", () => {
 
     // @ts-expect-error curves is not typed
     curve = await snarkjs.curves.getCurveFromName("bls12381");
-    debugVerifier = new Groth16AppVerifier(
+    debugVerifier = new Groth16Bls12381AppVerifier(
       algorand,
       "circuit/groth16_circuit_final.zkey",
       "circuit/circuit_js/circuit.wasm",
@@ -38,7 +38,7 @@ describe("groth16 verifier", () => {
       defaultSender,
     });
 
-    verifier = new Groth16AppVerifier(
+    verifier = new Groth16Bls12381AppVerifier(
       algorand,
       "circuit/groth16_circuit_final.zkey",
       "circuit/circuit_js/circuit.wasm",
@@ -54,7 +54,7 @@ describe("groth16 verifier", () => {
   });
 
   it("fails with wrong signal", async () => {
-    const proof = await getGroth16Proof("circuit/groth16_proof.json", curve);
+    const proof = await getGroth16Bls12381Proof("circuit/groth16_proof.json", curve);
     const signals = [1337n];
 
     const simResult = debugVerifier.simulateVerificationWithProofAndSignals(
@@ -69,7 +69,7 @@ describe("groth16 verifier", () => {
   });
 
   it("works", async () => {
-    const proof = await getGroth16Proof("circuit/groth16_proof.json", curve);
+    const proof = await getGroth16Bls12381Proof("circuit/groth16_proof.json", curve);
     const signals = [
       15744006038856998268181219516291113434365469909648022488288672656450282844855n,
     ];
@@ -111,19 +111,19 @@ describe("groth16 verifier", () => {
 });
 
 describe("groth16 verifier lsig", () => {
-  let verifier: Groth16LsigVerifier;
+  let verifier: Groth16Bls12381LsigVerifier;
   let algorand: AlgorandClient;
-  let client: Groth16SignalsAndProofClient;
+  let client: Groth16Bls12381SignalsAndProofClient;
 
   beforeAll(async () => {
     algorand = AlgorandClient.defaultLocalNet();
-    verifier = new Groth16LsigVerifier(
+    verifier = new Groth16Bls12381LsigVerifier(
       algorand,
       "circuit/groth16_circuit_final.zkey",
       "circuit/circuit_js/circuit.wasm",
     );
 
-    const signalsAndProofFactory = new Groth16SignalsAndProofFactory({
+    const signalsAndProofFactory = new Groth16Bls12381SignalsAndProofFactory({
       algorand,
       defaultSender: await algorand.account.localNetDispenser(),
     });

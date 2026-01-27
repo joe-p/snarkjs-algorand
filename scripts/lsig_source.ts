@@ -11,13 +11,19 @@ const plonkLsigTeal = readFileSync(
 );
 
 const groth16LsigTeal = readFileSync(
-  join(__dirname, "..", "contracts", "out", "Groth16VerifierLsig.teal"),
+  join(__dirname, "..", "contracts", "out", "Groth16Bls12381VerifierLsig.teal"),
+  "utf8",
+);
+
+const groth16Bn254LsigTeal = readFileSync(
+  join(__dirname, "..", "contracts", "out", "Groth16Bn254VerifierLsig.teal"),
   "utf8",
 );
 
 const content = `
 export const PLONK_LSIG_SOURCE = \`${plonkLsigTeal}\`;
 export const GROTH16_LSIG_SOURCE = \`${groth16LsigTeal}\`;
+export const GROTH16_BN254_LSIG_SOURCE = \`${groth16Bn254LsigTeal}\`;
 `;
 
 writeFileSync(

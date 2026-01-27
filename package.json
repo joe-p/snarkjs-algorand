@@ -18,7 +18,8 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build:contracts": "algokit compile ts contracts",
+    "generate:bn254": "tsx scripts/generate-bn254.ts",
+    "build:contracts": "pnpm generate:bn254 && algokit compile ts contracts",
     "build:clients": "algokit generate client contracts/out --output contracts/clients/{contract_name}.ts",
     "build:lib": "tsx scripts/ts_ignore.ts && tsx scripts/lsig_source.ts && tsup src/index.ts --dts --format esm,cjs --out-dir dist --clean",
     "build": "pnpm build:contracts && pnpm build:clients && pnpm build:lib",

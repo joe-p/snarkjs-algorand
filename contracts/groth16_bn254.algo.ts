@@ -15,10 +15,10 @@ import {
   g1Neg,
   inField,
   type PublicSignals,
-} from "./bls12381_common.algo";
+} from "./bn254_common.algo";
 
 /**
- * Groth16 BLS12-381 verifier for (SNARKJS-compatible)
+ * Groth16 BN254 verifier for (SNARKJS-compatible)
  *
  * This verifier implements the Groth16 zero-knowledge proof system verification
  * as described in https://eprint.iacr.org/2016/260.pdf
@@ -28,59 +28,59 @@ import {
  * 2) Validate proof points are in correct subgroups
  * 3) Perform pairing check: e(-pi_a, pi_b) * e(cpub, vk_gamma_2) * e(pi_c, vk_delta_2) * e(vk_alpha_1, vk_beta_2) = 1
  *
- * Field operations are over BLS12-381 Fr; commitments are on G1/G2.
+ * Field operations are over BN254 Fr; commitments are on G1/G2.
  */
 
 /**
- * Groth16 BLS12-381 proof structure
+ * Groth16 BN254 proof structure
  * Contains three commitments that prove knowledge of a satisfying assignment
  */
-export type Groth16Bls12381Proof = {
+export type Groth16Bn254Proof = {
   /** Prover's first commitment (G1 point) */
-  pi_a: bytes<96>;
+  pi_a: bytes<64>;
   /** Prover's second commitment (G2 point) */
-  pi_b: bytes<192>;
+  pi_b: bytes<128>;
   /** Prover's third commitment (G1 point) */
-  pi_c: bytes<96>;
+  pi_c: bytes<64>;
 };
 
 /**
- * Groth16 BLS12-381 verification key structure
+ * Groth16 BN254 verification key structure
  * Contains preprocessed circuit information for efficient verification
  */
-export type Groth16Bls12381VerificationKey = {
+export type Groth16Bn254VerificationKey = {
   /** Alpha parameter in G1 */
-  vk_alpha_1: bytes<96>;
+  vk_alpha_1: bytes<64>;
   /** Beta parameter in G2 */
-  vk_beta_2: bytes<192>;
+  vk_beta_2: bytes<128>;
   /** Gamma parameter in G2 */
-  vk_gamma_2: bytes<192>;
+  vk_gamma_2: bytes<128>;
   /** Delta parameter in G2 */
-  vk_delta_2: bytes<192>;
+  vk_delta_2: bytes<128>;
   /** Number of public inputs */
   nPublic: uint64;
   /** IC array: IC[0] is the constant term, IC[1..nPublic] correspond to public inputs */
-  IC: bytes<96>[];
+  IC: bytes<64>[];
 };
 
 /**
  * Check if a G1 point is in the correct subgroup
  */
-function g1GroupCheck(p: bytes<96>): boolean {
-  return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g1, p);
+function g1GroupCheck(p: bytes<64>): boolean {
+  return op.EllipticCurve.subgroupCheck(op.Ec.BN254g1, p);
 }
 
 /**
  * Check if a G2 point is in the correct subgroup
  */
-function g2GroupCheck(p: bytes<192>): boolean {
-  return op.EllipticCurve.subgroupCheck(op.Ec.BLS12_381g2, p);
+function g2GroupCheck(p: bytes<128>): boolean {
+  return op.EllipticCurve.subgroupCheck(op.Ec.BN254g2, p);
 }
 
 /**
  * Validate that all proof points are in correct subgroups
  */
-function assertProofInSubgroup(proof: Groth16Bls12381Proof): void {
+function assertProofInSubgroup(proof: Groth16Bn254Proof): void {
   assert(g1GroupCheck(proof.pi_a), "pi_a not in G1");
   assert(g2GroupCheck(proof.pi_b), "pi_b not in G2");
   assert(g1GroupCheck(proof.pi_c), "pi_c not in G1");
@@ -90,7 +90,7 @@ function assertProofInSubgroup(proof: Groth16Bls12381Proof): void {
  * Validate that all public signals are in the scalar field Fr
  */
 function assertSignalsInField(
-  vk: Groth16Bls12381VerificationKey,
+  vk: Groth16Bn254VerificationKey,
   signals: PublicSignals,
 ): void {
   assert(signals.length === vk.nPublic, "Invalid number of public inputs");
@@ -104,9 +104,9 @@ function assertSignalsInField(
  * Validate proof inputs (subgroup membership and field membership)
  */
 export function validateInput(
-  vk: Groth16Bls12381VerificationKey,
+  vk: Groth16Bn254VerificationKey,
   signals: PublicSignals,
-  proof: Groth16Bls12381Proof,
+  proof: Groth16Bn254Proof,
 ): void {
   assertProofInSubgroup(proof);
   assertSignalsInField(vk, signals);
@@ -119,21 +119,21 @@ export function validateInput(
  * This uses multi-scalar multiplication for efficiency.
  */
 function computeCpub(
-  vk: Groth16Bls12381VerificationKey,
+  vk: Groth16Bn254VerificationKey,
   signals: PublicSignals,
-): bytes<96> {
+): bytes<64> {
   // IC array contains (nPublic + 1) G1 points
   // IC[0] is the constant term, IC[1..nPublic] correspond to public inputs
 
   if (signals.length === 0) {
     // No public inputs, just return IC[0]
-    return vk.IC[0] as bytes<96>;
+    return vk.IC[0] as bytes<64>;
   }
 
   // Concatenate IC[1..nPublic] for multi-scalar multiplication
   let icPoints = Bytes();
   for (let i: uint64 = 1; i <= signals.length; i++) {
-    icPoints = op.concat(icPoints, vk.IC[i] as bytes<96>);
+    icPoints = op.concat(icPoints, vk.IC[i] as bytes<64>);
   }
 
   // Build scalars array from public signals
@@ -144,19 +144,19 @@ function computeCpub(
 
   // Compute Σ(publicSignals[i] * IC[i+1])
   let cpub = op.EllipticCurve.scalarMulMulti(
-    op.Ec.BLS12_381g1,
+    op.Ec.BN254g1,
     icPoints,
     scalars,
-  ).toFixed({ length: 96 });
+  ).toFixed({ length: 64 });
 
   // Add IC[0]
-  cpub = g1Add(cpub, vk.IC[0] as bytes<96>);
+  cpub = g1Add(cpub, vk.IC[0] as bytes<64>);
 
   return cpub;
 }
 
 /**
- * Main Groth16 BLS12-381 verification function
+ * Main Groth16 BN254 verification function
  *
  * Verifies a Groth16 proof by checking the pairing equation:
  * e(-pi_a, pi_b) * e(cpub, vk_gamma_2) * e(pi_c, vk_delta_2) * e(vk_alpha_1, vk_beta_2) = 1
@@ -164,9 +164,9 @@ function computeCpub(
  * Where cpub = IC[0] + Σ(publicSignals[i] * IC[i+1])
  */
 export function verify(
-  vk: Groth16Bls12381VerificationKey,
+  vk: Groth16Bn254VerificationKey,
   signals: PublicSignals,
-  proof: Groth16Bls12381Proof,
+  proof: Groth16Bn254Proof,
 ): boolean {
   // Validate inputs
   validateInput(vk, signals, proof);
@@ -189,7 +189,7 @@ export function verify(
 
   // Final pairing check
   const res = op.EllipticCurve.pairingCheck(
-    op.Ec.BLS12_381g1,
+    op.Ec.BN254g1,
     g1Points,
     g2Points,
   );
@@ -198,12 +198,12 @@ export function verify(
 }
 
 /**
- * Main Groth16 BLS12-381 verification function with debug logging
+ * Main Groth16 BN254 verification function with debug logging
  */
 export function verifyWithLogs(
-  vk: Groth16Bls12381VerificationKey,
+  vk: Groth16Bn254VerificationKey,
   signals: PublicSignals,
-  proof: Groth16Bls12381Proof,
+  proof: Groth16Bn254Proof,
 ): boolean {
   // Validate inputs
   validateInput(vk, signals, proof);
@@ -230,7 +230,7 @@ export function verifyWithLogs(
 
   // Final pairing check
   const res = op.EllipticCurve.pairingCheck(
-    op.Ec.BLS12_381g1,
+    op.Ec.BN254g1,
     g1Points,
     g2Points,
   );
@@ -245,11 +245,11 @@ export function verifyWithLogs(
  */
 export function verifyFromTemplate(
   signals: PublicSignals,
-  proof: Groth16Bls12381Proof,
+  proof: Groth16Bn254Proof,
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verify(decodeArc4<Groth16Bls12381VerificationKey>(vkBytes), signals, proof);
+  return verify(decodeArc4<Groth16Bn254VerificationKey>(vkBytes), signals, proof);
 }
 
 /**
@@ -257,12 +257,12 @@ export function verifyFromTemplate(
  */
 export function verifyFromTemplateWithLogs(
   signals: PublicSignals,
-  proof: Groth16Bls12381Proof,
+  proof: Groth16Bn254Proof,
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
   return verifyWithLogs(
-    decodeArc4<Groth16Bls12381VerificationKey>(vkBytes),
+    decodeArc4<Groth16Bn254VerificationKey>(vkBytes),
     signals,
     proof,
   );
@@ -271,7 +271,7 @@ export function verifyFromTemplateWithLogs(
 /**
  * Encoding & Endianness summary
  * - Field elements: 32-byte big-endian
- * - G1: 96-byte uncompressed x||y (BE)
- * - G2: 192-byte uncompressed x.c0||x.c1||y.c0||y.c1 (each 48-byte BE)
- * - IC array: concatenated 96-byte G1 points 
+ * - G1: 64-byte uncompressed x||y (BE)
+ * - G2: 128-byte uncompressed x.c0||x.c1||y.c0||y.c1 (each 32-byte BE)
+ * - IC array: concatenated 64-byte G1 points 
  */

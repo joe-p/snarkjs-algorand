@@ -24,7 +24,7 @@ import { TransactionComposer, AppCallMethodCall, AppMethodCallTransactionArgumen
 import { SendParams, SendSingleTransactionResult, SendAtomicTransactionComposerResults } from '@algorandfoundation/algokit-utils/types/transaction'
 import { Address, encodeAddress, modelsv2, OnApplicationComplete, Transaction, TransactionSigner } from 'algosdk'
 
-export const APP_SPEC: Arc56Contract = {"name":"Groth16SignalsAndProof","structs":{"GrothProof":[{"name":"piA","type":"byte[96]"},{"name":"piB","type":"byte[192]"},{"name":"piC","type":"byte[96]"}]},"methods":[{"name":"signalsAndProof","args":[{"type":"uint256[]","name":"signals"},{"type":"(byte[96],byte[192],byte[96])","struct":"GrothProof","name":"proof"}],"returns":{"type":"void"},"actions":{"create":[],"call":["NoOp"]},"readonly":false,"events":[],"recommendations":{}}],"arcs":[22,28],"networks":{},"state":{"schema":{"global":{"ints":0,"bytes":0},"local":{"ints":0,"bytes":0}},"keys":{"global":{},"local":{},"box":{}},"maps":{"global":{},"local":{},"box":{}}},"bareActions":{"create":["NoOp"],"call":[]},"sourceInfo":{"approval":{"sourceInfo":[{"pc":[37],"errorMessage":"OnCompletion must be NoOp && can only call when creating"},{"pc":[26],"errorMessage":"OnCompletion must be NoOp && can only call when not creating"},{"pc":[47],"errorMessage":"invalid array length header"},{"pc":[57],"errorMessage":"invalid number of bytes for arc4.dynamic_array<arc4.uint256>"},{"pc":[66],"errorMessage":"invalid number of bytes for contracts/groth16_bls12381.algo.ts::GrothProof"}],"pcOffsetMethod":"none"},"clear":{"sourceInfo":[],"pcOffsetMethod":"none"}},"source":{"approval":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYXJjNC9pbmRleC5kLnRzOjpDb250cmFjdC5hcHByb3ZhbFByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICAvLyBjb250cmFjdHMvZ3JvdGgxNl92ZXJpZmllci5hbGdvLnRzOjU1CiAgICAvLyBleHBvcnQgY2xhc3MgR3JvdGgxNlNpZ25hbHNBbmRQcm9vZiBleHRlbmRzIENvbnRyYWN0IHsKICAgIHR4biBOdW1BcHBBcmdzCiAgICBieiBtYWluX19fYWxnb3RzX18uZGVmYXVsdENyZWF0ZUA1CiAgICBwdXNoYnl0ZXMgMHg5ZDdmZThlZiAvLyBtZXRob2QgInNpZ25hbHNBbmRQcm9vZih1aW50MjU2W10sKGJ5dGVbOTZdLGJ5dGVbMTkyXSxieXRlWzk2XSkpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fc2lnbmFsc0FuZFByb29mX3JvdXRlQDMKICAgIGVycgoKbWFpbl9zaWduYWxzQW5kUHJvb2Zfcm91dGVAMzoKICAgIC8vIGNvbnRyYWN0cy9ncm90aDE2X3ZlcmlmaWVyLmFsZ28udHM6NTYKICAgIC8vIHB1YmxpYyBzaWduYWxzQW5kUHJvb2Yoc2lnbmFsczogUHVibGljU2lnbmFscywgcHJvb2Y6IEdyb3RoUHJvb2YpOiB2b2lkIHt9CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgJiYKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gbXVzdCBiZSBOb09wICYmIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIGIgc2lnbmFsc0FuZFByb29mCgptYWluX19fYWxnb3RzX18uZGVmYXVsdENyZWF0ZUA1OgogICAgLy8gY29udHJhY3RzL2dyb3RoMTZfdmVyaWZpZXIuYWxnby50czo1NQogICAgLy8gZXhwb3J0IGNsYXNzIEdyb3RoMTZTaWduYWxzQW5kUHJvb2YgZXh0ZW5kcyBDb250cmFjdCB7CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgJiYKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gbXVzdCBiZSBOb09wICYmIGNhbiBvbmx5IGNhbGwgd2hlbiBjcmVhdGluZwogICAgcHVzaGludCAxIC8vIDEKICAgIHJldHVybgoKCi8vIGNvbnRyYWN0cy9ncm90aDE2X3ZlcmlmaWVyLmFsZ28udHM6Okdyb3RoMTZTaWduYWxzQW5kUHJvb2Yuc2lnbmFsc0FuZFByb29mW3JvdXRpbmddKCkgLT4gdm9pZDoKc2lnbmFsc0FuZFByb29mOgogICAgLy8gY29udHJhY3RzL2dyb3RoMTZfdmVyaWZpZXIuYWxnby50czo1NgogICAgLy8gcHVibGljIHNpZ25hbHNBbmRQcm9vZihzaWduYWxzOiBQdWJsaWNTaWduYWxzLCBwcm9vZjogR3JvdGhQcm9vZik6IHZvaWQge30KICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGR1cAogICAgcHVzaGludCAwIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIHB1c2hpbnQgMzIgLy8gMzIKICAgICoKICAgIHB1c2hpbnQgMiAvLyAyCiAgICArCiAgICBzd2FwCiAgICBsZW4KICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuZHluYW1pY19hcnJheTxhcmM0LnVpbnQyNTY+CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAyCiAgICBsZW4KICAgIHB1c2hpbnQgMzg0IC8vIDM4NAogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgY29udHJhY3RzL2dyb3RoMTZfYmxzMTIzODEuYWxnby50czo6R3JvdGhQcm9vZgogICAgcHVzaGludCAxIC8vIDEKICAgIHJldHVybgo=","clear":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYmFzZS1jb250cmFjdC5kLnRzOjpCYXNlQ29udHJhY3QuY2xlYXJTdGF0ZVByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg=="},"byteCode":{"approval":"CzEbQQAYgASdf+jvNhoAjgEAAQAxGRQxGBBEQgALMRkUMRgUEESBAUM2GgFJgQBZgSALgQIITBUSRDYaAhWBgAMSRIEBQw==","clear":"C4EBQw=="},"events":[],"templateVariables":{}} as unknown as Arc56Contract
+export const APP_SPEC: Arc56Contract = {"name":"Groth16Bls12381SignalsAndProof","structs":{"Groth16Bls12381Proof":[{"name":"piA","type":"byte[96]"},{"name":"piB","type":"byte[192]"},{"name":"piC","type":"byte[96]"}]},"methods":[{"name":"signalsAndProof","args":[{"type":"uint256[]","name":"signals"},{"type":"(byte[96],byte[192],byte[96])","struct":"Groth16Bls12381Proof","name":"proof"}],"returns":{"type":"void"},"actions":{"create":[],"call":["NoOp"]},"readonly":false,"events":[],"recommendations":{}}],"arcs":[22,28],"networks":{},"state":{"schema":{"global":{"ints":0,"bytes":0},"local":{"ints":0,"bytes":0}},"keys":{"global":{},"local":{},"box":{}},"maps":{"global":{},"local":{},"box":{}}},"bareActions":{"create":["NoOp"],"call":[]},"sourceInfo":{"approval":{"sourceInfo":[{"pc":[37],"errorMessage":"OnCompletion must be NoOp && can only call when creating"},{"pc":[26],"errorMessage":"OnCompletion must be NoOp && can only call when not creating"},{"pc":[47],"errorMessage":"invalid array length header"},{"pc":[57],"errorMessage":"invalid number of bytes for arc4.dynamic_array<arc4.uint256>"},{"pc":[66],"errorMessage":"invalid number of bytes for contracts/groth16_bls12381.algo.ts::Groth16Bls12381Proof"}],"pcOffsetMethod":"none"},"clear":{"sourceInfo":[],"pcOffsetMethod":"none"}},"source":{"approval":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYXJjNC9pbmRleC5kLnRzOjpDb250cmFjdC5hcHByb3ZhbFByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICAvLyBjb250cmFjdHMvZ3JvdGgxNl9ibHMxMjM4MV92ZXJpZmllci5hbGdvLnRzOjU1CiAgICAvLyBleHBvcnQgY2xhc3MgR3JvdGgxNkJsczEyMzgxU2lnbmFsc0FuZFByb29mIGV4dGVuZHMgQ29udHJhY3QgewogICAgdHhuIE51bUFwcEFyZ3MKICAgIGJ6IG1haW5fX19hbGdvdHNfXy5kZWZhdWx0Q3JlYXRlQDUKICAgIHB1c2hieXRlcyAweDlkN2ZlOGVmIC8vIG1ldGhvZCAic2lnbmFsc0FuZFByb29mKHVpbnQyNTZbXSwoYnl0ZVs5Nl0sYnl0ZVsxOTJdLGJ5dGVbOTZdKSl2b2lkIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9zaWduYWxzQW5kUHJvb2Zfcm91dGVAMwogICAgZXJyCgptYWluX3NpZ25hbHNBbmRQcm9vZl9yb3V0ZUAzOgogICAgLy8gY29udHJhY3RzL2dyb3RoMTZfYmxzMTIzODFfdmVyaWZpZXIuYWxnby50czo1NgogICAgLy8gcHVibGljIHNpZ25hbHNBbmRQcm9vZihzaWduYWxzOiBQdWJsaWNTaWduYWxzLCBwcm9vZjogR3JvdGgxNkJsczEyMzgxUHJvb2YpOiB2b2lkIHsgfQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICYmCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIG11c3QgYmUgTm9PcCAmJiBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBiIHNpZ25hbHNBbmRQcm9vZgoKbWFpbl9fX2FsZ290c19fLmRlZmF1bHRDcmVhdGVANToKICAgIC8vIGNvbnRyYWN0cy9ncm90aDE2X2JsczEyMzgxX3ZlcmlmaWVyLmFsZ28udHM6NTUKICAgIC8vIGV4cG9ydCBjbGFzcyBHcm90aDE2QmxzMTIzODFTaWduYWxzQW5kUHJvb2YgZXh0ZW5kcyBDb250cmFjdCB7CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgJiYKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gbXVzdCBiZSBOb09wICYmIGNhbiBvbmx5IGNhbGwgd2hlbiBjcmVhdGluZwogICAgcHVzaGludCAxIC8vIDEKICAgIHJldHVybgoKCi8vIGNvbnRyYWN0cy9ncm90aDE2X2JsczEyMzgxX3ZlcmlmaWVyLmFsZ28udHM6Okdyb3RoMTZCbHMxMjM4MVNpZ25hbHNBbmRQcm9vZi5zaWduYWxzQW5kUHJvb2Zbcm91dGluZ10oKSAtPiB2b2lkOgpzaWduYWxzQW5kUHJvb2Y6CiAgICAvLyBjb250cmFjdHMvZ3JvdGgxNl9ibHMxMjM4MV92ZXJpZmllci5hbGdvLnRzOjU2CiAgICAvLyBwdWJsaWMgc2lnbmFsc0FuZFByb29mKHNpZ25hbHM6IFB1YmxpY1NpZ25hbHMsIHByb29mOiBHcm90aDE2QmxzMTIzODFQcm9vZik6IHZvaWQgeyB9CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIHB1c2hpbnQgMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBwdXNoaW50IDMyIC8vIDMyCiAgICAqCiAgICBwdXNoaW50IDIgLy8gMgogICAgKwogICAgc3dhcAogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50MjU2PgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgogICAgbGVuCiAgICBwdXNoaW50IDM4NCAvLyAzODQKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGNvbnRyYWN0cy9ncm90aDE2X2JsczEyMzgxLmFsZ28udHM6Okdyb3RoMTZCbHMxMjM4MVByb29mCiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg==","clear":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBAYWxnb3JhbmRmb3VuZGF0aW9uL2FsZ29yYW5kLXR5cGVzY3JpcHQvYmFzZS1jb250cmFjdC5kLnRzOjpCYXNlQ29udHJhY3QuY2xlYXJTdGF0ZVByb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg=="},"byteCode":{"approval":"CzEbQQAYgASdf+jvNhoAjgEAAQAxGRQxGBBEQgALMRkUMRgUEESBAUM2GgFJgQBZgSALgQIITBUSRDYaAhWBgAMSRIEBQw==","clear":"C4EBQw=="},"events":[],"templateVariables":{}} as unknown as Arc56Contract
 
 /**
  * A state record containing binary data
@@ -65,7 +65,7 @@ export type Expand<T> = T extends (...args: infer A) => infer R
 
 // Type definitions for ARC-56 structs
 
-export type GrothProof = {
+export type Groth16Bls12381Proof = {
   piA: Uint8Array,
   piB: Uint8Array,
   piC: Uint8Array
@@ -73,63 +73,59 @@ export type GrothProof = {
 
 
 /**
- * Converts the ABI tuple representation of a GrothProof to the struct representation
+ * Converts the ABI tuple representation of a Groth16Bls12381Proof to the struct representation
  */
-export function GrothProofFromTuple(abiTuple: [Uint8Array, Uint8Array, Uint8Array]) {
-  return getABIStructFromABITuple(abiTuple, APP_SPEC.structs.GrothProof, APP_SPEC.structs) as GrothProof
+export function Groth16Bls12381ProofFromTuple(abiTuple: [Uint8Array, Uint8Array, Uint8Array]) {
+  return getABIStructFromABITuple(abiTuple, APP_SPEC.structs.Groth16Bls12381Proof, APP_SPEC.structs) as Groth16Bls12381Proof
 }
 
 /**
- * The argument types for the Groth16SignalsAndProof contract
+ * The argument types for the Groth16Bls12381SignalsAndProof contract
  */
-export type Groth16SignalsAndProofArgs = {
+export type Groth16Bls12381SignalsAndProofArgs = {
   /**
    * The object representation of the arguments for each method
    */
   obj: {
     'signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void': {
       signals: bigint[] | number[]
-      proof: GrothProof
+      proof: Groth16Bls12381Proof
     }
   }
   /**
    * The tuple representation of the arguments for each method
    */
   tuple: {
-    'signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void': [signals: bigint[] | number[], proof: GrothProof]
+    'signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void': [signals: bigint[] | number[], proof: Groth16Bls12381Proof]
   }
 }
 
 /**
  * The return type for each method
  */
-export type Groth16SignalsAndProofReturns = {
+export type Groth16Bls12381SignalsAndProofReturns = {
   'signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void': void
 }
 
 /**
- * Defines the types of available calls and state of the Groth16SignalsAndProof smart contract.
+ * Defines the types of available calls and state of the Groth16Bls12381SignalsAndProof smart contract.
  */
-export type Groth16SignalsAndProofTypes = {
+export type Groth16Bls12381SignalsAndProofTypes = {
   /**
    * Maps method signatures / names to their argument and return types.
    */
   methods:
     & Record<'signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void' | 'signalsAndProof', {
-      argsObj: Groth16SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']
-      argsTuple: Groth16SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']
-      returns: Groth16SignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']
+      argsObj: Groth16Bls12381SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']
+      argsTuple: Groth16Bls12381SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']
+      returns: Groth16Bls12381SignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']
     }>
 }
 
 /**
  * Defines the possible abi call signatures.
  */
-export type Groth16SignalsAndProofSignatures = keyof Groth16SignalsAndProofTypes['methods']
-/**
- * Defines the possible abi call signatures for methods that return a non-void value.
- */
-export type Groth16SignalsAndProofNonVoidMethodSignatures = keyof Groth16SignalsAndProofTypes['methods'] extends infer T ? T extends keyof Groth16SignalsAndProofTypes['methods'] ? MethodReturn<T> extends void ? never : T  : never : never
+export type Groth16Bls12381SignalsAndProofSignatures = keyof Groth16Bls12381SignalsAndProofTypes['methods']
 /**
  * Defines an object containing all relevant parameters for a single call to the contract.
  */
@@ -141,42 +137,42 @@ export type CallParams<TArgs> = Expand<
     }
 >
 /**
- * Maps a method signature from the Groth16SignalsAndProof smart contract to the method's arguments in either tuple or struct form
+ * Maps a method signature from the Groth16Bls12381SignalsAndProof smart contract to the method's arguments in either tuple or struct form
  */
-export type MethodArgs<TSignature extends Groth16SignalsAndProofSignatures> = Groth16SignalsAndProofTypes['methods'][TSignature]['argsObj' | 'argsTuple']
+export type MethodArgs<TSignature extends Groth16Bls12381SignalsAndProofSignatures> = Groth16Bls12381SignalsAndProofTypes['methods'][TSignature]['argsObj' | 'argsTuple']
 /**
- * Maps a method signature from the Groth16SignalsAndProof smart contract to the method's return type
+ * Maps a method signature from the Groth16Bls12381SignalsAndProof smart contract to the method's return type
  */
-export type MethodReturn<TSignature extends Groth16SignalsAndProofSignatures> = Groth16SignalsAndProofTypes['methods'][TSignature]['returns']
+export type MethodReturn<TSignature extends Groth16Bls12381SignalsAndProofSignatures> = Groth16Bls12381SignalsAndProofTypes['methods'][TSignature]['returns']
 
 
 /**
  * Defines supported create method params for this smart contract
  */
-export type Groth16SignalsAndProofCreateCallParams =
+export type Groth16Bls12381SignalsAndProofCreateCallParams =
   | Expand<AppClientBareCallParams & {method?: never} & {onComplete?: OnApplicationComplete.NoOpOC} & CreateSchema>
 /**
  * Defines arguments required for the deploy method.
  */
-export type Groth16SignalsAndProofDeployParams = Expand<Omit<AppFactoryDeployParams, 'createParams' | 'updateParams' | 'deleteParams'> & {
+export type Groth16Bls12381SignalsAndProofDeployParams = Expand<Omit<AppFactoryDeployParams, 'createParams' | 'updateParams' | 'deleteParams'> & {
   /**
    * Create transaction parameters to use if a create needs to be issued as part of deployment; use `method` to define ABI call (if available) or leave out for a bare call (if available)
    */
-  createParams?: Groth16SignalsAndProofCreateCallParams
+  createParams?: Groth16Bls12381SignalsAndProofCreateCallParams
 }>
 
 
 /**
- * Exposes methods for constructing `AppClient` params objects for ABI calls to the Groth16SignalsAndProof smart contract
+ * Exposes methods for constructing `AppClient` params objects for ABI calls to the Groth16Bls12381SignalsAndProof smart contract
  */
-export abstract class Groth16SignalsAndProofParamsFactory {
+export abstract class Groth16Bls12381SignalsAndProofParamsFactory {
   /**
    * Constructs a no op call for the signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void ABI method
    *
    * @param params Parameters for the call
    * @returns An `AppClientMethodCallParams` object for the call
    */
-  static signalsAndProof(params: CallParams<Groth16SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']> & CallOnComplete): AppClientMethodCallParams & CallOnComplete {
+  static signalsAndProof(params: CallParams<Groth16Bls12381SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16Bls12381SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']> & CallOnComplete): AppClientMethodCallParams & CallOnComplete {
     return {
       ...params,
       method: 'signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void' as const,
@@ -186,16 +182,16 @@ export abstract class Groth16SignalsAndProofParamsFactory {
 }
 
 /**
- * A factory to create and deploy one or more instance of the Groth16SignalsAndProof smart contract and to create one or more app clients to interact with those (or other) app instances
+ * A factory to create and deploy one or more instance of the Groth16Bls12381SignalsAndProof smart contract and to create one or more app clients to interact with those (or other) app instances
  */
-export class Groth16SignalsAndProofFactory {
+export class Groth16Bls12381SignalsAndProofFactory {
   /**
    * The underlying `AppFactory` for when you want to have more flexibility
    */
   public readonly appFactory: _AppFactory
 
   /**
-   * Creates a new instance of `Groth16SignalsAndProofFactory`
+   * Creates a new instance of `Groth16Bls12381SignalsAndProofFactory`
    *
    * @param params The parameters to initialise the app factory with
    */
@@ -230,7 +226,7 @@ export class Groth16SignalsAndProofFactory {
    * @returns The `AppClient`
    */
   public getAppClientById(params: AppFactoryAppClientParams) {
-    return new Groth16SignalsAndProofClient(this.appFactory.getAppClientById(params))
+    return new Groth16Bls12381SignalsAndProofClient(this.appFactory.getAppClientById(params))
   }
   
   /**
@@ -245,20 +241,20 @@ export class Groth16SignalsAndProofFactory {
   public async getAppClientByCreatorAndName(
     params: AppFactoryResolveAppClientByCreatorAndNameParams,
   ) {
-    return new Groth16SignalsAndProofClient(await this.appFactory.getAppClientByCreatorAndName(params))
+    return new Groth16Bls12381SignalsAndProofClient(await this.appFactory.getAppClientByCreatorAndName(params))
   }
 
   /**
-   * Idempotently deploys the Groth16SignalsAndProof smart contract.
+   * Idempotently deploys the Groth16Bls12381SignalsAndProof smart contract.
    *
    * @param params The arguments for the contract calls and any additional parameters for the call
    * @returns The deployment result
    */
-  public async deploy(params: Groth16SignalsAndProofDeployParams = {}) {
+  public async deploy(params: Groth16Bls12381SignalsAndProofDeployParams = {}) {
     const result = await this.appFactory.deploy({
       ...params,
     })
-    return { result: result.result, appClient: new Groth16SignalsAndProofClient(result.appClient) }
+    return { result: result.result, appClient: new Groth16Bls12381SignalsAndProofClient(result.appClient) }
   }
 
   /**
@@ -270,7 +266,7 @@ export class Groth16SignalsAndProofFactory {
      */
     create: {
       /**
-       * Creates a new instance of the Groth16SignalsAndProof smart contract using a bare call.
+       * Creates a new instance of the Groth16Bls12381SignalsAndProof smart contract using a bare call.
        *
        * @param params The params for the bare (raw) call
        * @returns The params for a create call
@@ -291,7 +287,7 @@ export class Groth16SignalsAndProofFactory {
      */
     create: {
       /**
-       * Creates a new instance of the Groth16SignalsAndProof smart contract using a bare call.
+       * Creates a new instance of the Groth16Bls12381SignalsAndProof smart contract using a bare call.
        *
        * @param params The params for the bare (raw) call
        * @returns The transaction for a create call
@@ -312,14 +308,14 @@ export class Groth16SignalsAndProofFactory {
      */
     create: {
       /**
-       * Creates a new instance of the Groth16SignalsAndProof smart contract using a bare call.
+       * Creates a new instance of the Groth16Bls12381SignalsAndProof smart contract using a bare call.
        *
        * @param params The params for the bare (raw) call
        * @returns The create result
        */
       bare: async (params?: Expand<AppClientBareCallParams & AppClientCompilationParams & CreateSchema & SendParams & {onComplete?: OnApplicationComplete.NoOpOC}>) => {
         const result = await this.appFactory.send.bare.create(params)
-        return { result: result.result, appClient: new Groth16SignalsAndProofClient(result.appClient) }
+        return { result: result.result, appClient: new Groth16Bls12381SignalsAndProofClient(result.appClient) }
       },
     },
 
@@ -327,22 +323,22 @@ export class Groth16SignalsAndProofFactory {
 
 }
 /**
- * A client to make calls to the Groth16SignalsAndProof smart contract
+ * A client to make calls to the Groth16Bls12381SignalsAndProof smart contract
  */
-export class Groth16SignalsAndProofClient {
+export class Groth16Bls12381SignalsAndProofClient {
   /**
    * The underlying `AppClient` for when you want to have more flexibility
    */
   public readonly appClient: _AppClient
 
   /**
-   * Creates a new instance of `Groth16SignalsAndProofClient`
+   * Creates a new instance of `Groth16Bls12381SignalsAndProofClient`
    *
-   * @param appClient An `AppClient` instance which has been created with the Groth16SignalsAndProof app spec
+   * @param appClient An `AppClient` instance which has been created with the Groth16Bls12381SignalsAndProof app spec
    */
   constructor(appClient: _AppClient)
   /**
-   * Creates a new instance of `Groth16SignalsAndProofClient`
+   * Creates a new instance of `Groth16Bls12381SignalsAndProofClient`
    *
    * @param params The parameters to initialise the app client with
    */
@@ -353,26 +349,18 @@ export class Groth16SignalsAndProofClient {
       appSpec: APP_SPEC,
     })
   }
-  
+
   /**
-   * Checks for decode errors on the given return value and maps the return value to the return type for the given method
-   * @returns The typed return value or undefined if there was no value
-   */
-  decodeReturnValue<TSignature extends Groth16SignalsAndProofNonVoidMethodSignatures>(method: TSignature, returnValue: ABIReturn | undefined) {
-    return returnValue !== undefined ? getArc56ReturnValue<MethodReturn<TSignature>>(returnValue, this.appClient.getABIMethod(method), APP_SPEC.structs) : undefined
-  }
-  
-  /**
-   * Returns a new `Groth16SignalsAndProofClient` client, resolving the app by creator address and name
+   * Returns a new `Groth16Bls12381SignalsAndProofClient` client, resolving the app by creator address and name
    * using AlgoKit app deployment semantics (i.e. looking for the app creation transaction note).
    * @param params The parameters to create the app client
    */
-  public static async fromCreatorAndName(params: Omit<ResolveAppClientByCreatorAndName, 'appSpec'>): Promise<Groth16SignalsAndProofClient> {
-    return new Groth16SignalsAndProofClient(await _AppClient.fromCreatorAndName({...params, appSpec: APP_SPEC}))
+  public static async fromCreatorAndName(params: Omit<ResolveAppClientByCreatorAndName, 'appSpec'>): Promise<Groth16Bls12381SignalsAndProofClient> {
+    return new Groth16Bls12381SignalsAndProofClient(await _AppClient.fromCreatorAndName({...params, appSpec: APP_SPEC}))
   }
   
   /**
-   * Returns an `Groth16SignalsAndProofClient` instance for the current network based on
+   * Returns an `Groth16Bls12381SignalsAndProofClient` instance for the current network based on
    * pre-determined network-specific app IDs specified in the ARC-56 app spec.
    *
    * If no IDs are in the app spec or the network isn't recognised, an error is thrown.
@@ -380,8 +368,8 @@ export class Groth16SignalsAndProofClient {
    */
   static async fromNetwork(
     params: Omit<ResolveAppClientByNetwork, 'appSpec'>
-  ): Promise<Groth16SignalsAndProofClient> {
-    return new Groth16SignalsAndProofClient(await _AppClient.fromNetwork({...params, appSpec: APP_SPEC}))
+  ): Promise<Groth16Bls12381SignalsAndProofClient> {
+    return new Groth16Bls12381SignalsAndProofClient(await _AppClient.fromNetwork({...params, appSpec: APP_SPEC}))
   }
   
   /** The ID of the app instance this client is linked to. */
@@ -414,7 +402,7 @@ export class Groth16SignalsAndProofClient {
    */
   readonly params = {
     /**
-     * Makes a clear_state call to an existing instance of the Groth16SignalsAndProof smart contract.
+     * Makes a clear_state call to an existing instance of the Groth16Bls12381SignalsAndProof smart contract.
      *
      * @param params The params for the bare (raw) call
      * @returns The clearState result
@@ -424,13 +412,13 @@ export class Groth16SignalsAndProofClient {
     },
 
     /**
-     * Makes a call to the Groth16SignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void` ABI method.
+     * Makes a call to the Groth16Bls12381SignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void` ABI method.
      *
      * @param params The params for the smart contract call
      * @returns The call params
      */
-    signalsAndProof: (params: CallParams<Groth16SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) => {
-      return this.appClient.params.call(Groth16SignalsAndProofParamsFactory.signalsAndProof(params))
+    signalsAndProof: (params: CallParams<Groth16Bls12381SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16Bls12381SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+      return this.appClient.params.call(Groth16Bls12381SignalsAndProofParamsFactory.signalsAndProof(params))
     },
 
   }
@@ -440,7 +428,7 @@ export class Groth16SignalsAndProofClient {
    */
   readonly createTransaction = {
     /**
-     * Makes a clear_state call to an existing instance of the Groth16SignalsAndProof smart contract.
+     * Makes a clear_state call to an existing instance of the Groth16Bls12381SignalsAndProof smart contract.
      *
      * @param params The params for the bare (raw) call
      * @returns The clearState result
@@ -450,13 +438,13 @@ export class Groth16SignalsAndProofClient {
     },
 
     /**
-     * Makes a call to the Groth16SignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void` ABI method.
+     * Makes a call to the Groth16Bls12381SignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void` ABI method.
      *
      * @param params The params for the smart contract call
      * @returns The call transaction
      */
-    signalsAndProof: (params: CallParams<Groth16SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) => {
-      return this.appClient.createTransaction.call(Groth16SignalsAndProofParamsFactory.signalsAndProof(params))
+    signalsAndProof: (params: CallParams<Groth16Bls12381SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16Bls12381SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+      return this.appClient.createTransaction.call(Groth16Bls12381SignalsAndProofParamsFactory.signalsAndProof(params))
     },
 
   }
@@ -466,7 +454,7 @@ export class Groth16SignalsAndProofClient {
    */
   readonly send = {
     /**
-     * Makes a clear_state call to an existing instance of the Groth16SignalsAndProof smart contract.
+     * Makes a clear_state call to an existing instance of the Groth16Bls12381SignalsAndProof smart contract.
      *
      * @param params The params for the bare (raw) call
      * @returns The clearState result
@@ -476,14 +464,14 @@ export class Groth16SignalsAndProofClient {
     },
 
     /**
-     * Makes a call to the Groth16SignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void` ABI method.
+     * Makes a call to the Groth16Bls12381SignalsAndProof smart contract using the `signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void` ABI method.
      *
      * @param params The params for the smart contract call
      * @returns The call result
      */
-    signalsAndProof: async (params: CallParams<Groth16SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']> & SendParams & {onComplete?: OnApplicationComplete.NoOpOC}) => {
-      const result = await this.appClient.send.call(Groth16SignalsAndProofParamsFactory.signalsAndProof(params))
-      return {...result, return: result.return as unknown as (undefined | Groth16SignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'])}
+    signalsAndProof: async (params: CallParams<Groth16Bls12381SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16Bls12381SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']> & SendParams & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+      const result = await this.appClient.send.call(Groth16Bls12381SignalsAndProofParamsFactory.signalsAndProof(params))
+      return {...result, return: result.return as unknown as (undefined | Groth16Bls12381SignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'])}
     },
 
   }
@@ -495,31 +483,31 @@ export class Groth16SignalsAndProofClient {
    * @returns A new app client with the altered params
    */
   public clone(params: CloneAppClientParams) {
-    return new Groth16SignalsAndProofClient(this.appClient.clone(params))
+    return new Groth16Bls12381SignalsAndProofClient(this.appClient.clone(params))
   }
 
   /**
-   * Methods to access state for the current Groth16SignalsAndProof app
+   * Methods to access state for the current Groth16Bls12381SignalsAndProof app
    */
   state = {
   }
 
-  public newGroup(): Groth16SignalsAndProofComposer {
+  public newGroup(): Groth16Bls12381SignalsAndProofComposer {
     const client = this
     const composer = this.algorand.newGroup()
     let promiseChain:Promise<unknown> = Promise.resolve()
     const resultMappers: Array<undefined | ((x: ABIReturn | undefined) => any)> = []
     return {
       /**
-       * Add a signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void method call against the Groth16SignalsAndProof contract
+       * Add a signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void method call against the Groth16Bls12381SignalsAndProof contract
        */
-      signalsAndProof(params: CallParams<Groth16SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) {
+      signalsAndProof(params: CallParams<Groth16Bls12381SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16Bls12381SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']> & {onComplete?: OnApplicationComplete.NoOpOC}) {
         promiseChain = promiseChain.then(async () => composer.addAppCallMethodCall(await client.params.signalsAndProof(params)))
         resultMappers.push(undefined)
         return this
       },
       /**
-       * Add a clear state call to the Groth16SignalsAndProof contract
+       * Add a clear state call to the Groth16Bls12381SignalsAndProof contract
        */
       clearState(params: AppClientBareCallParams) {
         promiseChain = promiseChain.then(() => composer.addAppCall(client.params.clearState(params)))
@@ -549,10 +537,10 @@ export class Groth16SignalsAndProofClient {
           returns: result.returns?.map((val, i) => resultMappers[i] !== undefined ? resultMappers[i]!(val) : val.returnValue)
         }
       }
-    } as unknown as Groth16SignalsAndProofComposer
+    } as unknown as Groth16Bls12381SignalsAndProofComposer
   }
 }
-export type Groth16SignalsAndProofComposer<TReturns extends [...any[]] = []> = {
+export type Groth16Bls12381SignalsAndProofComposer<TReturns extends [...any[]] = []> = {
   /**
    * Calls the signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void ABI method.
    *
@@ -560,15 +548,15 @@ export type Groth16SignalsAndProofComposer<TReturns extends [...any[]] = []> = {
    * @param params Any additional parameters for the call
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
    */
-  signalsAndProof(params?: CallParams<Groth16SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']>): Groth16SignalsAndProofComposer<[...TReturns, Groth16SignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | undefined]>
+  signalsAndProof(params?: CallParams<Groth16Bls12381SignalsAndProofArgs['obj']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | Groth16Bls12381SignalsAndProofArgs['tuple']['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void']>): Groth16Bls12381SignalsAndProofComposer<[...TReturns, Groth16Bls12381SignalsAndProofReturns['signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void'] | undefined]>
 
   /**
-   * Makes a clear_state call to an existing instance of the Groth16SignalsAndProof smart contract.
+   * Makes a clear_state call to an existing instance of the Groth16Bls12381SignalsAndProof smart contract.
    *
    * @param args The arguments for the bare call
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
    */
-  clearState(params?: AppClientBareCallParams): Groth16SignalsAndProofComposer<[...TReturns, undefined]>
+  clearState(params?: AppClientBareCallParams): Groth16Bls12381SignalsAndProofComposer<[...TReturns, undefined]>
 
   /**
    * Adds a transaction to the composer
@@ -576,7 +564,7 @@ export type Groth16SignalsAndProofComposer<TReturns extends [...any[]] = []> = {
    * @param txn A transaction to add to the transaction group
    * @param signer The optional signer to use when signing this transaction.
    */
-  addTransaction(txn: Transaction, signer?: TransactionSigner): Groth16SignalsAndProofComposer<TReturns>
+  addTransaction(txn: Transaction, signer?: TransactionSigner): Groth16Bls12381SignalsAndProofComposer<TReturns>
   /**
    * Returns the underlying AtomicTransactionComposer instance
    */
@@ -584,15 +572,15 @@ export type Groth16SignalsAndProofComposer<TReturns extends [...any[]] = []> = {
   /**
    * Simulates the transaction group and returns the result
    */
-  simulate(): Promise<Groth16SignalsAndProofComposerResults<TReturns> & { simulateResponse: modelsv2.SimulateResponse }>
-  simulate(options: SkipSignaturesSimulateOptions): Promise<Groth16SignalsAndProofComposerResults<TReturns> & { simulateResponse: modelsv2.SimulateResponse }>
-  simulate(options: RawSimulateOptions): Promise<Groth16SignalsAndProofComposerResults<TReturns> & { simulateResponse: modelsv2.SimulateResponse }>
+  simulate(): Promise<Groth16Bls12381SignalsAndProofComposerResults<TReturns> & { simulateResponse: modelsv2.SimulateResponse }>
+  simulate(options: SkipSignaturesSimulateOptions): Promise<Groth16Bls12381SignalsAndProofComposerResults<TReturns> & { simulateResponse: modelsv2.SimulateResponse }>
+  simulate(options: RawSimulateOptions): Promise<Groth16Bls12381SignalsAndProofComposerResults<TReturns> & { simulateResponse: modelsv2.SimulateResponse }>
   /**
    * Sends the transaction group to the network and returns the results
    */
-  send(params?: SendParams): Promise<Groth16SignalsAndProofComposerResults<TReturns>>
+  send(params?: SendParams): Promise<Groth16Bls12381SignalsAndProofComposerResults<TReturns>>
 }
-export type Groth16SignalsAndProofComposerResults<TReturns extends [...any[]]> = Expand<SendAtomicTransactionComposerResults & {
+export type Groth16Bls12381SignalsAndProofComposerResults<TReturns extends [...any[]]> = Expand<SendAtomicTransactionComposerResults & {
   returns: TReturns
 }>
 

@@ -3,8 +3,8 @@
 
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
-    // contracts/groth16_verifier.algo.ts:55
-    // export class Groth16SignalsAndProof extends Contract {
+    // contracts/groth16_bls12381_verifier.algo.ts:55
+    // export class Groth16Bls12381SignalsAndProof extends Contract {
     txn NumAppArgs
     bz main___algots__.defaultCreate@5
     pushbytes 0x9d7fe8ef // method "signalsAndProof(uint256[],(byte[96],byte[192],byte[96]))void"
@@ -13,8 +13,8 @@ main:
     err
 
 main_signalsAndProof_route@3:
-    // contracts/groth16_verifier.algo.ts:56
-    // public signalsAndProof(signals: PublicSignals, proof: GrothProof): void {}
+    // contracts/groth16_bls12381_verifier.algo.ts:56
+    // public signalsAndProof(signals: PublicSignals, proof: Groth16Bls12381Proof): void { }
     txn OnCompletion
     !
     txn ApplicationID
@@ -23,8 +23,8 @@ main_signalsAndProof_route@3:
     b signalsAndProof
 
 main___algots__.defaultCreate@5:
-    // contracts/groth16_verifier.algo.ts:55
-    // export class Groth16SignalsAndProof extends Contract {
+    // contracts/groth16_bls12381_verifier.algo.ts:55
+    // export class Groth16Bls12381SignalsAndProof extends Contract {
     txn OnCompletion
     !
     txn ApplicationID
@@ -35,10 +35,10 @@ main___algots__.defaultCreate@5:
     return
 
 
-// contracts/groth16_verifier.algo.ts::Groth16SignalsAndProof.signalsAndProof[routing]() -> void:
+// contracts/groth16_bls12381_verifier.algo.ts::Groth16Bls12381SignalsAndProof.signalsAndProof[routing]() -> void:
 signalsAndProof:
-    // contracts/groth16_verifier.algo.ts:56
-    // public signalsAndProof(signals: PublicSignals, proof: GrothProof): void {}
+    // contracts/groth16_bls12381_verifier.algo.ts:56
+    // public signalsAndProof(signals: PublicSignals, proof: Groth16Bls12381Proof): void { }
     txna ApplicationArgs 1
     dup
     pushint 0 // 0
@@ -55,6 +55,6 @@ signalsAndProof:
     len
     pushint 384 // 384
     ==
-    assert // invalid number of bytes for contracts/groth16_bls12381.algo.ts::GrothProof
+    assert // invalid number of bytes for contracts/groth16_bls12381.algo.ts::Groth16Bls12381Proof
     pushint 1 // 1
     return

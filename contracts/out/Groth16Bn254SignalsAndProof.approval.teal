@@ -1,0 +1,60 @@
+#pragma version 11
+#pragma typetrack false
+
+// @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
+main:
+    // contracts/groth16_bn254_verifier.algo.ts:55
+    // export class Groth16Bn254SignalsAndProof extends Contract {
+    txn NumAppArgs
+    bz main___algots__.defaultCreate@5
+    pushbytes 0x544ed0c1 // method "signalsAndProof(uint256[],(byte[64],byte[128],byte[64]))void"
+    txna ApplicationArgs 0
+    match main_signalsAndProof_route@3
+    err
+
+main_signalsAndProof_route@3:
+    // contracts/groth16_bn254_verifier.algo.ts:56
+    // public signalsAndProof(signals: PublicSignals, proof: Groth16Bn254Proof): void { }
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert // OnCompletion must be NoOp && can only call when not creating
+    b signalsAndProof
+
+main___algots__.defaultCreate@5:
+    // contracts/groth16_bn254_verifier.algo.ts:55
+    // export class Groth16Bn254SignalsAndProof extends Contract {
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    assert // OnCompletion must be NoOp && can only call when creating
+    pushint 1 // 1
+    return
+
+
+// contracts/groth16_bn254_verifier.algo.ts::Groth16Bn254SignalsAndProof.signalsAndProof[routing]() -> void:
+signalsAndProof:
+    // contracts/groth16_bn254_verifier.algo.ts:56
+    // public signalsAndProof(signals: PublicSignals, proof: Groth16Bn254Proof): void { }
+    txna ApplicationArgs 1
+    dup
+    pushint 0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 32 // 32
+    *
+    pushint 2 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    len
+    pushint 256 // 256
+    ==
+    assert // invalid number of bytes for contracts/groth16_bn254.algo.ts::Groth16Bn254Proof
+    pushint 1 // 1
+    return

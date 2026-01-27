@@ -9,32 +9,32 @@ import {
 import { Uint256 } from "@algorandfoundation/algorand-typescript/arc4";
 
 /**
- * BLS12-381 curve-specific constants and utilities
+ * BN254 curve-specific constants and utilities
  */
 
-/** BLS12-381 scalar field modulus (Fr), 32-byte big-endian */
-export const BLS12_381_SCALAR_MODULUS = BigUint(
+/** BN254 scalar field modulus (Fr), 32-byte big-endian */
+export const BN254_SCALAR_MODULUS = BigUint(
   Bytes.fromHex(
-    "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001",
+    "30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001",
   ),
 );
 
 /**
- * BLS12_381_SCALAR_MODULUS - 1, used for point negation
+ * BN254_SCALAR_MODULUS - 1, used for point negation
  */
 export const R_MINUS_1 = BigUint(
   Bytes.fromHex(
-    "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000",
+    "30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000000",
   ),
 );
 
 /**
  * Reduce to canonical form in the scalar field Fr.
- * Computes a mod r where r is the BLS12-381 scalar field modulus.
+ * Computes a mod r where r is the BN254 scalar field modulus.
  * Ensures the result is in the range [0, r-1].
  */
 export function frScalar(a: biguint): biguint {
-  return a % BLS12_381_SCALAR_MODULUS;
+  return a % BN254_SCALAR_MODULUS;
 }
 
 /**
@@ -54,33 +54,29 @@ export function debugLog(name: string, value: bytes): void {
 }
 
 /**
- * Scalar multiplication on the BLS12-381 G1 group.
+ * Scalar multiplication on the BN254 G1 group.
  * Computes s * P where P is a G1 point and s is a scalar in Fr.
- * Returns the result as a 96-byte uncompressed G1 point.
+ * Returns the result as a 64-byte uncompressed G1 point.
  */
-export function g1TimesFr(p: bytes<96>, s: biguint): bytes<96> {
-  return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    length: 96,
-  });
+export function g1TimesFr(p: bytes<64>, s: biguint): bytes<64> {
+  return op.EllipticCurve.scalarMul(op.Ec.BN254g1, p, Bytes(s)).toFixed({ length: 64 });
 }
 
 /**
- * Point addition on the BLS12-381 G1 group.
+ * Point addition on the BN254 G1 group.
  * Computes P1 + P2 where P1 and P2 are G1 points.
- * Returns the result as a 96-byte uncompressed G1 point.
+ * Returns the result as a 64-byte uncompressed G1 point.
  */
-export function g1Add(p1: bytes<96>, p2: bytes<96>): bytes<96> {
-  return op.EllipticCurve.add(op.Ec.BLS12_381g1, p1, p2).toFixed({
-    length: 96,
-  });
+export function g1Add(p1: bytes<64>, p2: bytes<64>): bytes<64> {
+  return op.EllipticCurve.add(op.Ec.BN254g1, p1, p2).toFixed({ length: 64 });
 }
 
 /**
- * Point negation on the BLS12-381 G1 group.
+ * Point negation on the BN254 G1 group.
  * Computes -P where P is a G1 point by multiplying by (r-1) where r is the scalar field modulus.
  * This is equivalent to negating the y-coordinate in affine representation.
  */
-export function g1Neg(p: bytes<96>): bytes<96> {
+export function g1Neg(p: bytes<64>): bytes<64> {
   return g1TimesFr(p, R_MINUS_1);
 }
 
@@ -88,7 +84,7 @@ export function g1Neg(p: bytes<96>): bytes<96> {
  * Check if a value is in the scalar field Fr
  */
 export function inField(value: Uint256): boolean {
-  return value.asBigUint() < BLS12_381_SCALAR_MODULUS;
+  return value.asBigUint() < BN254_SCALAR_MODULUS;
 }
 
 export type PublicSignals = Uint256[];

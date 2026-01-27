@@ -1,10 +1,10 @@
 import type { AlgorandClient } from "@algorandfoundation/algokit-utils";
 import type { Address, Transaction } from "algosdk";
 import type {
-  Groth16VerifierFactory,
-  GrothVerificationKey,
-} from "../contracts/clients/Groth16Verifier";
-import type { Groth16VerifierWithLogsFactory } from "../contracts/clients/Groth16VerifierWithLogs";
+  Groth16Bls12381VerifierFactory,
+  Groth16Bls12381VerificationKey,
+} from "../contracts/clients/Groth16Bls12381Verifier";
+import type { Groth16Bls12381VerifierWithLogsFactory } from "../contracts/clients/Groth16Bls12381VerifierWithLogs";
 import type {
   PlonkVerifierFactory,
   PlonkVerificationKey,
@@ -12,7 +12,7 @@ import type {
 import type { PlonkVerifierWithLogsFactory } from "../contracts/clients/PlonkVerifierWithLogs";
 import type { RawSimulateOptions } from "@algorandfoundation/algokit-utils/types/composer";
 import type { AppClientMethodCallParams } from "@algorandfoundation/algokit-utils/types/app-client";
-import type { Groth16Witness, PlonkWitness } from ".";
+import type { Groth16Bls12381Witness, PlonkWitness } from ".";
 import * as snarkjs from "snarkjs";
 import { microAlgos } from "@algorandfoundation/algokit-utils";
 import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
@@ -38,15 +38,30 @@ export function reorderG2Uncompressed(uncompressed: Uint8Array): Uint8Array {
   return reordered;
 }
 
+export function reorderG2UncompressedBN254(uncompressed: Uint8Array): Uint8Array {
+  const x1 = uncompressed.subarray(0, 32);
+  const x0 = uncompressed.subarray(32, 64);
+  const y1 = uncompressed.subarray(64, 96);
+  const y0 = uncompressed.subarray(96, 128);
+
+  const reordered = new Uint8Array(128);
+  reordered.set(x0, 0);
+  reordered.set(x1, 32);
+  reordered.set(y0, 64);
+  reordered.set(y1, 96);
+
+  return reordered;
+}
+
 export function getProofFromFile(path: string): any {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
 export abstract class AppVerifier<
-  Factory extends Groth16VerifierFactory | PlonkVerifierFactory,
+  Factory extends Groth16Bls12381VerifierFactory | PlonkVerifierFactory,
   LogsFactory extends
-    | Groth16VerifierWithLogsFactory
-    | PlonkVerifierWithLogsFactory,
+  | Groth16Bls12381VerifierWithLogsFactory
+  | PlonkVerifierWithLogsFactory,
   Client extends ReturnType<Factory["getAppClientById"]>,
   Witness extends { signals: any; proof: any } & Parameters<
     Client["send"]["verify"]
@@ -63,7 +78,8 @@ export abstract class AppVerifier<
     public algorand: AlgorandClient,
     public zKey: snarkjs.ZKArtifact,
     public wasmProver: snarkjs.ZKArtifact,
-  ) {}
+    protected curveName: string = "bls12381",
+  ) { }
 
   protected abstract newFactory(o: {
     algorand: AlgorandClient;
@@ -100,10 +116,10 @@ export abstract class AppVerifier<
     return {};
   }
 
-  private async ensureCurveInstanttiation() {
+  private async ensureCurveInstantiation() {
     if (!this.curve) {
       // @ts-expect-error curves is not typed
-      this.curve = await snarkjs.curves.getCurveFromName("bls12381");
+      this.curve = await snarkjs.curves.getCurveFromName(this.curveName);
     }
   }
 
@@ -117,7 +133,7 @@ export abstract class AppVerifier<
       throw new Error("AppVerifier already deployed");
     }
 
-    await this.ensureCurveInstanttiation();
+    await this.ensureCurveInstantiation();
 
     let factory;
 
@@ -151,7 +167,7 @@ export abstract class AppVerifier<
   }
 
   async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<Witness> {
-    await this.ensureCurveInstanttiation();
+    await this.ensureCurveInstantiation();
 
     const { proof: rawProof, publicSignals: rawSignals } = await this.fullProve(
       inputs,
@@ -252,8 +268,8 @@ export abstract class AppVerifier<
 }
 
 export abstract class LsigVerifier<
-  VerificationKey extends GrothVerificationKey | PlonkVerificationKey,
-  Witness extends Groth16Witness | PlonkWitness,
+  VerificationKey extends Groth16Bls12381VerificationKey | PlonkVerificationKey,
+  Witness extends Groth16Bls12381Witness | PlonkWitness,
 > {
   curve?: any;
 
@@ -262,7 +278,8 @@ export abstract class LsigVerifier<
     public zKey: snarkjs.ZKArtifact,
     public wasmProver: snarkjs.ZKArtifact,
     public totalLsigs: number = 6,
-  ) {}
+    protected curveName: string = "bls12381",
+  ) { }
 
   protected abstract getVkey(
     zKey: snarkjs.ZKArtifact,
@@ -293,15 +310,15 @@ export abstract class LsigVerifier<
     return {};
   }
 
-  private async ensureCurveInstanttiation() {
+  private async ensureCurveInstantiation() {
     if (!this.curve) {
       // @ts-expect-error curves is not typed
-      this.curve = await snarkjs.curves.getCurveFromName("bls12381");
+      this.curve = await snarkjs.curves.getCurveFromName(this.curveName);
     }
   }
 
   async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<Witness> {
-    await this.ensureCurveInstanttiation();
+    await this.ensureCurveInstantiation();
 
     const { proof: rawProof, publicSignals: rawSignals } = await this.fullProve(
       inputs,
@@ -319,7 +336,7 @@ export abstract class LsigVerifier<
   }
 
   async lsigAccount() {
-    await this.ensureCurveInstanttiation();
+    await this.ensureCurveInstantiation();
 
     const vk = await this.getVkey(this.zKey, this.curve);
     const vkBytes = this.encodeVkey(vk, this.getAppSpec());
