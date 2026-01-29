@@ -181,10 +181,6 @@ export type PlonkVerifierTypes = {
  */
 export type PlonkVerifierSignatures = keyof PlonkVerifierTypes['methods']
 /**
- * Defines the possible abi call signatures for methods that return a non-void value.
- */
-export type PlonkVerifierNonVoidMethodSignatures = keyof PlonkVerifierTypes['methods'] extends infer T ? T extends keyof PlonkVerifierTypes['methods'] ? MethodReturn<T> extends void ? never : T  : never : never
-/**
  * Defines an object containing all relevant parameters for a single call to the contract.
  */
 export type CallParams<TArgs> = Expand<
@@ -428,15 +424,7 @@ export class PlonkVerifierClient {
       appSpec: APP_SPEC,
     })
   }
-  
-  /**
-   * Checks for decode errors on the given return value and maps the return value to the return type for the given method
-   * @returns The typed return value or undefined if there was no value
-   */
-  decodeReturnValue<TSignature extends PlonkVerifierNonVoidMethodSignatures>(method: TSignature, returnValue: ABIReturn | undefined) {
-    return returnValue !== undefined ? getArc56ReturnValue<MethodReturn<TSignature>>(returnValue, this.appClient.getABIMethod(method), APP_SPEC.structs) : undefined
-  }
-  
+
   /**
    * Returns a new `PlonkVerifierClient` client, resolving the app by creator address and name
    * using AlgoKit app deployment semantics (i.e. looking for the app creation transaction note).

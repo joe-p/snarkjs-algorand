@@ -1,37 +1,116 @@
 #pragma version 11
 #pragma typetrack false
 
-// contracts/groth16_verifier.algo.ts::program() -> uint64:
+// @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
     intcblock 32 1 96 0 680
     bytecblock 0x 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 TMPL_VERIFICATION_KEY
+    // contracts/groth16_bls12381_verifier.algo.ts:22
+    // export class Groth16Bls12381VerifierWithLogs extends Contract {
+    txn NumAppArgs
+    bz main___algots__.defaultCreate@6
+    pushbytess 0x74589fa0 0xe354e1d1 // method "_dummy((byte[96],byte[192],byte[192],byte[192],uint64,byte[96][]))void", method "verify(uint256[],(byte[96],byte[192],byte[96]))void"
+    txna ApplicationArgs 0
+    match main__dummy_route@3 main_verify_route@4
+    err
+
+main_verify_route@4:
+    // contracts/groth16_bls12381_verifier.algo.ts:27
+    // verify(signals: PublicSignals, proof: Groth16Bls12381Proof): void {
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert // OnCompletion must be NoOp && can only call when not creating
+    b verify
+
+main__dummy_route@3:
+    // contracts/groth16_bls12381_verifier.algo.ts:24
+    // @abimethod({ allowActions: "CloseOut" })
+    txn OnCompletion
+    pushint 2 // CloseOut
+    ==
+    txn ApplicationID
+    &&
+    assert // OnCompletion must be CloseOut && can only call when not creating
+    b _dummy
+
+main___algots__.defaultCreate@6:
+    // contracts/groth16_bls12381_verifier.algo.ts:22
+    // export class Groth16Bls12381VerifierWithLogs extends Contract {
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    assert // OnCompletion must be NoOp && can only call when creating
+    intc_1 // 1
+    return
+
+
+// contracts/groth16_bls12381_verifier.algo.ts::Groth16Bls12381VerifierWithLogs._dummy[routing]() -> void:
+_dummy:
+    // contracts/groth16_bls12381_verifier.algo.ts:24
+    // @abimethod({ allowActions: "CloseOut" })
+    txna ApplicationArgs 1
+    dup
+    len
+    dig 1
+    intc 4 // 680
+    extract_uint16 // on error: invalid tuple encoding
+    dup
+    pushint 682 // 682
+    ==
+    assert // invalid tail pointer at index 5 of (uint8[96],uint8[192],uint8[192],uint8[192],uint64,(len+uint8[96][]))
+    uncover 2
+    swap
+    dig 2
+    substring3
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 96
+    *
+    pushint 684 // 684
+    +
+    ==
+    assert // invalid number of bytes for contracts/groth16_bls12381.algo.ts::Groth16Bls12381VerificationKey
+    intc_1 // 1
+    return
+
+
+// contracts/groth16_bls12381_verifier.algo.ts::Groth16Bls12381VerifierWithLogs.verify[routing]() -> void:
+verify:
     intc_3 // 0
     dup
     bytec_0 // ""
-    // contracts/groth16_verifier.algo.ts:44
-    // assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
-    txn Fee
-    !
-    txn RekeyTo
-    global ZeroAddress
-    ==
-    &&
-    assert // assert target is match for conditions
-    // contracts/groth16_verifier.algo.ts:46
-    // const proof = decodeArc4<GrothProof>(Txn.applicationArgs(2));
-    pushint 2 // 2
-    txnas ApplicationArgs
-    // contracts/groth16_verifier.algo.ts:47
-    // const signals = decodeArc4<PublicSignals>(Txn.applicationArgs(1));
-    intc_1 // 1
-    txnas ApplicationArgs
+    // contracts/groth16_bls12381_verifier.algo.ts:27
+    // verify(signals: PublicSignals, proof: Groth16Bls12381Proof): void {
+    txna ApplicationArgs 1
+    dupn 2
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
     dup
+    cover 2
+    dup
+    intc_0 // 32
+    *
+    pushint 2 // 2
+    +
     uncover 2
-    // contracts/groth16_bls12381.algo.ts:252
-    // return verify(decodeArc4<GrothVerificationKey>(vkBytes), signals, proof);
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 384 // 384
+    ==
+    assert // invalid number of bytes for contracts/groth16_bls12381.algo.ts::Groth16Bls12381Proof
+    // contracts/groth16_bls12381.algo.ts:265
+    // decodeArc4<Groth16Bls12381VerificationKey>(vkBytes),
     bytec_2 // TMPL_VERIFICATION_KEY
     dup
-    cover 3
+    cover 2
     cover 3
     // contracts/groth16_bls12381.algo.ts:84
     // assert(g1GroupCheck(proof.pi_a), "pi_a not in G1");
@@ -72,23 +151,19 @@ main:
     assert // pi_c not in G1
     // contracts/groth16_bls12381.algo.ts:96
     // assert(signals.length === vk.nPublic, "Invalid number of public inputs");
-    intc_3 // 0
-    extract_uint16 // on error: invalid array length header
-    dup
-    uncover 2
     pushint 672 // 672
     extract_uint64
     ==
     assert // Invalid number of public inputs
     intc_3 // 0
 
-main_for_header@2:
+verify_for_header@2:
     // contracts/groth16_bls12381.algo.ts:98
     // for (const signal of signals) {
     dup
-    dig 2
+    dig 6
     <
-    bz main_after_for@4
+    bz verify_after_for@4
     dig 6
     extract 2 0
     dig 1
@@ -108,16 +183,16 @@ main_for_header@2:
     intc_1 // 1
     +
     bury 1
-    b main_for_header@2
+    b verify_for_header@2
 
-main_after_for@4:
+verify_after_for@4:
     // contracts/groth16_bls12381.algo.ts:128
     // if (signals.length === 0) {
-    dig 1
-    bnz main_after_if_else@6
+    dig 5
+    bnz verify_after_if_else@6
     // contracts/groth16_bls12381.algo.ts:130
     // return vk.IC[0] as bytes<96>;
-    dig 5
+    dig 4
     dup
     intc 4 // 680
     extract_uint16
@@ -126,10 +201,52 @@ main_after_for@4:
     substring3
     extract 2 96
 
-main_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
-    // contracts/bls12381_common.algo.ts:62
-    // return op.EllipticCurve.scalarMul(op.Ec.BLS12_381g1, p, Bytes(s)).toFixed({
-    dig 5
+verify_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
+    // contracts/groth16_bls12381.algo.ts:213
+    // debugLog("cpub", cpub);
+    pushbytes "cpub"
+    // contracts/bls12381_common.algo.ts:52
+    // log(name);
+    log
+    // contracts/bls12381_common.algo.ts:53
+    // log(value);
+    dup
+    log
+    // contracts/groth16_bls12381.algo.ts:216
+    // debugLog("pi_a", proof.pi_a);
+    pushbytes "pi_a"
+    // contracts/bls12381_common.algo.ts:52
+    // log(name);
+    log
+    // contracts/bls12381_common.algo.ts:53
+    // log(value);
+    dig 4
+    dup
+    log
+    // contracts/groth16_bls12381.algo.ts:217
+    // debugLog("pi_b", proof.pi_b);
+    pushbytes "pi_b"
+    // contracts/bls12381_common.algo.ts:52
+    // log(name);
+    log
+    // contracts/bls12381_common.algo.ts:53
+    // log(value);
+    dig 4
+    dup
+    cover 3
+    log
+    // contracts/groth16_bls12381.algo.ts:218
+    // debugLog("pi_c", proof.pi_c);
+    pushbytes "pi_c"
+    // contracts/bls12381_common.algo.ts:52
+    // log(name);
+    log
+    // contracts/bls12381_common.algo.ts:53
+    // log(value);
+    dig 4
+    dup
+    cover 2
+    log
     // contracts/bls12381_common.algo.ts:84
     // return g1TimesFr(p, R_MINUS_1);
     pushbytes 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
@@ -145,56 +262,68 @@ main_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     intc_2 // 96
     ==
     assert // Length must be 96
-    // contracts/groth16_bls12381.algo.ts:181
+    // contracts/groth16_bls12381.algo.ts:222
     // let g1Points = op.concat(negPiA, cpub);
+    uncover 2
+    concat
+    // contracts/groth16_bls12381.algo.ts:223
+    // g1Points = op.concat(g1Points, proof.pi_c);
     swap
     concat
-    // contracts/groth16_bls12381.algo.ts:182
-    // g1Points = op.concat(g1Points, proof.pi_c);
-    dig 3
-    concat
-    // contracts/groth16_bls12381.algo.ts:183
+    // contracts/groth16_bls12381.algo.ts:224
     // g1Points = op.concat(g1Points, vk.vk_alpha_1);
     dig 6
     dup
     cover 2
     extract 0 96
     concat
-    // contracts/groth16_bls12381.algo.ts:186
+    // contracts/groth16_bls12381.algo.ts:227
     // let g2Points = op.concat(proof.pi_b, vk.vk_gamma_2);
     dig 1
     pushints 288 192 // 288, 192
     extract3
-    dig 6
+    uncover 3
     swap
     concat
-    // contracts/groth16_bls12381.algo.ts:187
+    // contracts/groth16_bls12381.algo.ts:228
     // g2Points = op.concat(g2Points, vk.vk_delta_2);
     dig 2
     pushints 480 192 // 480, 192
     extract3
     concat
-    // contracts/groth16_bls12381.algo.ts:188
+    // contracts/groth16_bls12381.algo.ts:229
     // g2Points = op.concat(g2Points, vk.vk_beta_2);
     uncover 2
     extract 96 192
     concat
-    // contracts/groth16_bls12381.algo.ts:191-195
+    // contracts/groth16_bls12381.algo.ts:232-236
     // const res = op.EllipticCurve.pairingCheck(
     //   op.Ec.BLS12_381g1,
     //   g1Points,
     //   g2Points,
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/groth16_verifier.algo.ts:49
-    // assert(verifyFromTemplate(signals, proof), "Verification failed");
+    // contracts/groth16_bls12381.algo.ts:238
+    // debugLog("pairing result", res ? Bytes.fromHex("01") : Bytes.fromHex("00"));
+    pushbytess 0x00 0x01 // 0x00, 0x01
+    dig 2
+    select
+    pushbytes "pairing result"
+    // contracts/bls12381_common.algo.ts:52
+    // log(name);
+    log
+    // contracts/bls12381_common.algo.ts:53
+    // log(value);
+    log
+    // contracts/groth16_bls12381_verifier.algo.ts:28
+    // assert(verifyFromTemplateWithLogs(signals, proof), "Verification failed");
     assert // Verification failed
-    // contracts/groth16_verifier.algo.ts:51
-    // return true;
+    // contracts/groth16_bls12381_verifier.algo.ts:27
+    // verify(signals: PublicSignals, proof: Groth16Bls12381Proof): void {
     intc_1 // 1
     return
 
-main_after_if_else@6:
+verify_after_if_else@6:
     // contracts/groth16_bls12381.algo.ts:134
     // let icPoints = Bytes();
     bytec_0 // 0x
@@ -204,16 +333,16 @@ main_after_if_else@6:
     intc_1 // 1
     bury 8
 
-main_while_top@7:
+verify_while_top@7:
     // contracts/groth16_bls12381.algo.ts:135
     // for (let i: uint64 = 1; i <= signals.length; i++) {
     dig 7
-    dig 2
+    dig 6
     <=
-    bz main_after_while@9
+    bz verify_after_while@9
     // contracts/groth16_bls12381.algo.ts:136
     // icPoints = op.concat(icPoints, vk.IC[i] as bytes<96>);
-    dig 5
+    dig 4
     dup
     intc 4 // 680
     extract_uint16
@@ -237,9 +366,9 @@ main_while_top@7:
     intc_1 // 1
     +
     bury 8
-    b main_while_top@7
+    b verify_while_top@7
 
-main_after_while@9:
+verify_after_while@9:
     // contracts/groth16_bls12381.algo.ts:140
     // let scalars = Bytes();
     bytec_0 // 0x
@@ -247,13 +376,13 @@ main_after_while@9:
     intc_3 // 0
     bury 1
 
-main_for_header@10:
+verify_for_header@10:
     // contracts/groth16_bls12381.algo.ts:141
     // for (const signal of signals) {
     dup
-    dig 2
+    dig 6
     <
-    bz main_after_for@12
+    bz verify_after_for@12
     dig 6
     extract 2 0
     dig 1
@@ -291,9 +420,9 @@ main_for_header@10:
     intc_1 // 1
     +
     bury 1
-    b main_for_header@10
+    b verify_for_header@10
 
-main_after_for@12:
+verify_after_for@12:
     // contracts/groth16_bls12381.algo.ts:146-150
     // let cpub = op.EllipticCurve.scalarMulMulti(
     //   op.Ec.BLS12_381g1,
@@ -310,7 +439,7 @@ main_after_for@12:
     assert // Length must be 96
     // contracts/groth16_bls12381.algo.ts:153
     // cpub = g1Add(cpub, vk.IC[0] as bytes<96>);
-    dig 6
+    dig 5
     dup
     intc 4 // 680
     extract_uint16
@@ -330,6 +459,6 @@ main_after_for@12:
     intc_2 // 96
     ==
     assert // Length must be 96
-    // contracts/groth16_bls12381.algo.ts:175
+    // contracts/groth16_bls12381.algo.ts:212
     // const cpub = computeCpub(vk, signals);
-    b main_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13
+    b verify_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13

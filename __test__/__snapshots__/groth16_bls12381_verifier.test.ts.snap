@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`groth16 BLS12-381 verifier > works > budget used 1`] = `109034`;
+
+exports[`groth16 BLS12-381 verifier > works > number of app calls required for budget 1`] = `156`;
+
+exports[`groth16 BLS12-381 verifier > works > number of lsig txns required for budget 1`] = `6`;

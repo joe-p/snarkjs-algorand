@@ -1859,14 +1859,14 @@ getChallenge:
 export const GROTH16_LSIG_SOURCE = `#pragma version 11
 #pragma typetrack false
 
-// contracts/groth16_verifier.algo.ts::program() -> uint64:
+// contracts/groth16_bls12381_verifier.algo.ts::program() -> uint64:
 main:
     intcblock 32 1 96 0 680
     bytecblock 0x 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 TMPL_VERIFICATION_KEY
     intc_3 // 0
     dup
     bytec_0 // ""
-    // contracts/groth16_verifier.algo.ts:44
+    // contracts/groth16_bls12381_verifier.algo.ts:44
     // assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
     txn Fee
     !
@@ -1875,18 +1875,18 @@ main:
     ==
     &&
     assert // assert target is match for conditions
-    // contracts/groth16_verifier.algo.ts:46
-    // const proof = decodeArc4<GrothProof>(Txn.applicationArgs(2));
+    // contracts/groth16_bls12381_verifier.algo.ts:46
+    // const proof = decodeArc4<Groth16Bls12381Proof>(Txn.applicationArgs(2));
     pushint 2 // 2
     txnas ApplicationArgs
-    // contracts/groth16_verifier.algo.ts:47
+    // contracts/groth16_bls12381_verifier.algo.ts:47
     // const signals = decodeArc4<PublicSignals>(Txn.applicationArgs(1));
     intc_1 // 1
     txnas ApplicationArgs
     dup
     uncover 2
     // contracts/groth16_bls12381.algo.ts:252
-    // return verify(decodeArc4<GrothVerificationKey>(vkBytes), signals, proof);
+    // return verify(decodeArc4<Groth16Bls12381VerificationKey>(vkBytes), signals, proof);
     bytec_2 // TMPL_VERIFICATION_KEY
     dup
     cover 3
@@ -2044,10 +2044,10 @@ main_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     //   g2Points,
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/groth16_verifier.algo.ts:49
+    // contracts/groth16_bls12381_verifier.algo.ts:49
     // assert(verifyFromTemplate(signals, proof), "Verification failed");
     assert // Verification failed
-    // contracts/groth16_verifier.algo.ts:51
+    // contracts/groth16_bls12381_verifier.algo.ts:51
     // return true;
     intc_1 // 1
     return
@@ -2191,4 +2191,329 @@ main_after_for@12:
     // contracts/groth16_bls12381.algo.ts:175
     // const cpub = computeCpub(vk, signals);
     b main_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13
+`;
+export const GROTH16_BN254_LSIG_SOURCE = `#pragma version 11
+#pragma typetrack false
+
+// contracts/groth16_bn254_verifier.algo.ts::program() -> uint64:
+main:
+    intcblock 32 1 64 0 456
+    bytecblock 0x 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001 TMPL_VERIFICATION_KEY
+    intc_3 // 0
+    dup
+    bytec_0 // ""
+    // contracts/groth16_bn254_verifier.algo.ts:44
+    // assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
+    txn Fee
+    !
+    txn RekeyTo
+    global ZeroAddress
+    ==
+    &&
+    assert // assert target is match for conditions
+    // contracts/groth16_bn254_verifier.algo.ts:46
+    // const proof = decodeArc4<Groth16Bn254Proof>(Txn.applicationArgs(2));
+    pushint 2 // 2
+    txnas ApplicationArgs
+    // contracts/groth16_bn254_verifier.algo.ts:47
+    // const signals = decodeArc4<PublicSignals>(Txn.applicationArgs(1));
+    intc_1 // 1
+    txnas ApplicationArgs
+    dup
+    uncover 2
+    // contracts/groth16_bn254.algo.ts:252
+    // return verify(decodeArc4<Groth16Bn254VerificationKey>(vkBytes), signals, proof);
+    bytec_2 // TMPL_VERIFICATION_KEY
+    dup
+    cover 3
+    cover 3
+    // contracts/groth16_bn254.algo.ts:84
+    // assert(g1GroupCheck(proof.pi_a), "pi_a not in G1");
+    dup
+    extract 0 64
+    dup
+    cover 4
+    // contracts/groth16_bn254.algo.ts:70
+    // return op.EllipticCurve.subgroupCheck(op.Ec.BN254g1, p);
+    ec_subgroup_check BN254g1
+    // contracts/groth16_bn254.algo.ts:84
+    // assert(g1GroupCheck(proof.pi_a), "pi_a not in G1");
+    assert // pi_a not in G1
+    // contracts/groth16_bn254.algo.ts:85
+    // assert(g2GroupCheck(proof.pi_b), "pi_b not in G2");
+    dup
+    extract 64 128
+    dup
+    cover 4
+    // contracts/groth16_bn254.algo.ts:77
+    // return op.EllipticCurve.subgroupCheck(op.Ec.BN254g2, p);
+    ec_subgroup_check BN254g2
+    // contracts/groth16_bn254.algo.ts:85
+    // assert(g2GroupCheck(proof.pi_b), "pi_b not in G2");
+    assert // pi_b not in G2
+    // contracts/groth16_bn254.algo.ts:86
+    // assert(g1GroupCheck(proof.pi_c), "pi_c not in G1");
+    extract 192 64
+    dup
+    cover 3
+    // contracts/groth16_bn254.algo.ts:70
+    // return op.EllipticCurve.subgroupCheck(op.Ec.BN254g1, p);
+    ec_subgroup_check BN254g1
+    // contracts/groth16_bn254.algo.ts:86
+    // assert(g1GroupCheck(proof.pi_c), "pi_c not in G1");
+    assert // pi_c not in G1
+    // contracts/groth16_bn254.algo.ts:96
+    // assert(signals.length === vk.nPublic, "Invalid number of public inputs");
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    uncover 2
+    pushint 448 // 448
+    extract_uint64
+    ==
+    assert // Invalid number of public inputs
+    intc_3 // 0
+
+main_for_header@2:
+    // contracts/groth16_bn254.algo.ts:98
+    // for (const signal of signals) {
+    dup
+    dig 2
+    <
+    bz main_after_for@4
+    dig 6
+    extract 2 0
+    dig 1
+    dup
+    cover 2
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    // contracts/bn254_common.algo.ts:87
+    // return value.asBigUint() < BN254_SCALAR_MODULUS;
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    // contracts/groth16_bn254.algo.ts:99
+    // assert(inField(signal), "public signal not in Fr");
+    assert // public signal not in Fr
+    intc_1 // 1
+    +
+    bury 1
+    b main_for_header@2
+
+main_after_for@4:
+    // contracts/groth16_bn254.algo.ts:128
+    // if (signals.length === 0) {
+    dig 1
+    bnz main_after_if_else@6
+    // contracts/groth16_bn254.algo.ts:130
+    // return vk.IC[0] as bytes<64>;
+    dig 5
+    dup
+    intc 4 // 456
+    extract_uint16
+    dig 1
+    len
+    substring3
+    extract 2 64
+
+main_after_inlined_contracts/groth16_bn254.algo.ts::computeCpub@13:
+    // contracts/bn254_common.algo.ts:62
+    // return op.EllipticCurve.scalarMul(op.Ec.BN254g1, p, Bytes(s)).toFixed({ length: 64 });
+    dig 5
+    // contracts/bn254_common.algo.ts:80
+    // return g1TimesFr(p, R_MINUS_1);
+    pushbytes 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000000
+    // contracts/bn254_common.algo.ts:62
+    // return op.EllipticCurve.scalarMul(op.Ec.BN254g1, p, Bytes(s)).toFixed({ length: 64 });
+    ec_scalar_mul BN254g1
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // Length must be 64
+    // contracts/groth16_bn254.algo.ts:181
+    // let g1Points = op.concat(negPiA, cpub);
+    swap
+    concat
+    // contracts/groth16_bn254.algo.ts:182
+    // g1Points = op.concat(g1Points, proof.pi_c);
+    dig 3
+    concat
+    // contracts/groth16_bn254.algo.ts:183
+    // g1Points = op.concat(g1Points, vk.vk_alpha_1);
+    dig 6
+    dup
+    cover 2
+    extract 0 64
+    concat
+    // contracts/groth16_bn254.algo.ts:186
+    // let g2Points = op.concat(proof.pi_b, vk.vk_gamma_2);
+    dig 1
+    extract 192 128
+    dig 6
+    swap
+    concat
+    // contracts/groth16_bn254.algo.ts:187
+    // g2Points = op.concat(g2Points, vk.vk_delta_2);
+    dig 2
+    pushints 320 128 // 320, 128
+    extract3
+    concat
+    // contracts/groth16_bn254.algo.ts:188
+    // g2Points = op.concat(g2Points, vk.vk_beta_2);
+    uncover 2
+    extract 64 128
+    concat
+    // contracts/groth16_bn254.algo.ts:191-195
+    // const res = op.EllipticCurve.pairingCheck(
+    //   op.Ec.BN254g1,
+    //   g1Points,
+    //   g2Points,
+    // );
+    ec_pairing_check BN254g1
+    // contracts/groth16_bn254_verifier.algo.ts:49
+    // assert(verifyFromTemplate(signals, proof), "Verification failed");
+    assert // Verification failed
+    // contracts/groth16_bn254_verifier.algo.ts:51
+    // return true;
+    intc_1 // 1
+    return
+
+main_after_if_else@6:
+    // contracts/groth16_bn254.algo.ts:134
+    // let icPoints = Bytes();
+    bytec_0 // 0x
+    bury 10
+    // contracts/groth16_bn254.algo.ts:135
+    // for (let i: uint64 = 1; i <= signals.length; i++) {
+    intc_1 // 1
+    bury 8
+
+main_while_top@7:
+    // contracts/groth16_bn254.algo.ts:135
+    // for (let i: uint64 = 1; i <= signals.length; i++) {
+    dig 7
+    dig 2
+    <=
+    bz main_after_while@9
+    // contracts/groth16_bn254.algo.ts:136
+    // icPoints = op.concat(icPoints, vk.IC[i] as bytes<64>);
+    dig 5
+    dup
+    intc 4 // 456
+    extract_uint16
+    dig 1
+    len
+    substring3
+    extract 2 0
+    dig 8
+    dup
+    cover 2
+    intc_2 // 64
+    *
+    intc_2 // 64
+    extract3 // on error: index access is out of bounds
+    dig 11
+    swap
+    concat
+    bury 11
+    // contracts/groth16_bn254.algo.ts:135
+    // for (let i: uint64 = 1; i <= signals.length; i++) {
+    intc_1 // 1
+    +
+    bury 8
+    b main_while_top@7
+
+main_after_while@9:
+    // contracts/groth16_bn254.algo.ts:140
+    // let scalars = Bytes();
+    bytec_0 // 0x
+    bury 9
+    intc_3 // 0
+    bury 1
+
+main_for_header@10:
+    // contracts/groth16_bn254.algo.ts:141
+    // for (const signal of signals) {
+    dup
+    dig 2
+    <
+    bz main_after_for@12
+    dig 6
+    extract 2 0
+    dig 1
+    dup
+    cover 2
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    // contracts/bn254_common.algo.ts:37
+    // return a % BN254_SCALAR_MODULUS;
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    // contracts/bn254_common.algo.ts:45
+    // return new Uint256(a).bytes.toFixed({ length: 32 });
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // Length must be 32
+    // contracts/groth16_bn254.algo.ts:142
+    // scalars = op.concat(scalars, b32(frScalar(signal.asBigUint())));
+    dig 10
+    swap
+    concat
+    bury 10
+    intc_1 // 1
+    +
+    bury 1
+    b main_for_header@10
+
+main_after_for@12:
+    // contracts/groth16_bn254.algo.ts:146-150
+    // let cpub = op.EllipticCurve.scalarMulMulti(
+    //   op.Ec.BN254g1,
+    //   icPoints,
+    //   scalars,
+    // ).toFixed({ length: 64 });
+    dig 9
+    dig 9
+    ec_multi_scalar_mul BN254g1
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // Length must be 64
+    // contracts/groth16_bn254.algo.ts:153
+    // cpub = g1Add(cpub, vk.IC[0] as bytes<64>);
+    dig 6
+    dup
+    intc 4 // 456
+    extract_uint16
+    dig 1
+    len
+    substring3
+    extract 2 64
+    // contracts/bn254_common.algo.ts:71
+    // return op.EllipticCurve.add(op.Ec.BN254g1, p1, p2).toFixed({ length: 64 });
+    ec_add BN254g1
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // Length must be 64
+    // contracts/groth16_bn254.algo.ts:175
+    // const cpub = computeCpub(vk, signals);
+    b main_after_inlined_contracts/groth16_bn254.algo.ts::computeCpub@13
 `;
