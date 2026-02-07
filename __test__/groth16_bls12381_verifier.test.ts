@@ -54,7 +54,10 @@ describe("groth16 BLS12-381 verifier", () => {
   });
 
   it("fails with wrong signal", async () => {
-    const proof = await getGroth16Bls12381Proof("circuit/groth16_proof.json", curve);
+    const proof = await getGroth16Bls12381Proof(
+      "circuit/groth16_proof.json",
+      curve,
+    );
     const signals = [1337n];
 
     const simResult = debugVerifier.simulateVerificationWithProofAndSignals(
@@ -69,7 +72,10 @@ describe("groth16 BLS12-381 verifier", () => {
   });
 
   it("works", async () => {
-    const proof = await getGroth16Bls12381Proof("circuit/groth16_proof.json", curve);
+    const proof = await getGroth16Bls12381Proof(
+      "circuit/groth16_proof.json",
+      curve,
+    );
     const signals = [
       15744006038856998268181219516291113434365469909648022488288672656450282844855n,
     ];

@@ -38,7 +38,9 @@ export function reorderG2Uncompressed(uncompressed: Uint8Array): Uint8Array {
   return reordered;
 }
 
-export function reorderG2UncompressedBN254(uncompressed: Uint8Array): Uint8Array {
+export function reorderG2UncompressedBN254(
+  uncompressed: Uint8Array,
+): Uint8Array {
   const x1 = uncompressed.subarray(0, 32);
   const x0 = uncompressed.subarray(32, 64);
   const y1 = uncompressed.subarray(64, 96);
@@ -60,8 +62,8 @@ export function getProofFromFile(path: string): any {
 export abstract class AppVerifier<
   Factory extends Groth16Bls12381VerifierFactory | PlonkVerifierFactory,
   LogsFactory extends
-  | Groth16Bls12381VerifierWithLogsFactory
-  | PlonkVerifierWithLogsFactory,
+    | Groth16Bls12381VerifierWithLogsFactory
+    | PlonkVerifierWithLogsFactory,
   Client extends ReturnType<Factory["getAppClientById"]>,
   Witness extends { signals: any; proof: any } & Parameters<
     Client["send"]["verify"]
@@ -79,7 +81,7 @@ export abstract class AppVerifier<
     public zKey: snarkjs.ZKArtifact,
     public wasmProver: snarkjs.ZKArtifact,
     protected curveName: string = "bls12381",
-  ) { }
+  ) {}
 
   protected abstract newFactory(o: {
     algorand: AlgorandClient;
@@ -279,7 +281,7 @@ export abstract class LsigVerifier<
     public wasmProver: snarkjs.ZKArtifact,
     public totalLsigs: number = 6,
     protected curveName: string = "bls12381",
-  ) { }
+  ) {}
 
   protected abstract getVkey(
     zKey: snarkjs.ZKArtifact,

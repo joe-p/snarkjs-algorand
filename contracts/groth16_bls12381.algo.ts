@@ -249,7 +249,11 @@ export function verifyFromTemplate(
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verify(decodeArc4<Groth16Bls12381VerificationKey>(vkBytes), signals, proof);
+  return verify(
+    decodeArc4<Groth16Bls12381VerificationKey>(vkBytes),
+    signals,
+    proof,
+  );
 }
 
 /**
@@ -273,5 +277,5 @@ export function verifyFromTemplateWithLogs(
  * - Field elements: 32-byte big-endian
  * - G1: 96-byte uncompressed x||y (BE)
  * - G2: 192-byte uncompressed x.c0||x.c1||y.c0||y.c1 (each 48-byte BE)
- * - IC array: concatenated 96-byte G1 points 
+ * - IC array: concatenated 96-byte G1 points
  */

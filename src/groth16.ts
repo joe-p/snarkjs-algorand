@@ -23,7 +23,10 @@ import {
   type Arc56Contract,
 } from "@algorandfoundation/algokit-utils/types/app-arc56";
 import type { Address } from "algosdk";
-import { GROTH16_LSIG_SOURCE, GROTH16_BN254_LSIG_SOURCE } from "../contracts/out/lsig_source";
+import {
+  GROTH16_LSIG_SOURCE,
+  GROTH16_BN254_LSIG_SOURCE,
+} from "../contracts/out/lsig_source";
 import { stringValuesToBigints } from "./index.ts";
 import {
   AppVerifier,
@@ -149,14 +152,22 @@ export async function getGroth16Bls12381Vkey(
   zKey: snarkjs.ZKArtifact,
   curve: any,
 ): Promise<Groth16Bls12381VerificationKey> {
-  return getGroth16VkeyGeneric<Groth16Bls12381VerificationKey>(zKey, curve, reorderG2Uncompressed);
+  return getGroth16VkeyGeneric<Groth16Bls12381VerificationKey>(
+    zKey,
+    curve,
+    reorderG2Uncompressed,
+  );
 }
 
 export function encodeGroth16Bls12381Vk(
   vkey: Groth16Bls12381VerificationKey,
   appSpec: Arc56Contract,
 ): Uint8Array {
-  return getABIEncodedValue(vkey, "Groth16Bls12381VerificationKey", appSpec.structs);
+  return getABIEncodedValue(
+    vkey,
+    "Groth16Bls12381VerificationKey",
+    appSpec.structs,
+  );
 }
 
 export async function getGroth16Bls12381Proof(
@@ -167,8 +178,15 @@ export async function getGroth16Bls12381Proof(
   return encodeGroth16Bls12381Proof(proof, curve);
 }
 
-export function encodeGroth16Bls12381Proof(proof: any, curve: any): Groth16Bls12381Proof {
-  return encodeGroth16ProofGeneric<Groth16Bls12381Proof>(proof, curve, reorderG2Uncompressed);
+export function encodeGroth16Bls12381Proof(
+  proof: any,
+  curve: any,
+): Groth16Bls12381Proof {
+  return encodeGroth16ProofGeneric<Groth16Bls12381Proof>(
+    proof,
+    curve,
+    reorderG2Uncompressed,
+  );
 }
 
 export type Groth16Bls12381Witness = {
@@ -272,14 +290,22 @@ export async function getGroth16Bn254Vkey(
   zKey: snarkjs.ZKArtifact,
   curve: any,
 ): Promise<Groth16Bn254VerificationKey> {
-  return getGroth16VkeyGeneric<Groth16Bn254VerificationKey>(zKey, curve, reorderG2UncompressedBN254);
+  return getGroth16VkeyGeneric<Groth16Bn254VerificationKey>(
+    zKey,
+    curve,
+    reorderG2UncompressedBN254,
+  );
 }
 
 export function encodeGroth16Bn254Vk(
   vkey: Groth16Bn254VerificationKey,
   appSpec: Arc56Contract,
 ): Uint8Array {
-  return getABIEncodedValue(vkey, "Groth16Bn254VerificationKey", appSpec.structs);
+  return getABIEncodedValue(
+    vkey,
+    "Groth16Bn254VerificationKey",
+    appSpec.structs,
+  );
 }
 
 export async function getGroth16Bn254Proof(
@@ -290,8 +316,15 @@ export async function getGroth16Bn254Proof(
   return encodeGroth16Bn254Proof(proof, curve);
 }
 
-export function encodeGroth16Bn254Proof(proof: any, curve: any): Groth16Bn254Proof {
-  return encodeGroth16ProofGeneric<Groth16Bn254Proof>(proof, curve, reorderG2UncompressedBN254);
+export function encodeGroth16Bn254Proof(
+  proof: any,
+  curve: any,
+): Groth16Bn254Proof {
+  return encodeGroth16ProofGeneric<Groth16Bn254Proof>(
+    proof,
+    curve,
+    reorderG2UncompressedBN254,
+  );
 }
 
 export type Groth16Bn254Witness = {

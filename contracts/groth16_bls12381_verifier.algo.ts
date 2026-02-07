@@ -22,7 +22,7 @@ import { type PublicSignals } from "./bls12381_common.algo";
 export class Groth16Bls12381VerifierWithLogs extends Contract {
   /** Dummy function that only exists so we can have the VerificationKey type in the generated client */
   @abimethod({ allowActions: "CloseOut" })
-  public _dummy(_vk: Groth16Bls12381VerificationKey): void { }
+  public _dummy(_vk: Groth16Bls12381VerificationKey): void {}
 
   verify(signals: PublicSignals, proof: Groth16Bls12381Proof): void {
     assert(verifyFromTemplateWithLogs(signals, proof), "Verification failed");
@@ -32,7 +32,7 @@ export class Groth16Bls12381VerifierWithLogs extends Contract {
 export class Groth16Bls12381Verifier extends Contract {
   /** Dummy function that only exists so we can have the VerificationKey type in the generated client */
   @abimethod({ allowActions: "CloseOut" })
-  public _dummy(_vk: Groth16Bls12381VerificationKey): void { }
+  public _dummy(_vk: Groth16Bls12381VerificationKey): void {}
 
   verify(signals: PublicSignals, proof: Groth16Bls12381Proof): void {
     assert(verifyFromTemplate(signals, proof), "Verification failed");
@@ -53,5 +53,8 @@ export class Groth16Bls12381VerifierLsig extends LogicSig {
 }
 
 export class Groth16Bls12381SignalsAndProof extends Contract {
-  public signalsAndProof(signals: PublicSignals, proof: Groth16Bls12381Proof): void { }
+  public signalsAndProof(
+    signals: PublicSignals,
+    proof: Groth16Bls12381Proof,
+  ): void {}
 }
