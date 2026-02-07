@@ -59,7 +59,9 @@ export function debugLog(name: string, value: bytes): void {
  * Returns the result as a 64-byte uncompressed G1 point.
  */
 export function g1TimesFr(p: bytes<64>, s: biguint): bytes<64> {
-  return op.EllipticCurve.scalarMul(op.Ec.BN254g1, p, Bytes(s)).toFixed({ length: 64 });
+  return op.EllipticCurve.scalarMul(op.Ec.BN254g1, p, Bytes(s)).toFixed({
+    length: 64,
+  });
 }
 
 /**

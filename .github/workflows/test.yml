@@ -37,14 +37,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prettier check
+        run: npx prettier -c .
+
       - name: Install algokit
         run: pip install algokit
 
       - name: start localnet
         run: algokit localnet start
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm build

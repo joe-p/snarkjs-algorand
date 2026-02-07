@@ -188,11 +188,7 @@ export function verify(
   g2Points = op.concat(g2Points, vk.vk_beta_2);
 
   // Final pairing check
-  const res = op.EllipticCurve.pairingCheck(
-    op.Ec.BN254g1,
-    g1Points,
-    g2Points,
-  );
+  const res = op.EllipticCurve.pairingCheck(op.Ec.BN254g1, g1Points, g2Points);
 
   return res;
 }
@@ -229,11 +225,7 @@ export function verifyWithLogs(
   g2Points = op.concat(g2Points, vk.vk_beta_2);
 
   // Final pairing check
-  const res = op.EllipticCurve.pairingCheck(
-    op.Ec.BN254g1,
-    g1Points,
-    g2Points,
-  );
+  const res = op.EllipticCurve.pairingCheck(op.Ec.BN254g1, g1Points, g2Points);
 
   debugLog("pairing result", res ? Bytes.fromHex("01") : Bytes.fromHex("00"));
 
@@ -249,7 +241,11 @@ export function verifyFromTemplate(
 ): boolean {
   const vkBytes = TemplateVar<bytes>("VERIFICATION_KEY");
 
-  return verify(decodeArc4<Groth16Bn254VerificationKey>(vkBytes), signals, proof);
+  return verify(
+    decodeArc4<Groth16Bn254VerificationKey>(vkBytes),
+    signals,
+    proof,
+  );
 }
 
 /**
@@ -273,5 +269,5 @@ export function verifyFromTemplateWithLogs(
  * - Field elements: 32-byte big-endian
  * - G1: 64-byte uncompressed x||y (BE)
  * - G2: 128-byte uncompressed x.c0||x.c1||y.c0||y.c1 (each 32-byte BE)
- * - IC array: concatenated 64-byte G1 points 
+ * - IC array: concatenated 64-byte G1 points
  */

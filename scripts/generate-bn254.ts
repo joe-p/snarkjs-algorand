@@ -18,8 +18,7 @@ const BN254: CurveConfig = {
   name: "BN254",
   scalarModulus:
     "30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001",
-  rMinus1:
-    "30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000000",
+  rMinus1: "30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000000",
   g1Size: 64,
   g2Size: 128,
   fieldSize: 32,
@@ -47,13 +46,19 @@ function getBaseSubstitutions(config: CurveConfig): Substitution[] {
     [/bytes<96>/g, `bytes<${config.g1Size}>`],
 
     // toFixed length values (for G1 points)
-    [/\.toFixed\(\{\s*\n?\s*length: 96,?\s*\n?\s*\}\)/g, `.toFixed({ length: ${config.g1Size} })`],
-    [/\.toFixed\(\{ length: 96 \}\)/g, `.toFixed({ length: ${config.g1Size} })`],
+    [
+      /\.toFixed\(\{\s*\n?\s*length: 96,?\s*\n?\s*\}\)/g,
+      `.toFixed({ length: ${config.g1Size} })`,
+    ],
+    [
+      /\.toFixed\(\{ length: 96 \}\)/g,
+      `.toFixed({ length: ${config.g1Size} })`,
+    ],
 
     [/BLS12_381/g, config.name],
     [/BLS12-381/g, config.name],
     [/bls12381/g, config.name.toLowerCase()],
-    [/Bls12381/g, 'Bn254'],
+    [/Bls12381/g, "Bn254"],
 
     // Comments: byte sizes
     [/96-byte/g, `${config.g1Size}-byte`],
@@ -64,7 +69,7 @@ function getBaseSubstitutions(config: CurveConfig): Substitution[] {
 
 function applySubstitutions(
   content: string,
-  substitutions: Substitution[]
+  substitutions: Substitution[],
 ): string {
   for (const [pattern, replacement] of substitutions) {
     content = content.replace(pattern, replacement);
@@ -72,23 +77,27 @@ function applySubstitutions(
   return content;
 }
 
-function generate(
-  sourceFile: string,
-  config: CurveConfig
-): void {
+function generate(sourceFile: string, config: CurveConfig): void {
   const contractsDir = join(__dirname, "..", "contracts");
   const fullSourcePath = join(contractsDir, sourceFile);
 
   let content = readFileSync(fullSourcePath, "utf8");
   content = applySubstitutions(content, getBaseSubstitutions(config));
 
-  const targetFile = fullSourcePath.replace("bls12381", config.name.toLowerCase());
+  const targetFile = fullSourcePath.replace(
+    "bls12381",
+    config.name.toLowerCase(),
+  );
   writeFileSync(targetFile, content);
   console.log(`Generated ${targetFile}`);
 }
 
 console.log("Generating BN254 contracts...");
-["bls12381_common.algo.ts", "groth16_bls12381.algo.ts", "groth16_bls12381_verifier.algo.ts"].forEach((baseName) => {
+[
+  "bls12381_common.algo.ts",
+  "groth16_bls12381.algo.ts",
+  "groth16_bls12381_verifier.algo.ts",
+].forEach((baseName) => {
   generate(baseName, BN254);
-})
+});
 console.log("BN254 generation complete!");
