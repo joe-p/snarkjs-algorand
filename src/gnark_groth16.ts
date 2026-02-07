@@ -241,6 +241,13 @@ export function decodeGnarkBn254Vk(
   // [288..292] num_k (u32 big-endian)
   // [292..]    K[] compressed G1 points (32 bytes each)
 
+  // Minimum length: header up to and including num_k (292 bytes)
+  if (vkBytes.length < 292) {
+    throw new Error(
+      `Invalid VK: expected at least 292 bytes, got ${vkBytes.length}`,
+    );
+  }
+
   const vk_alpha_1 = decompressG1(vkBytes.slice(0, 32));
   const vk_beta_2 = decompressG2(vkBytes.slice(64, 128));
   const vk_gamma_2 = decompressG2(vkBytes.slice(128, 192));
@@ -251,6 +258,19 @@ export function decodeGnarkBn254Vk(
     (vkBytes[289]! << 16) |
     (vkBytes[290]! << 8) |
     vkBytes[291]!;
+
+  // Validate num_k (must be at least 1 for the constant term)
+  if (num_k < 1) {
+    throw new Error(`Invalid VK: num_k must be at least 1, got ${num_k}`);
+  }
+
+  // Validate that we have enough bytes for all IC points
+  const requiredLength = 292 + 32 * num_k;
+  if (vkBytes.length < requiredLength) {
+    throw new Error(
+      `Invalid VK: expected ${requiredLength} bytes for ${num_k} IC points, got ${vkBytes.length}`,
+    );
+  }
 
   const IC: Uint8Array[] = [];
   let offset = 292;

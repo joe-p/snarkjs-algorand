@@ -141,8 +141,11 @@ export abstract class AppVerifier<
 
   private async ensureCurveInstantiation() {
     if (!this.curve) {
+      // snarkjs uses "bn128" for BN254 curve
+      const snarkjsCurveName =
+        this.curveName === "bn254" ? "bn128" : this.curveName;
       // @ts-expect-error curves is not typed
-      this.curve = await snarkjs.curves.getCurveFromName(this.curveName);
+      this.curve = await snarkjs.curves.getCurveFromName(snarkjsCurveName);
     }
   }
 
@@ -177,8 +180,6 @@ export abstract class AppVerifier<
         "Must provide either zKey and wasmProver or vk during construction",
       );
     }
-
-    console.debug("this.vk", this.vk);
 
     const vk = this.vk ?? (await this.getVkey(this.zKey!, this.curve));
     const vkBytes = this.encodeVkey(vk, factory.appSpec);
@@ -385,8 +386,11 @@ export abstract class LsigVerifier<
 
   private async ensureCurveInstantiation() {
     if (!this.curve) {
+      // snarkjs uses "bn128" for BN254 curve
+      const snarkjsCurveName =
+        this.curveName === "bn254" ? "bn128" : this.curveName;
       // @ts-expect-error curves is not typed
-      this.curve = await snarkjs.curves.getCurveFromName(this.curveName);
+      this.curve = await snarkjs.curves.getCurveFromName(snarkjsCurveName);
     }
   }
 

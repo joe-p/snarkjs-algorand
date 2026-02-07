@@ -11,7 +11,7 @@ import {
   Groth16Bn254SignalsAndProofClient,
   Groth16Bn254SignalsAndProofFactory,
 } from "../contracts/clients/Groth16Bn254SignalsAndProof";
-import type { Groth16Bn254Proof } from "../dist";
+import type { Groth16Bn254Proof } from "../src/groth16";
 import {
   decodeGnarkBn254Proof,
   decodeGnarkBn254Vk,

@@ -135,10 +135,11 @@ export class PlonkLsigVerifier extends LsigVerifier<
   PlonkWitness
 > {
   constructor(o: LsigVerifierOptions<PlonkVerificationKey>) {
-    if (o.totalLsigs === undefined) {
-      o.totalLsigs = 7;
-    }
-    super("bls12381", o);
+    const options: LsigVerifierOptions<PlonkVerificationKey> = {
+      ...o,
+      totalLsigs: o.totalLsigs ?? 7,
+    };
+    super("bls12381", options);
   }
   protected async getVkey(
     zKey: snarkjs.ZKArtifact,
