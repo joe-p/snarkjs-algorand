@@ -11,6 +11,8 @@ const FLAG_NEGATIVE = 0xc0; // larger y
 
 const G2_B = Fp2.mulByB(Fp2.ONE);
 
+const MAX_GNARK_BN254_IC_POINTS = 1024;
+
 function bytesToBigIntBE(bytes: Uint8Array): bigint {
   let result = 0n;
   for (const b of bytes) result = (result << 8n) | BigInt(b);
@@ -213,6 +215,12 @@ export function decodeGnarkBn254Vk(
 
   if (num_k < 1) {
     throw new Error(`Invalid VK: num_k must be at least 1, got ${num_k}`);
+  }
+
+  if (num_k > MAX_GNARK_BN254_IC_POINTS) {
+    throw new Error(
+      `Invalid VK: num_k must be <= ${MAX_GNARK_BN254_IC_POINTS}, got ${num_k}`,
+    );
   }
 
   const requiredLength = 292 + 32 * num_k;

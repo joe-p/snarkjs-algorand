@@ -203,6 +203,18 @@ describe("groth16 bn254 verifier lsig", () => {
 
     const vk = decodeGnarkBn254Vk(hexToBytes(sp1VkHex));
 
+    it("rejects oversized num_k", () => {
+      const vkBytes = hexToBytes(sp1VkHex);
+      const mutated = new Uint8Array(vkBytes);
+      mutated[288] = 0x00;
+      mutated[289] = 0x01;
+      mutated[290] = 0x00;
+      mutated[291] = 0x00;
+      expect(() => decodeGnarkBn254Vk(mutated)).toThrow(
+        "num_k must be <= 1024",
+      );
+    });
+
     it("works with app verifier", async () => {
       const sp1App = new Groth16Bn254AppVerifier({
         algorand,
@@ -224,6 +236,14 @@ describe("groth16 bn254 verifier lsig", () => {
           extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
           allowMoreLogging: true,
         },
+      );
+    });
+
+    it("rejects invalid compressed G1 flag", () => {
+      const proofBytes = hexToBytes(sp1ProofHex);
+      proofBytes[0] = 0x00;
+      expect(() => decodeGnarkBn254Proof(proofBytes)).toThrow(
+        "Invalid G1 point flag",
       );
     });
 
