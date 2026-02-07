@@ -13,6 +13,4 @@ Fr.w.forEach((val, i) => {
   );
 });
 
-
-
 await curve.terminate();

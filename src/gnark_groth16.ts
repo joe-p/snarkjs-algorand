@@ -158,7 +158,9 @@ const FLAG_NEGATIVE = 0xc0; // larger y
 
 function decompressG1(compressed: Uint8Array): Uint8Array {
   if (compressed.length !== 32) {
-    throw new Error(`Invalid G1 compressed point: expected 32 bytes, got ${compressed.length}`);
+    throw new Error(
+      `Invalid G1 compressed point: expected 32 bytes, got ${compressed.length}`,
+    );
   }
 
   const flag = compressed[0]! & FLAG_MASK;
@@ -205,7 +207,9 @@ const B_TWIST: Fq2 = [
 
 function decompressG2(compressed: Uint8Array): Uint8Array {
   if (compressed.length !== 64) {
-    throw new Error(`Invalid G2 compressed point: expected 64 bytes, got ${compressed.length}`);
+    throw new Error(
+      `Invalid G2 compressed point: expected 64 bytes, got ${compressed.length}`,
+    );
   }
 
   const flag = compressed[0]! & FLAG_MASK;
