@@ -1,3 +1,16 @@
+# UNRELEASED: 0.10.0
+
+## BREAKING CHANGES
+
+- All verifier class constructors now accept an options object instead of positional parameters
+  - `Groth16Bls12381AppVerifier`, `Groth16Bls12381LsigVerifier`, `Groth16Bn254AppVerifier`, `Groth16Bn254LsigVerifier`, `PlonkAppVerifier`, `PlonkLsigVerifier`
+  - New signature: `{ algorand, zKey, wasmProver }` or `{ algorand, vk }`
+
+## Features
+
+- Added support for passing verification keys (VK) directly to verifiers without requiring zKey and wasmProver files
+- Added `gnark_groth16` module with `decodeGnarkBn254Proof` and `decodeGnarkBn254Vk` functions for SP1 proof verification support
+
 # 0.9.0
 
 ## BREAKING CHANGES
