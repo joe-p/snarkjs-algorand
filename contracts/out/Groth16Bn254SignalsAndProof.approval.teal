@@ -13,8 +13,11 @@ main:
     err
 
 main_signalsAndProof_route@3:
-    // contracts/groth16_bn254_verifier.algo.ts:56
-    // public signalsAndProof(signals: PublicSignals, proof: Groth16Bn254Proof): void { }
+    // contracts/groth16_bn254_verifier.algo.ts:56-59
+    // public signalsAndProof(
+    //   signals: PublicSignals,
+    //   proof: Groth16Bn254Proof,
+    // ): void {}
     txn OnCompletion
     !
     txn ApplicationID
@@ -37,8 +40,11 @@ main___algots__.defaultCreate@5:
 
 // contracts/groth16_bn254_verifier.algo.ts::Groth16Bn254SignalsAndProof.signalsAndProof[routing]() -> void:
 signalsAndProof:
-    // contracts/groth16_bn254_verifier.algo.ts:56
-    // public signalsAndProof(signals: PublicSignals, proof: Groth16Bn254Proof): void { }
+    // contracts/groth16_bn254_verifier.algo.ts:56-59
+    // public signalsAndProof(
+    //   signals: PublicSignals,
+    //   proof: Groth16Bn254Proof,
+    // ): void {}
     txna ApplicationArgs 1
     dup
     pushint 0 // 0

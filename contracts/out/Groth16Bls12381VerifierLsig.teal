@@ -27,8 +27,8 @@ main:
     txnas ApplicationArgs
     dup
     uncover 2
-    // contracts/groth16_bls12381.algo.ts:252
-    // return verify(decodeArc4<Groth16Bls12381VerificationKey>(vkBytes), signals, proof);
+    // contracts/groth16_bls12381.algo.ts:253
+    // decodeArc4<Groth16Bls12381VerificationKey>(vkBytes),
     bytec_2 // TMPL_VERIFICATION_KEY
     dup
     cover 3

@@ -100,4 +100,16 @@ console.log("Generating BN254 contracts...");
 ].forEach((baseName) => {
   generate(baseName, BN254);
 });
+
+import { execSync } from "child_process";
+execSync(
+  `npx prettier --write ${join(
+    __dirname,
+    "..",
+    "contracts",
+    "*bn254*.algo.ts",
+  )}`,
+  { stdio: "inherit" },
+);
+
 console.log("BN254 generation complete!");

@@ -106,7 +106,7 @@ verify:
     pushint 384 // 384
     ==
     assert // invalid number of bytes for contracts/groth16_bls12381.algo.ts::Groth16Bls12381Proof
-    // contracts/groth16_bls12381.algo.ts:265
+    // contracts/groth16_bls12381.algo.ts:269
     // decodeArc4<Groth16Bls12381VerificationKey>(vkBytes),
     bytec_2 // TMPL_VERIFICATION_KEY
     dup
