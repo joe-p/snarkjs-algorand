@@ -34,6 +34,8 @@ import {
   reorderG2Uncompressed,
   reorderG2UncompressedBN254,
   getProofFromFile,
+  type AppVerifierOptions,
+  type LsigVerifierOptions,
 } from "./common";
 
 // ============================================================================
@@ -198,6 +200,10 @@ export class Groth16Bls12381LsigVerifier extends LsigVerifier<
   Groth16Bls12381VerificationKey,
   Groth16Bls12381Witness
 > {
+  constructor(options: LsigVerifierOptions<Groth16Bls12381VerificationKey>) {
+    super("bls12381", options);
+  }
+
   protected async getVkey(
     zKey: snarkjs.ZKArtifact,
     curve: any,
@@ -241,6 +247,10 @@ export class Groth16Bls12381AppVerifier extends AppVerifier<
   Groth16Bls12381VerifierDeployParams,
   Groth16Bls12381VerificationKey
 > {
+  constructor(options: AppVerifierOptions<Groth16Bls12381VerificationKey>) {
+    super("bls12381", options);
+  }
+
   protected newFactory(o: {
     algorand: AlgorandClient;
     defaultSender: Address;
@@ -336,13 +346,8 @@ export class Groth16Bn254LsigVerifier extends LsigVerifier<
   Groth16Bn254VerificationKey,
   Groth16Bn254Witness
 > {
-  constructor(
-    algorand: AlgorandClient,
-    zKey: snarkjs.ZKArtifact,
-    wasmProver: snarkjs.ZKArtifact,
-    totalLsigs: number = 6,
-  ) {
-    super(algorand, zKey, wasmProver, totalLsigs, "bn128");
+  constructor(options: LsigVerifierOptions<Groth16Bn254VerificationKey>) {
+    super("bn254", options);
   }
 
   protected async getVkey(
@@ -388,12 +393,8 @@ export class Groth16Bn254AppVerifier extends AppVerifier<
   Groth16Bn254VerifierDeployParams,
   Groth16Bn254VerificationKey
 > {
-  constructor(
-    algorand: AlgorandClient,
-    zKey: snarkjs.ZKArtifact,
-    wasmProver: snarkjs.ZKArtifact,
-  ) {
-    super(algorand, zKey, wasmProver, "bn128");
+  constructor(options: AppVerifierOptions<Groth16Bn254VerificationKey>) {
+    super("bn254", options);
   }
 
   protected newFactory(o: {
