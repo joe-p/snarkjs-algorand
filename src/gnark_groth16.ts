@@ -157,7 +157,17 @@ const FLAG_NEGATIVE = 0xc0; // larger y
 // ============================
 
 function decompressG1(compressed: Uint8Array): Uint8Array {
+  if (compressed.length !== 32) {
+    throw new Error(`Invalid G1 compressed point: expected 32 bytes, got ${compressed.length}`);
+  }
+
   const flag = compressed[0]! & FLAG_MASK;
+
+  // Validate flag: must be either FLAG_POSITIVE (0x80) or FLAG_NEGATIVE (0xc0)
+  if (flag !== FLAG_POSITIVE && flag !== FLAG_NEGATIVE) {
+    throw new Error(`Invalid G1 point flag: 0x${flag.toString(16)}`);
+  }
+
   const xBytes = new Uint8Array(compressed);
   xBytes[0]! &= ~FLAG_MASK;
 
@@ -194,7 +204,17 @@ const B_TWIST: Fq2 = [
 ];
 
 function decompressG2(compressed: Uint8Array): Uint8Array {
+  if (compressed.length !== 64) {
+    throw new Error(`Invalid G2 compressed point: expected 64 bytes, got ${compressed.length}`);
+  }
+
   const flag = compressed[0]! & FLAG_MASK;
+
+  // Validate flag: must be either FLAG_POSITIVE (0x80) or FLAG_NEGATIVE (0xc0)
+  if (flag !== FLAG_POSITIVE && flag !== FLAG_NEGATIVE) {
+    throw new Error(`Invalid G2 point flag: 0x${flag.toString(16)}`);
+  }
+
   const xImBytes = new Uint8Array(compressed.slice(0, 32));
   xImBytes[0]! &= ~FLAG_MASK;
 
@@ -253,10 +273,11 @@ export function decodeGnarkBn254Vk(
   const vk_gamma_2 = decompressG2(vkBytes.slice(128, 192));
   const vk_delta_2 = decompressG2(vkBytes.slice(224, 288));
 
+  // Parse as unsigned 32-bit big-endian to avoid signed integer issues with bitwise ops
   const num_k =
-    (vkBytes[288]! << 24) |
-    (vkBytes[289]! << 16) |
-    (vkBytes[290]! << 8) |
+    vkBytes[288]! * 0x1000000 +
+    vkBytes[289]! * 0x10000 +
+    vkBytes[290]! * 0x100 +
     vkBytes[291]!;
 
   // Validate num_k (must be at least 1 for the constant term)
