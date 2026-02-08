@@ -307,7 +307,10 @@ export abstract class AppVerifier<
 
 export type LsigVerifierOptions<VerificationKey> =
   AppVerifierOptions<VerificationKey> & {
-    totalLsigs?: number;
+    /** The number added to the lsig's group index to get the signals and proof from app call index */
+    appOffset: number;
+    /** The total number of lsigs that will be used to call the app (including the one created by lsigAccount and any extra ones created in verificationParams) */
+    totalLsigs: number;
   };
 
 export type LsigVerificationArgs<Witness extends Record<string, any>> = {
@@ -316,11 +319,11 @@ export type LsigVerificationArgs<Witness extends Record<string, any>> = {
   };
   addExtraLsigs?: boolean;
   paramsCallback: (params: {
-    appParams: {
+    lsigParams: {
       sender: Address;
       staticFee: AlgoAmount;
-      args: { signals: Witness["signals"]; proof: Witness["proof"] };
     };
+    args: { signals: Witness["signals"]; proof: Witness["proof"] };
     lsigsFee: AlgoAmount;
     extraLsigsTxns: Transaction[];
   }) => Promise<void>;
@@ -339,13 +342,15 @@ export abstract class LsigVerifier<
   wasmProver?: snarkjs.ZKArtifact;
   totalLsigs: number;
   vk?: VerificationKey;
+  appOffset: number;
 
   constructor(
     public curveName: "bls12381" | "bn254",
     options: LsigVerifierOptions<VerificationKey>,
   ) {
     this.algorand = options.algorand;
-    this.totalLsigs = options.totalLsigs ?? 6;
+    this.totalLsigs = options.totalLsigs;
+    this.appOffset = options.appOffset;
 
     if ("vk" in options) {
       this.vk = options.vk;
@@ -436,6 +441,7 @@ export abstract class LsigVerifier<
       this.getLsigSource(),
       {
         VERIFICATION_KEY: vkBytes,
+        APP_OFFSET: this.appOffset,
         ...additionalParams,
       },
     );
@@ -457,11 +463,11 @@ export abstract class LsigVerifier<
     }
 
     const params = {
-      appParams: {
+      lsigParams: {
         sender: await this.lsigAccount(),
         staticFee: microAlgos(0),
-        args: { signals: signals, proof: proof },
       },
+      args: { signals: signals, proof: proof },
       lsigsFee: microAlgos(1000 * this.totalLsigs),
       extraLsigsTxns: [] as Transaction[],
     };

@@ -2,9 +2,11 @@ import {
   Contract,
   Global,
   LogicSig,
+  TemplateVar,
   Txn,
   assert,
   assertMatch,
+  type uint64,
 } from "@algorandfoundation/algorand-typescript";
 import {
   abimethod,
@@ -16,10 +18,12 @@ import {
   type PlonkVerificationKey,
   type PlonkProof as PlonkProof,
   verifyPlonkFromTemplate,
-  type LagrangeWitness,
 } from "./plonk_bls12381.algo";
 
 import { type PublicSignals } from "./bls12381_common.algo";
+import { GTxn } from "@algorandfoundation/algorand-typescript/op";
+
+const APP_OFFSET = TemplateVar<uint64>("APP_OFFSET");
 
 export class PlonkVerifierWithLogs extends Contract {
   /** Dummy function that only exists so we can have the VerificationKey type in the generated client */
@@ -48,9 +52,10 @@ export class PlonkVerifierLsig extends LogicSig {
   program(): boolean {
     assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
 
-    const lw = decodeArc4<LagrangeWitness>(Txn.applicationArgs(3));
-    const proof = decodeArc4<PlonkProof>(Txn.applicationArgs(2));
-    const signals = decodeArc4<Uint256[]>(Txn.applicationArgs(1));
+    const idx: uint64 = Txn.groupIndex + APP_OFFSET;
+
+    const proof = decodeArc4<PlonkProof>(GTxn.applicationArgs(idx, 2));
+    const signals = decodeArc4<PublicSignals>(GTxn.applicationArgs(idx, 1));
 
     assert(verifyPlonkFromTemplate(signals, proof), "Verification failed");
 

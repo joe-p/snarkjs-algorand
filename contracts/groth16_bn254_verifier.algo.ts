@@ -2,9 +2,11 @@ import {
   Contract,
   Global,
   LogicSig,
+  TemplateVar,
   Txn,
   assert,
   assertMatch,
+  type uint64,
 } from "@algorandfoundation/algorand-typescript";
 import {
   abimethod,
@@ -18,6 +20,9 @@ import {
 } from "./groth16_bn254.algo";
 
 import { type PublicSignals } from "./bn254_common.algo";
+import { GTxn } from "@algorandfoundation/algorand-typescript/op";
+
+const APP_OFFSET = TemplateVar<uint64>("APP_OFFSET");
 
 export class Groth16Bn254VerifierWithLogs extends Contract {
   /** Dummy function that only exists so we can have the VerificationKey type in the generated client */
@@ -42,9 +47,10 @@ export class Groth16Bn254Verifier extends Contract {
 export class Groth16Bn254VerifierLsig extends LogicSig {
   program(): boolean {
     assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
+    const idx: uint64 = Txn.groupIndex + APP_OFFSET;
 
-    const proof = decodeArc4<Groth16Bn254Proof>(Txn.applicationArgs(2));
-    const signals = decodeArc4<PublicSignals>(Txn.applicationArgs(1));
+    const proof = decodeArc4<Groth16Bn254Proof>(GTxn.applicationArgs(idx, 2));
+    const signals = decodeArc4<PublicSignals>(GTxn.applicationArgs(idx, 1));
 
     assert(verifyFromTemplate(signals, proof), "Verification failed");
 

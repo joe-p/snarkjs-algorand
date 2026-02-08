@@ -3,13 +3,13 @@
 
 // contracts/plonk_verifier.algo.ts::program() -> uint64:
 main:
-    intcblock 32 96 1 0 384
+    intcblock 32 96 1 0 384 TMPL_APP_OFFSET
     bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x 0x01 TMPL_ROOT_OF_UNITY 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000 TMPL_VERIFICATION_KEY
     intc_3 // 0
     dupn 22
     bytec_1 // ""
     dupn 3
-    // contracts/plonk_verifier.algo.ts:49
+    // contracts/plonk_verifier.algo.ts:53
     // assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
     txn Fee
     !
@@ -18,14 +18,21 @@ main:
     ==
     &&
     assert // assert target is match for conditions
-    // contracts/plonk_verifier.algo.ts:52
-    // const proof = decodeArc4<PlonkProof>(Txn.applicationArgs(2));
+    // contracts/plonk_verifier.algo.ts:55
+    // const idx: uint64 = Txn.groupIndex + APP_OFFSET;
+    txn GroupIndex
+    intc 5 // TMPL_APP_OFFSET
+    +
+    // contracts/plonk_verifier.algo.ts:57
+    // const proof = decodeArc4<PlonkProof>(GTxn.applicationArgs(idx, 2));
+    dup
     pushint 2 // 2
-    txnas ApplicationArgs
-    // contracts/plonk_verifier.algo.ts:53
-    // const signals = decodeArc4<Uint256[]>(Txn.applicationArgs(1));
+    gtxnsas ApplicationArgs
+    // contracts/plonk_verifier.algo.ts:58
+    // const signals = decodeArc4<PublicSignals>(GTxn.applicationArgs(idx, 1));
+    swap
     intc_2 // 1
-    txnas ApplicationArgs
+    gtxnsas ApplicationArgs
     dup
     uncover 2
     // contracts/plonk_bls12381.algo.ts:261
@@ -1765,10 +1772,10 @@ main_after_while@22:
     //   op.concat(vk.X_2, G2_ONE), // G2 points
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/plonk_verifier.algo.ts:55
+    // contracts/plonk_verifier.algo.ts:60
     // assert(verifyPlonkFromTemplate(signals, proof), "Verification failed");
     assert // Verification failed
-    // contracts/plonk_verifier.algo.ts:57
+    // contracts/plonk_verifier.algo.ts:62
     // return true;
     intc_2 // 1
     return

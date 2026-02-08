@@ -3,7 +3,7 @@
 
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
-    // contracts/plonk_verifier.algo.ts:61
+    // contracts/plonk_verifier.algo.ts:66
     // export class PlonkSignalsAndProof extends Contract {
     txn NumAppArgs
     bz main___algots__.defaultCreate@5
@@ -13,7 +13,7 @@ main:
     err
 
 main_signalsAndProof_route@3:
-    // contracts/plonk_verifier.algo.ts:62
+    // contracts/plonk_verifier.algo.ts:67
     // public signalsAndProof(signals: Uint256[], proof: PlonkProof): void {}
     txn OnCompletion
     !
@@ -23,7 +23,7 @@ main_signalsAndProof_route@3:
     b signalsAndProof
 
 main___algots__.defaultCreate@5:
-    // contracts/plonk_verifier.algo.ts:61
+    // contracts/plonk_verifier.algo.ts:66
     // export class PlonkSignalsAndProof extends Contract {
     txn OnCompletion
     !
@@ -37,7 +37,7 @@ main___algots__.defaultCreate@5:
 
 // contracts/plonk_verifier.algo.ts::PlonkSignalsAndProof.signalsAndProof[routing]() -> void:
 signalsAndProof:
-    // contracts/plonk_verifier.algo.ts:62
+    // contracts/plonk_verifier.algo.ts:67
     // public signalsAndProof(signals: Uint256[], proof: PlonkProof): void {}
     txna ApplicationArgs 1
     dup

@@ -5,7 +5,7 @@
 main:
     intcblock 32 1 96 0 680
     bytecblock 0x 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 TMPL_VERIFICATION_KEY
-    // contracts/groth16_bls12381_verifier.algo.ts:32
+    // contracts/groth16_bls12381_verifier.algo.ts:37
     // export class Groth16Bls12381Verifier extends Contract {
     txn NumAppArgs
     bz main___algots__.defaultCreate@6
@@ -15,7 +15,7 @@ main:
     err
 
 main_verify_route@4:
-    // contracts/groth16_bls12381_verifier.algo.ts:37
+    // contracts/groth16_bls12381_verifier.algo.ts:42
     // verify(signals: PublicSignals, proof: Groth16Bls12381Proof): void {
     txn OnCompletion
     !
@@ -25,7 +25,7 @@ main_verify_route@4:
     b verify
 
 main__dummy_route@3:
-    // contracts/groth16_bls12381_verifier.algo.ts:34
+    // contracts/groth16_bls12381_verifier.algo.ts:39
     // @abimethod({ allowActions: "CloseOut" })
     txn OnCompletion
     pushint 2 // CloseOut
@@ -36,7 +36,7 @@ main__dummy_route@3:
     b _dummy
 
 main___algots__.defaultCreate@6:
-    // contracts/groth16_bls12381_verifier.algo.ts:32
+    // contracts/groth16_bls12381_verifier.algo.ts:37
     // export class Groth16Bls12381Verifier extends Contract {
     txn OnCompletion
     !
@@ -50,7 +50,7 @@ main___algots__.defaultCreate@6:
 
 // contracts/groth16_bls12381_verifier.algo.ts::Groth16Bls12381Verifier._dummy[routing]() -> void:
 _dummy:
-    // contracts/groth16_bls12381_verifier.algo.ts:34
+    // contracts/groth16_bls12381_verifier.algo.ts:39
     // @abimethod({ allowActions: "CloseOut" })
     txna ApplicationArgs 1
     dup
@@ -83,7 +83,7 @@ verify:
     intc_3 // 0
     dup
     bytec_0 // ""
-    // contracts/groth16_bls12381_verifier.algo.ts:37
+    // contracts/groth16_bls12381_verifier.algo.ts:42
     // verify(signals: PublicSignals, proof: Groth16Bls12381Proof): void {
     txna ApplicationArgs 1
     dupn 2
@@ -261,10 +261,10 @@ verify_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     //   g2Points,
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/groth16_bls12381_verifier.algo.ts:38
+    // contracts/groth16_bls12381_verifier.algo.ts:43
     // assert(verifyFromTemplate(signals, proof), "Verification failed");
     assert // Verification failed
-    // contracts/groth16_bls12381_verifier.algo.ts:37
+    // contracts/groth16_bls12381_verifier.algo.ts:42
     // verify(signals: PublicSignals, proof: Groth16Bls12381Proof): void {
     intc_1 // 1
     return

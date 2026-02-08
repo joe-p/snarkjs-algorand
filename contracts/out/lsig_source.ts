@@ -4,13 +4,13 @@ export const PLONK_LSIG_SOURCE = `#pragma version 11
 
 // contracts/plonk_verifier.algo.ts::program() -> uint64:
 main:
-    intcblock 32 96 1 0 384
+    intcblock 32 96 1 0 384 TMPL_APP_OFFSET
     bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x 0x01 TMPL_ROOT_OF_UNITY 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000 TMPL_VERIFICATION_KEY
     intc_3 // 0
     dupn 22
     bytec_1 // ""
     dupn 3
-    // contracts/plonk_verifier.algo.ts:49
+    // contracts/plonk_verifier.algo.ts:53
     // assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
     txn Fee
     !
@@ -19,14 +19,21 @@ main:
     ==
     &&
     assert // assert target is match for conditions
-    // contracts/plonk_verifier.algo.ts:52
-    // const proof = decodeArc4<PlonkProof>(Txn.applicationArgs(2));
+    // contracts/plonk_verifier.algo.ts:55
+    // const idx: uint64 = Txn.groupIndex + APP_OFFSET;
+    txn GroupIndex
+    intc 5 // TMPL_APP_OFFSET
+    +
+    // contracts/plonk_verifier.algo.ts:57
+    // const proof = decodeArc4<PlonkProof>(GTxn.applicationArgs(idx, 2));
+    dup
     pushint 2 // 2
-    txnas ApplicationArgs
-    // contracts/plonk_verifier.algo.ts:53
-    // const signals = decodeArc4<Uint256[]>(Txn.applicationArgs(1));
+    gtxnsas ApplicationArgs
+    // contracts/plonk_verifier.algo.ts:58
+    // const signals = decodeArc4<PublicSignals>(GTxn.applicationArgs(idx, 1));
+    swap
     intc_2 // 1
-    txnas ApplicationArgs
+    gtxnsas ApplicationArgs
     dup
     uncover 2
     // contracts/plonk_bls12381.algo.ts:261
@@ -1766,10 +1773,10 @@ main_after_while@22:
     //   op.concat(vk.X_2, G2_ONE), // G2 points
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/plonk_verifier.algo.ts:55
+    // contracts/plonk_verifier.algo.ts:60
     // assert(verifyPlonkFromTemplate(signals, proof), "Verification failed");
     assert // Verification failed
-    // contracts/plonk_verifier.algo.ts:57
+    // contracts/plonk_verifier.algo.ts:62
     // return true;
     intc_2 // 1
     return
@@ -1861,12 +1868,12 @@ export const GROTH16_LSIG_SOURCE = `#pragma version 11
 
 // contracts/groth16_bls12381_verifier.algo.ts::program() -> uint64:
 main:
-    intcblock 32 1 96 0 680
+    intcblock 32 1 96 0 680 TMPL_APP_OFFSET
     bytecblock 0x 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 TMPL_VERIFICATION_KEY
     intc_3 // 0
     dup
     bytec_0 // ""
-    // contracts/groth16_bls12381_verifier.algo.ts:44
+    // contracts/groth16_bls12381_verifier.algo.ts:49
     // assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
     txn Fee
     !
@@ -1875,14 +1882,25 @@ main:
     ==
     &&
     assert // assert target is match for conditions
-    // contracts/groth16_bls12381_verifier.algo.ts:46
-    // const proof = decodeArc4<Groth16Bls12381Proof>(Txn.applicationArgs(2));
+    // contracts/groth16_bls12381_verifier.algo.ts:50
+    // const idx: uint64 = Txn.groupIndex + APP_OFFSET;
+    txn GroupIndex
+    intc 5 // TMPL_APP_OFFSET
+    +
+    // contracts/groth16_bls12381_verifier.algo.ts:52-54
+    // const proof = decodeArc4<Groth16Bls12381Proof>(
+    //   GTxn.applicationArgs(idx, 2),
+    // );
+    dup
+    // contracts/groth16_bls12381_verifier.algo.ts:53
+    // GTxn.applicationArgs(idx, 2),
     pushint 2 // 2
-    txnas ApplicationArgs
-    // contracts/groth16_bls12381_verifier.algo.ts:47
-    // const signals = decodeArc4<PublicSignals>(Txn.applicationArgs(1));
+    gtxnsas ApplicationArgs
+    // contracts/groth16_bls12381_verifier.algo.ts:55
+    // const signals = decodeArc4<PublicSignals>(GTxn.applicationArgs(idx, 1));
+    swap
     intc_1 // 1
-    txnas ApplicationArgs
+    gtxnsas ApplicationArgs
     dup
     uncover 2
     // contracts/groth16_bls12381.algo.ts:253
@@ -2044,10 +2062,10 @@ main_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     //   g2Points,
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/groth16_bls12381_verifier.algo.ts:49
+    // contracts/groth16_bls12381_verifier.algo.ts:57
     // assert(verifyFromTemplate(signals, proof), "Verification failed");
     assert // Verification failed
-    // contracts/groth16_bls12381_verifier.algo.ts:51
+    // contracts/groth16_bls12381_verifier.algo.ts:59
     // return true;
     intc_1 // 1
     return
@@ -2197,12 +2215,12 @@ export const GROTH16_BN254_LSIG_SOURCE = `#pragma version 11
 
 // contracts/groth16_bn254_verifier.algo.ts::program() -> uint64:
 main:
-    intcblock 32 1 64 0 456
+    intcblock 32 1 64 0 456 TMPL_APP_OFFSET
     bytecblock 0x 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001 TMPL_VERIFICATION_KEY
     intc_3 // 0
     dup
     bytec_0 // ""
-    // contracts/groth16_bn254_verifier.algo.ts:44
+    // contracts/groth16_bn254_verifier.algo.ts:49
     // assertMatch(Txn, { fee: 0, rekeyTo: Global.zeroAddress });
     txn Fee
     !
@@ -2211,14 +2229,21 @@ main:
     ==
     &&
     assert // assert target is match for conditions
-    // contracts/groth16_bn254_verifier.algo.ts:46
-    // const proof = decodeArc4<Groth16Bn254Proof>(Txn.applicationArgs(2));
+    // contracts/groth16_bn254_verifier.algo.ts:50
+    // const idx: uint64 = Txn.groupIndex + APP_OFFSET;
+    txn GroupIndex
+    intc 5 // TMPL_APP_OFFSET
+    +
+    // contracts/groth16_bn254_verifier.algo.ts:52
+    // const proof = decodeArc4<Groth16Bn254Proof>(GTxn.applicationArgs(idx, 2));
+    dup
     pushint 2 // 2
-    txnas ApplicationArgs
-    // contracts/groth16_bn254_verifier.algo.ts:47
-    // const signals = decodeArc4<PublicSignals>(Txn.applicationArgs(1));
+    gtxnsas ApplicationArgs
+    // contracts/groth16_bn254_verifier.algo.ts:53
+    // const signals = decodeArc4<PublicSignals>(GTxn.applicationArgs(idx, 1));
+    swap
     intc_1 // 1
-    txnas ApplicationArgs
+    gtxnsas ApplicationArgs
     dup
     uncover 2
     // contracts/groth16_bn254.algo.ts:245
@@ -2373,10 +2398,10 @@ main_after_inlined_contracts/groth16_bn254.algo.ts::computeCpub@13:
     // contracts/groth16_bn254.algo.ts:191
     // const res = op.EllipticCurve.pairingCheck(op.Ec.BN254g1, g1Points, g2Points);
     ec_pairing_check BN254g1
-    // contracts/groth16_bn254_verifier.algo.ts:49
+    // contracts/groth16_bn254_verifier.algo.ts:55
     // assert(verifyFromTemplate(signals, proof), "Verification failed");
     assert // Verification failed
-    // contracts/groth16_bn254_verifier.algo.ts:51
+    // contracts/groth16_bn254_verifier.algo.ts:57
     // return true;
     intc_1 // 1
     return
