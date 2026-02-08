@@ -183,12 +183,12 @@ describe("groth16 bn254 verifier lsig", () => {
     // Circuit: simple Fibonacci program (fib(10))
     // Proof system: Groth16 over BN254
     // Generated: 2026-01-15 using sp1-sdk v3.0.0
-    // 
+    //
     // To regenerate:
     // 1. Install SP1 toolchain: cargo install sp1-cli
     // 2. Build program: cd examples/fibonacci && cargo prove build
     // 3. Generate proof: cargo prove --groth16 --bn254
-    // 
+    //
     // These vectors verify that our decoder correctly handles SP1's
     // compressed point format and VK structure.
     const sp1ProofHex =
