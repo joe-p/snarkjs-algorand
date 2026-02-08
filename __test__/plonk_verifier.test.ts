@@ -7,9 +7,9 @@ import {
   PlonkLsigVerifier,
 } from "../src/plonk";
 import {
-  PlonkSignalsAndProofClient,
-  PlonkSignalsAndProofFactory,
-} from "../contracts/clients/PlonkSignalsAndProof";
+  PlonkBls12381SignalsAndProofClient,
+  PlonkBls12381SignalsAndProofFactory,
+} from "../contracts/clients/PlonkBls12381SignalsAndProof";
 
 const LSIG_BUDGET = 20_000; // Budget for each logicsig
 const APP_BUDGET = 700; // Budget for the app call
@@ -75,22 +75,22 @@ describe("verifier", () => {
 
     // @ts-expect-error curves is not typed
     curve = await snarkjs.curves.getCurveFromName("bls12381");
-    debugVerifier = new PlonkAppVerifier(
+    debugVerifier = new PlonkAppVerifier({
       algorand,
-      "circuit/plonk_circuit_final.zkey",
-      "circuit/circuit_js/circuit.wasm",
-    );
+      zKey: "circuit/plonk_circuit_final.zkey",
+      wasmProver: "circuit/circuit_js/circuit.wasm",
+    });
     await debugVerifier.deploy({
       appName: `plonk-verifier-${Date.now()}`,
       debugLogging: true,
       defaultSender,
     });
 
-    verifier = new PlonkAppVerifier(
+    verifier = new PlonkAppVerifier({
       algorand,
-      "circuit/plonk_circuit_final.zkey",
-      "circuit/circuit_js/circuit.wasm",
-    );
+      zKey: "circuit/plonk_circuit_final.zkey",
+      wasmProver: "circuit/circuit_js/circuit.wasm",
+    });
     await verifier.deploy({
       appName: `plonk-verifier-${Date.now()}`,
       defaultSender,
@@ -258,17 +258,17 @@ describe("verifier", () => {
 describe("verifier lsig", () => {
   let verifier: PlonkLsigVerifier;
   let algorand: AlgorandClient;
-  let client: PlonkSignalsAndProofClient;
+  let client: PlonkBls12381SignalsAndProofClient;
 
   beforeAll(async () => {
     algorand = AlgorandClient.defaultLocalNet();
-    verifier = new PlonkLsigVerifier(
+    verifier = new PlonkLsigVerifier({
       algorand,
-      "circuit/plonk_circuit_final.zkey",
-      "circuit/circuit_js/circuit.wasm",
-    );
+      zKey: "circuit/plonk_circuit_final.zkey",
+      wasmProver: "circuit/circuit_js/circuit.wasm",
+    });
 
-    const signalsAndProofFactory = new PlonkSignalsAndProofFactory({
+    const signalsAndProofFactory = new PlonkBls12381SignalsAndProofFactory({
       algorand,
       defaultSender: await algorand.account.localNetDispenser(),
     });

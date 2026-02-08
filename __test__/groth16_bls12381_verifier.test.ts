@@ -27,22 +27,22 @@ describe("groth16 BLS12-381 verifier", () => {
 
     // @ts-expect-error curves is not typed
     curve = await snarkjs.curves.getCurveFromName("bls12381");
-    debugVerifier = new Groth16Bls12381AppVerifier(
+    debugVerifier = new Groth16Bls12381AppVerifier({
       algorand,
-      "circuit/groth16_circuit_final.zkey",
-      "circuit/circuit_js/circuit.wasm",
-    );
+      zKey: "circuit/groth16_circuit_final.zkey",
+      wasmProver: "circuit/circuit_js/circuit.wasm",
+    });
     await debugVerifier.deploy({
       appName: `groth16-verifier-${Date.now()}`,
       debugLogging: true,
       defaultSender,
     });
 
-    verifier = new Groth16Bls12381AppVerifier(
+    verifier = new Groth16Bls12381AppVerifier({
       algorand,
-      "circuit/groth16_circuit_final.zkey",
-      "circuit/circuit_js/circuit.wasm",
-    );
+      zKey: "circuit/groth16_circuit_final.zkey",
+      wasmProver: "circuit/circuit_js/circuit.wasm",
+    });
     await verifier.deploy({
       appName: `groth16-verifier-${Date.now()}`,
       defaultSender,
@@ -123,11 +123,11 @@ describe("groth16 verifier lsig", () => {
 
   beforeAll(async () => {
     algorand = AlgorandClient.defaultLocalNet();
-    verifier = new Groth16Bls12381LsigVerifier(
+    verifier = new Groth16Bls12381LsigVerifier({
       algorand,
-      "circuit/groth16_circuit_final.zkey",
-      "circuit/circuit_js/circuit.wasm",
-    );
+      zKey: "circuit/groth16_circuit_final.zkey",
+      wasmProver: "circuit/circuit_js/circuit.wasm",
+    });
 
     const signalsAndProofFactory = new Groth16Bls12381SignalsAndProofFactory({
       algorand,

@@ -24,6 +24,8 @@ import {
   encodeSignals,
   reorderG2Uncompressed,
   getProofFromFile,
+  type AppVerifierOptions,
+  type LsigVerifierOptions,
 } from "./common";
 
 export {
@@ -132,6 +134,13 @@ export class PlonkLsigVerifier extends LsigVerifier<
   PlonkVerificationKey,
   PlonkWitness
 > {
+  constructor(o: LsigVerifierOptions<PlonkVerificationKey>) {
+    const options: LsigVerifierOptions<PlonkVerificationKey> = {
+      ...o,
+      totalLsigs: o.totalLsigs ?? 7,
+    };
+    super("bls12381", options);
+  }
   protected async getVkey(
     zKey: snarkjs.ZKArtifact,
     curve: any,
@@ -195,6 +204,10 @@ export class PlonkAppVerifier extends AppVerifier<
   PlonkVerifierDeployParams,
   PlonkVerificationKey
 > {
+  constructor(o: AppVerifierOptions<PlonkVerificationKey>) {
+    super("bls12381", o);
+  }
+
   protected newFactory(o: {
     algorand: AlgorandClient;
     defaultSender: Address;

@@ -59,6 +59,16 @@ export function getProofFromFile(path: string): any {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
+export type AppVerifierOptions<VerificationKey> = {
+  algorand: AlgorandClient;
+} & (
+  | {
+      zKey: snarkjs.ZKArtifact;
+      wasmProver: snarkjs.ZKArtifact;
+    }
+  | { vk: VerificationKey }
+);
+
 export abstract class AppVerifier<
   Factory extends Groth16Bls12381VerifierFactory | PlonkVerifierFactory,
   LogsFactory extends
@@ -75,13 +85,24 @@ export abstract class AppVerifier<
 > {
   appClient?: Client;
   curve?: any;
+  vk?: VerificationKey;
+  algorand: AlgorandClient;
+  zKey?: snarkjs.ZKArtifact;
+  wasmProver?: snarkjs.ZKArtifact;
 
   constructor(
-    public algorand: AlgorandClient,
-    public zKey: snarkjs.ZKArtifact,
-    public wasmProver: snarkjs.ZKArtifact,
-    protected curveName: string = "bls12381",
-  ) {}
+    public curveName: "bls12381" | "bn254",
+    options: AppVerifierOptions<VerificationKey>,
+  ) {
+    this.algorand = options.algorand;
+
+    if ("vk" in options) {
+      this.vk = options.vk;
+    } else {
+      this.zKey = options.zKey;
+      this.wasmProver = options.wasmProver;
+    }
+  }
 
   protected abstract newFactory(o: {
     algorand: AlgorandClient;
@@ -120,8 +141,11 @@ export abstract class AppVerifier<
 
   private async ensureCurveInstantiation() {
     if (!this.curve) {
+      // snarkjs uses "bn128" for BN254 curve
+      const snarkjsCurveName =
+        this.curveName === "bn254" ? "bn128" : this.curveName;
       // @ts-expect-error curves is not typed
-      this.curve = await snarkjs.curves.getCurveFromName(this.curveName);
+      this.curve = await snarkjs.curves.getCurveFromName(snarkjsCurveName);
     }
   }
 
@@ -151,7 +175,13 @@ export abstract class AppVerifier<
       });
     }
 
-    const vk = await this.getVkey(this.zKey, this.curve);
+    if ((!this.zKey || !this.wasmProver) && !this.vk) {
+      throw new Error(
+        "Must provide either zKey and wasmProver or vk during construction",
+      );
+    }
+
+    const vk = this.vk ?? (await this.getVkey(this.zKey!, this.curve));
     const vkBytes = this.encodeVkey(vk, factory.appSpec);
 
     const additionalParams = this.getAdditionalDeployParams(vk, this.curve);
@@ -170,6 +200,12 @@ export abstract class AppVerifier<
 
   async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<Witness> {
     await this.ensureCurveInstantiation();
+
+    if (!this.wasmProver || !this.zKey) {
+      throw new Error(
+        "Cannot generate proof and signals without wasmProver and zKey",
+      );
+    }
 
     const { proof: rawProof, publicSignals: rawSignals } = await this.fullProve(
       inputs,
@@ -269,19 +305,55 @@ export abstract class AppVerifier<
   }
 }
 
+export type LsigVerifierOptions<VerificationKey> =
+  AppVerifierOptions<VerificationKey> & {
+    totalLsigs?: number;
+  };
+
+export type LsigVerificationArgs<Witness extends Record<string, any>> = {
+  composer: {
+    addTransaction: (txn: Transaction) => unknown;
+  };
+  addExtraLsigs?: boolean;
+  paramsCallback: (params: {
+    appParams: {
+      sender: Address;
+      staticFee: AlgoAmount;
+      args: { signals: Witness["signals"]; proof: Witness["proof"] };
+    };
+    lsigsFee: AlgoAmount;
+    extraLsigsTxns: Transaction[];
+  }) => Promise<void>;
+} & (
+  | { inputs: snarkjs.CircuitSignals }
+  | { proof: Witness["proof"]; signals: Witness["signals"] }
+);
+
 export abstract class LsigVerifier<
   VerificationKey extends Groth16Bls12381VerificationKey | PlonkVerificationKey,
   Witness extends Groth16Bls12381Witness | PlonkWitness,
 > {
   curve?: any;
+  algorand: AlgorandClient;
+  zKey?: snarkjs.ZKArtifact;
+  wasmProver?: snarkjs.ZKArtifact;
+  totalLsigs: number;
+  vk?: VerificationKey;
 
   constructor(
-    public algorand: AlgorandClient,
-    public zKey: snarkjs.ZKArtifact,
-    public wasmProver: snarkjs.ZKArtifact,
-    public totalLsigs: number = 6,
-    protected curveName: string = "bls12381",
-  ) {}
+    public curveName: "bls12381" | "bn254",
+    options: LsigVerifierOptions<VerificationKey>,
+  ) {
+    this.algorand = options.algorand;
+    this.totalLsigs = options.totalLsigs ?? 6;
+
+    if ("vk" in options) {
+      this.vk = options.vk;
+    } else {
+      this.zKey = options.zKey;
+      this.wasmProver = options.wasmProver;
+    }
+  }
 
   protected abstract getVkey(
     zKey: snarkjs.ZKArtifact,
@@ -314,13 +386,22 @@ export abstract class LsigVerifier<
 
   private async ensureCurveInstantiation() {
     if (!this.curve) {
+      // snarkjs uses "bn128" for BN254 curve
+      const snarkjsCurveName =
+        this.curveName === "bn254" ? "bn128" : this.curveName;
       // @ts-expect-error curves is not typed
-      this.curve = await snarkjs.curves.getCurveFromName(this.curveName);
+      this.curve = await snarkjs.curves.getCurveFromName(snarkjsCurveName);
     }
   }
 
   async proofAndSignals(inputs: snarkjs.CircuitSignals): Promise<Witness> {
     await this.ensureCurveInstantiation();
+
+    if (!this.wasmProver || !this.zKey) {
+      throw new Error(
+        "Cannot generate proof and signals without wasmProver and zKey",
+      );
+    }
 
     const { proof: rawProof, publicSignals: rawSignals } = await this.fullProve(
       inputs,
@@ -340,7 +421,13 @@ export abstract class LsigVerifier<
   async lsigAccount() {
     await this.ensureCurveInstantiation();
 
-    const vk = await this.getVkey(this.zKey, this.curve);
+    if (!this.vk && (!this.zKey || !this.wasmProver)) {
+      throw new Error(
+        "Cannot generate lsig account without either vk or wasmProver and zKey",
+      );
+    }
+
+    const vk = this.vk ?? (await this.getVkey(this.zKey!, this.curve!));
     const vkBytes = this.encodeVkey(vk, this.getAppSpec());
 
     const additionalParams = this.getAdditionalTemplateParams(vk, this.curve);
@@ -356,34 +443,24 @@ export abstract class LsigVerifier<
     return this.algorand.account.logicsig(compilation.compiledBase64ToBytes);
   }
 
-  async verificationParams({
-    inputs,
-    composer,
-    paramsCallback,
-    addExtraLsigs = true,
-  }: {
-    inputs: snarkjs.CircuitSignals;
-    composer: {
-      addTransaction: (txn: Transaction) => unknown;
-    };
-    addExtraLsigs?: boolean;
-    paramsCallback: (params: {
-      appParams: {
-        sender: Address;
-        staticFee: AlgoAmount;
-        args: { signals: Witness["signals"]; proof: Witness["proof"] };
-      };
-      lsigsFee: AlgoAmount;
-      extraLsigsTxns: Transaction[];
-    }) => Promise<void>;
-  }): Promise<void> {
-    const { proof, signals } = await this.proofAndSignals(inputs);
+  async verificationParams(args: LsigVerificationArgs<Witness>): Promise<void> {
+    let proof: Witness["proof"];
+    let signals: Witness["signals"];
+
+    if ("inputs" in args) {
+      const proofAndSignals = await this.proofAndSignals(args.inputs);
+      proof = proofAndSignals.proof;
+      signals = proofAndSignals.signals;
+    } else {
+      proof = args.proof;
+      signals = args.signals;
+    }
 
     const params = {
       appParams: {
         sender: await this.lsigAccount(),
         staticFee: microAlgos(0),
-        args: { signals, proof },
+        args: { signals: signals, proof: proof },
       },
       lsigsFee: microAlgos(1000 * this.totalLsigs),
       extraLsigsTxns: [] as Transaction[],
@@ -396,7 +473,7 @@ export abstract class LsigVerifier<
       compilation.compiledBase64ToBytes,
     );
 
-    await paramsCallback(params);
+    await args.paramsCallback(params);
 
     for (let i = 0; i < this.totalLsigs - 1; i++) {
       const lsigPay = await this.algorand.createTransaction.payment({
@@ -409,8 +486,8 @@ export abstract class LsigVerifier<
 
       params.extraLsigsTxns.push(lsigPay);
 
-      if (addExtraLsigs) {
-        composer.addTransaction(lsigPay);
+      if (args.addExtraLsigs ?? true) {
+        args.composer.addTransaction(lsigPay);
       }
     }
   }
