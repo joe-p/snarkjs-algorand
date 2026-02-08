@@ -13,8 +13,8 @@ import {
 } from "../contracts/clients/Groth16Bn254SignalsAndProof";
 import type { Groth16Bn254Proof } from "../src/groth16";
 import {
-  decodeGnarkBn254Proof,
-  decodeGnarkBn254Vk,
+  decodeGnarkGroth16Bn254Proof,
+  decodeGnarkGroth16Bn254Vk,
 } from "../src/gnark_groth16";
 
 const LSIG_BUDGET = 20_000; // Budget for each logicsig
@@ -211,9 +211,9 @@ describe("groth16 bn254 verifier lsig", () => {
       return bytes;
     }
 
-    const proof = decodeGnarkBn254Proof(hexToBytes(sp1ProofHex));
+    const proof = decodeGnarkGroth16Bn254Proof(hexToBytes(sp1ProofHex));
 
-    const vk = decodeGnarkBn254Vk(hexToBytes(sp1VkHex));
+    const vk = decodeGnarkGroth16Bn254Vk(hexToBytes(sp1VkHex));
 
     it("rejects oversized num_k", () => {
       const vkBytes = hexToBytes(sp1VkHex);
@@ -222,7 +222,7 @@ describe("groth16 bn254 verifier lsig", () => {
       mutated[289] = 0x01;
       mutated[290] = 0x00;
       mutated[291] = 0x00;
-      expect(() => decodeGnarkBn254Vk(mutated)).toThrow(
+      expect(() => decodeGnarkGroth16Bn254Vk(mutated)).toThrow(
         "num_k must be <= 1024",
       );
     });
@@ -259,7 +259,7 @@ describe("groth16 bn254 verifier lsig", () => {
       proofBytes[62] = 0x00;
       proofBytes[61] = 0x00;
       proofBytes[60] = 0x00;
-      expect(() => decodeGnarkBn254Proof(proofBytes)).toThrow();
+      expect(() => decodeGnarkGroth16Bn254Proof(proofBytes)).toThrow();
     });
 
     it("rejects invalid compressed G1 flag in VK", () => {
@@ -268,7 +268,7 @@ describe("groth16 bn254 verifier lsig", () => {
       // Set invalid flag (0x00 instead of 0x80 or 0xc0)
       const mutated = new Uint8Array(vkBytes);
       mutated[0] = 0x00;
-      expect(() => decodeGnarkBn254Vk(mutated)).toThrow(
+      expect(() => decodeGnarkGroth16Bn254Vk(mutated)).toThrow(
         "Invalid G1 point flag",
       );
     });

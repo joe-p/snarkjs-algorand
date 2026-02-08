@@ -9,7 +9,7 @@
 ## Features
 
 - Added support for passing verification keys (VK) directly to verifiers without requiring zKey and wasmProver files
-- Added `gnark_groth16` module with `decodeGnarkBn254Proof` and `decodeGnarkBn254Vk` functions for SP1 proof verification support
+- Added `gnark_groth16` module with `decodeGnarkGroth16Bn254Proof` and `decodeGnarkGroth16Bn254Vk` functions for SP1 proof verification support
 
 # 0.9.0
 

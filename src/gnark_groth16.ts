@@ -217,7 +217,7 @@ function parseG2Uncompressed(bytes: Uint8Array, label: string): Uint8Array {
   return validateG2Affine(x, y);
 }
 
-export function decodeGnarkBn254Proof(
+export function decodeGnarkGroth16Bn254Proof(
   encodedProof: Uint8Array,
 ): Groth16Bn254Proof {
   if (encodedProof.length !== 256) {
@@ -231,7 +231,7 @@ export function decodeGnarkBn254Proof(
   return { piA, piB, piC };
 }
 
-export function decodeGnarkBn254Vk(
+export function decodeGnarkGroth16Bn254Vk(
   vkBytes: Uint8Array,
 ): Groth16Bn254VerificationKey {
   // [0..32]    G1 Alpha compressed
