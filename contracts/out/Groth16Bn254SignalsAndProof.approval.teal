@@ -3,7 +3,7 @@
 
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
-    // contracts/groth16_bn254_verifier.algo.ts:55
+    // contracts/groth16_bn254_verifier.algo.ts:61
     // export class Groth16Bn254SignalsAndProof extends Contract {
     txn NumAppArgs
     bz main___algots__.defaultCreate@5
@@ -13,7 +13,7 @@ main:
     err
 
 main_signalsAndProof_route@3:
-    // contracts/groth16_bn254_verifier.algo.ts:56-59
+    // contracts/groth16_bn254_verifier.algo.ts:62-65
     // public signalsAndProof(
     //   signals: PublicSignals,
     //   proof: Groth16Bn254Proof,
@@ -26,7 +26,7 @@ main_signalsAndProof_route@3:
     b signalsAndProof
 
 main___algots__.defaultCreate@5:
-    // contracts/groth16_bn254_verifier.algo.ts:55
+    // contracts/groth16_bn254_verifier.algo.ts:61
     // export class Groth16Bn254SignalsAndProof extends Contract {
     txn OnCompletion
     !
@@ -40,7 +40,7 @@ main___algots__.defaultCreate@5:
 
 // contracts/groth16_bn254_verifier.algo.ts::Groth16Bn254SignalsAndProof.signalsAndProof[routing]() -> void:
 signalsAndProof:
-    // contracts/groth16_bn254_verifier.algo.ts:56-59
+    // contracts/groth16_bn254_verifier.algo.ts:62-65
     // public signalsAndProof(
     //   signals: PublicSignals,
     //   proof: Groth16Bn254Proof,

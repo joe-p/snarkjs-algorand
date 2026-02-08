@@ -263,6 +263,8 @@ describe("verifier lsig", () => {
   beforeAll(async () => {
     algorand = AlgorandClient.defaultLocalNet();
     verifier = new PlonkLsigVerifier({
+      totalLsigs: 6,
+      appOffset: 0,
       algorand,
       zKey: "circuit/plonk_circuit_final.zkey",
       wasmProver: "circuit/circuit_js/circuit.wasm",
@@ -287,10 +289,10 @@ describe("verifier lsig", () => {
       inputs: { a: 10, b: 21 },
       composer: group,
       paramsCallback: async (params) => {
-        const { appParams, lsigsFee } = params;
+        const { lsigParams, lsigsFee, args } = params;
 
         // Call app with signals and proof via lsig
-        group.signalsAndProof(appParams);
+        group.signalsAndProof({ ...lsigParams, args });
 
         // Pay the required fees
         const feePayer = await algorand.account.localNetDispenser();

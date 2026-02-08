@@ -5,7 +5,7 @@
 main:
     intcblock 32 96 1 0 384
     bytecblock 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 0x 0x01 TMPL_ROOT_OF_UNITY 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000 TMPL_VERIFICATION_KEY
-    // contracts/plonk_verifier.algo.ts:24
+    // contracts/plonk_verifier.algo.ts:28
     // export class PlonkVerifierWithLogs extends Contract {
     txn NumAppArgs
     bz main___algots__.defaultCreate@6
@@ -15,7 +15,7 @@ main:
     err
 
 main_verify_route@4:
-    // contracts/plonk_verifier.algo.ts:29
+    // contracts/plonk_verifier.algo.ts:33
     // verify(signals: PublicSignals, proof: PlonkProof): void {
     txn OnCompletion
     !
@@ -25,7 +25,7 @@ main_verify_route@4:
     b verify
 
 main__dummy_route@3:
-    // contracts/plonk_verifier.algo.ts:26
+    // contracts/plonk_verifier.algo.ts:30
     // @abimethod({ allowActions: "CloseOut" })
     txn OnCompletion
     pushint 2 // CloseOut
@@ -36,7 +36,7 @@ main__dummy_route@3:
     b _dummy
 
 main___algots__.defaultCreate@6:
-    // contracts/plonk_verifier.algo.ts:24
+    // contracts/plonk_verifier.algo.ts:28
     // export class PlonkVerifierWithLogs extends Contract {
     txn OnCompletion
     !
@@ -127,7 +127,7 @@ getChallenge:
 
 // contracts/plonk_verifier.algo.ts::PlonkVerifierWithLogs._dummy[routing]() -> void:
 _dummy:
-    // contracts/plonk_verifier.algo.ts:26
+    // contracts/plonk_verifier.algo.ts:30
     // @abimethod({ allowActions: "CloseOut" })
     txna ApplicationArgs 1
     len
@@ -144,7 +144,7 @@ verify:
     dupn 30
     bytec_1 // ""
     dupn 3
-    // contracts/plonk_verifier.algo.ts:29
+    // contracts/plonk_verifier.algo.ts:33
     // verify(signals: PublicSignals, proof: PlonkProof): void {
     txna ApplicationArgs 1
     dupn 2
@@ -2090,13 +2090,13 @@ verify_after_while@27:
     //   op.concat(vk.X_2, G2_ONE), // G2 points
     // );
     ec_pairing_check BLS12_381g1
-    // contracts/plonk_verifier.algo.ts:30-33
+    // contracts/plonk_verifier.algo.ts:34-37
     // assert(
     //   verifyPlonkFromTemplateWithLogs(signals, proof),
     //   "Verification failed",
     // );
     assert // Verification failed
-    // contracts/plonk_verifier.algo.ts:29
+    // contracts/plonk_verifier.algo.ts:33
     // verify(signals: PublicSignals, proof: PlonkProof): void {
     intc_2 // 1
     return

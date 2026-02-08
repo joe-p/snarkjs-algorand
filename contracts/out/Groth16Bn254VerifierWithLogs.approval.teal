@@ -5,7 +5,7 @@
 main:
     intcblock 32 1 64 0 456
     bytecblock 0x 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001 TMPL_VERIFICATION_KEY
-    // contracts/groth16_bn254_verifier.algo.ts:22
+    // contracts/groth16_bn254_verifier.algo.ts:27
     // export class Groth16Bn254VerifierWithLogs extends Contract {
     txn NumAppArgs
     bz main___algots__.defaultCreate@6
@@ -15,7 +15,7 @@ main:
     err
 
 main_verify_route@4:
-    // contracts/groth16_bn254_verifier.algo.ts:27
+    // contracts/groth16_bn254_verifier.algo.ts:32
     // verify(signals: PublicSignals, proof: Groth16Bn254Proof): void {
     txn OnCompletion
     !
@@ -25,7 +25,7 @@ main_verify_route@4:
     b verify
 
 main__dummy_route@3:
-    // contracts/groth16_bn254_verifier.algo.ts:24
+    // contracts/groth16_bn254_verifier.algo.ts:29
     // @abimethod({ allowActions: "CloseOut" })
     txn OnCompletion
     pushint 2 // CloseOut
@@ -36,7 +36,7 @@ main__dummy_route@3:
     b _dummy
 
 main___algots__.defaultCreate@6:
-    // contracts/groth16_bn254_verifier.algo.ts:22
+    // contracts/groth16_bn254_verifier.algo.ts:27
     // export class Groth16Bn254VerifierWithLogs extends Contract {
     txn OnCompletion
     !
@@ -50,7 +50,7 @@ main___algots__.defaultCreate@6:
 
 // contracts/groth16_bn254_verifier.algo.ts::Groth16Bn254VerifierWithLogs._dummy[routing]() -> void:
 _dummy:
-    // contracts/groth16_bn254_verifier.algo.ts:24
+    // contracts/groth16_bn254_verifier.algo.ts:29
     // @abimethod({ allowActions: "CloseOut" })
     txna ApplicationArgs 1
     dup
@@ -83,7 +83,7 @@ verify:
     intc_3 // 0
     dup
     bytec_0 // ""
-    // contracts/groth16_bn254_verifier.algo.ts:27
+    // contracts/groth16_bn254_verifier.algo.ts:32
     // verify(signals: PublicSignals, proof: Groth16Bn254Proof): void {
     txna ApplicationArgs 1
     dupn 2
@@ -308,10 +308,10 @@ verify_after_inlined_contracts/groth16_bn254.algo.ts::computeCpub@13:
     // contracts/bn254_common.algo.ts:53
     // log(value);
     log
-    // contracts/groth16_bn254_verifier.algo.ts:28
+    // contracts/groth16_bn254_verifier.algo.ts:33
     // assert(verifyFromTemplateWithLogs(signals, proof), "Verification failed");
     assert // Verification failed
-    // contracts/groth16_bn254_verifier.algo.ts:27
+    // contracts/groth16_bn254_verifier.algo.ts:32
     // verify(signals: PublicSignals, proof: Groth16Bn254Proof): void {
     intc_1 // 1
     return

@@ -1,3 +1,19 @@
+# UNRELEASED: 0.11.0
+
+## BREAKING CHANGES
+
+- Lsig verifiers now require `appOffset` parameter to specify the offset from lsig group index to app call
+  - To preserve previous behavior, use `appOffset: 0`
+- Lsig verifiers now require `totalLsigs` parameter
+  - To preserve previous behavior, use `totalLsigs: 6`
+- `paramsCallback` API changed: `appParams` renamed to `lsigParams`, `args` moved to separate property
+  - Old: `paramsCallback: ({ appParams: { sender, staticFee, args }, lsigsFee })`
+  - New: `paramsCallback: ({ lsigParams: { sender, staticFee }, args, lsigsFee })`
+
+## Features
+
+- Lsig contracts now use `GTxn.applicationArgs` with configurable `APP_OFFSET` template variable for more flexible transaction group layouts
+
 # 0.10.0
 
 ## BREAKING CHANGES

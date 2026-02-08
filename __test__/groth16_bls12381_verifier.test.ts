@@ -124,6 +124,8 @@ describe("groth16 verifier lsig", () => {
   beforeAll(async () => {
     algorand = AlgorandClient.defaultLocalNet();
     verifier = new Groth16Bls12381LsigVerifier({
+      appOffset: 0,
+      totalLsigs: 6,
       algorand,
       zKey: "circuit/groth16_circuit_final.zkey",
       wasmProver: "circuit/circuit_js/circuit.wasm",
@@ -148,10 +150,10 @@ describe("groth16 verifier lsig", () => {
       inputs: { a: 10, b: 21 },
       composer: group,
       paramsCallback: async (params) => {
-        const { appParams, lsigsFee } = params;
+        const { lsigParams, args, lsigsFee } = params;
 
         // Call app with signals and proof via lsig
-        group.signalsAndProof(appParams);
+        group.signalsAndProof({ ...lsigParams, args });
 
         // Pay the required fees
         const feePayer = await algorand.account.localNetDispenser();

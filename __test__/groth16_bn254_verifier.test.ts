@@ -133,6 +133,8 @@ describe("groth16 bn254 verifier lsig", () => {
   beforeAll(async () => {
     algorand = AlgorandClient.defaultLocalNet();
     verifier = new Groth16Bn254LsigVerifier({
+      appOffset: 0,
+      totalLsigs: 6,
       algorand,
       zKey: "circuit/groth16_bn254_circuit_final.zkey",
       wasmProver: "circuit/circuit_bn254_js/circuit_bn254.wasm",
@@ -157,10 +159,10 @@ describe("groth16 bn254 verifier lsig", () => {
       inputs: { a: 10, b: 21 },
       composer: group,
       paramsCallback: async (params) => {
-        const { appParams, lsigsFee } = params;
+        const { lsigParams, args, lsigsFee } = params;
 
         // Call app with signals and proof via lsig
-        group.signalsAndProof(appParams);
+        group.signalsAndProof({ ...lsigParams, args });
 
         // Pay the required fees
         const feePayer = await algorand.account.localNetDispenser();
@@ -275,6 +277,8 @@ describe("groth16 bn254 verifier lsig", () => {
 
     it("works with lsig verifier", async () => {
       const sp1Lsig = new Groth16Bn254LsigVerifier({
+        totalLsigs: 6,
+        appOffset: 0,
         algorand,
         vk,
       });
@@ -286,10 +290,10 @@ describe("groth16 bn254 verifier lsig", () => {
         signals,
         composer: group,
         paramsCallback: async (params) => {
-          const { appParams, lsigsFee } = params;
+          const { lsigParams, lsigsFee, args } = params;
 
           // Call app with signals and proof via lsig
-          group.signalsAndProof(appParams);
+          group.signalsAndProof({ ...lsigParams, args });
 
           // Pay the required fees
           const feePayer = await algorand.account.localNetDispenser();
