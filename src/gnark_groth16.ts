@@ -1,9 +1,14 @@
-import { bn254 } from "@noble/curves/bn254.js";
+import * as nobleBn254 from "@noble/curves/bn254.js";
 import type { Groth16Bn254Proof, Groth16Bn254VerificationKey } from "./groth16";
 
-const { Fp, Fp2 } = bn254.fields;
+const bn254 = nobleBn254.bn254;
+const { Fp, Fp2, Fr } = bn254.fields;
 const G1Point = bn254.G1.Point;
 const G2Point = bn254.G2.Point;
+
+// BN254 curve order (subgroup order for both G1 and G2)
+// Fr is the scalar field, and its order equals the subgroup order
+const SUBGROUP_ORDER = Fr.ORDER;
 
 const FLAG_MASK = 0xc0;
 const FLAG_POSITIVE = 0x80; // smaller y
@@ -11,6 +16,17 @@ const FLAG_NEGATIVE = 0xc0; // larger y
 
 const G2_B = Fp2.mulByB(Fp2.ONE);
 
+/**
+ * Maximum number of IC (input commitment) points allowed in a Gnark BN254 verification key.
+ *
+ * This limit is set to 1024 to prevent:
+ * 1. Excessive memory consumption during VK parsing
+ * 2. Potential DoS attacks with maliciously large VKs
+ * 3. Transaction size limits on Algorand (16KB max)
+ *
+ * Each IC point is 32 bytes compressed, so 1024 points = 32KB which is already
+ * over the Algorand limit. In practice, most circuits use < 100 public inputs.
+ */
 const MAX_GNARK_BN254_IC_POINTS = 1024;
 
 function bytesToBigIntBE(bytes: Uint8Array): bigint {
@@ -27,7 +43,9 @@ function assertFp(value: bigint, label: string): void {
 
 function readFp(bytes: Uint8Array, label: string): bigint {
   if (bytes.length !== Fp.BYTES) {
-    throw new Error(`Invalid ${label} length: expected 32 bytes, got ${bytes.length}`);
+    throw new Error(
+      `Invalid ${label} length: expected 32 bytes, got ${bytes.length}`,
+    );
   }
   const value = bytesToBigIntBE(bytes);
   assertFp(value, label);
@@ -49,7 +67,10 @@ function toSnarkjsG1Bytes(x: bigint, y: bigint): Uint8Array {
   return result;
 }
 
-function toSnarkjsG2Bytes(x: { c0: bigint; c1: bigint }, y: { c0: bigint; c1: bigint }): Uint8Array {
+function toSnarkjsG2Bytes(
+  x: { c0: bigint; c1: bigint },
+  y: { c0: bigint; c1: bigint },
+): Uint8Array {
   const result = new Uint8Array(128);
   result.set(Fp.toBytes(x.c0), 0); // X.re
   result.set(Fp.toBytes(x.c1), 32); // X.im
@@ -70,10 +91,26 @@ function validateG2Affine(
 ): Uint8Array {
   const point = G2Point.fromAffine({ x, y });
   point.assertValidity();
+
+  // Validate subgroup membership: n * P should equal identity (point at infinity)
+  // This is critical for security - points not in the correct subgroup can pass
+  // curve equation checks but cause security vulnerabilities in pairing operations.
+  //
+  // We use (n-1) * P + P = O instead of n * P = O because noble-curves' multiply()
+  // validates that scalar < field order, and n equals the field order.
+  const multiplied = point.multiply(SUBGROUP_ORDER - 1n);
+  const result = multiplied.add(point);
+  if (!result.is0()) {
+    throw new Error("Invalid G2 point: not in correct subgroup");
+  }
+
   return toSnarkjsG2Bytes(x, y);
 }
 
-function fq2Gt(a: { c0: bigint; c1: bigint }, b: { c0: bigint; c1: bigint }): boolean {
+function fq2Gt(
+  a: { c0: bigint; c1: bigint },
+  b: { c0: bigint; c1: bigint },
+): boolean {
   const { re: aRe, im: aIm } = Fp2.reim(a);
   const { re: bRe, im: bIm } = Fp2.reim(b);
   if (aIm !== bIm) return aIm > bIm;
@@ -87,7 +124,10 @@ function chooseFpRoot(flag: number, y: bigint): bigint {
   return flag === FLAG_POSITIVE ? smaller : larger;
 }
 
-function chooseFp2Root(flag: number, y: { c0: bigint; c1: bigint }): {
+function chooseFp2Root(
+  flag: number,
+  y: { c0: bigint; c1: bigint },
+): {
   c0: bigint;
   c1: bigint;
 } {
@@ -162,7 +202,9 @@ function parseG1Uncompressed(bytes: Uint8Array, label: string): Uint8Array {
 
 function parseG2Uncompressed(bytes: Uint8Array, label: string): Uint8Array {
   if (bytes.length !== 128) {
-    throw new Error(`Invalid ${label}: expected 128 bytes, got ${bytes.length}`);
+    throw new Error(
+      `Invalid ${label}: expected 128 bytes, got ${bytes.length}`,
+    );
   }
 
   const xIm = readFp(bytes.slice(0, 32), `${label}.x.im`);
@@ -207,11 +249,11 @@ export function decodeGnarkBn254Vk(
     );
   }
 
-  const num_k =
-    vkBytes[288]! * 0x1000000 +
-    vkBytes[289]! * 0x10000 +
-    vkBytes[290]! * 0x100 +
-    vkBytes[291]!;
+  const num_k = new DataView(
+    vkBytes.buffer,
+    vkBytes.byteOffset + 288,
+    4,
+  ).getUint32(0, false);
 
   if (num_k < 1) {
     throw new Error(`Invalid VK: num_k must be at least 1, got ${num_k}`);

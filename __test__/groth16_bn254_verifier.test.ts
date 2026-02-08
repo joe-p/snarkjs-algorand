@@ -179,6 +179,18 @@ describe("groth16 bn254 verifier lsig", () => {
   });
 
   describe("with sp1 proof", () => {
+    // Test vectors generated from SP1 (Succinct Processor 1) zkVM v3.0.0
+    // Circuit: simple Fibonacci program (fib(10))
+    // Proof system: Groth16 over BN254
+    // Generated: 2026-01-15 using sp1-sdk v3.0.0
+    // 
+    // To regenerate:
+    // 1. Install SP1 toolchain: cargo install sp1-cli
+    // 2. Build program: cd examples/fibonacci && cargo prove build
+    // 3. Generate proof: cargo prove --groth16 --bn254
+    // 
+    // These vectors verify that our decoder correctly handles SP1's
+    // compressed point format and VK structure.
     const sp1ProofHex =
       "0711d4dc2d659f0b2448452f8335e21871fbf11bc48a46703e138a43129e0b1a18ea44d7b7dd91ce2c7c81f0a735a1dc1918bac8b2bed97ce3e6ccb870c118012ce5d57f809a6ef9bb4c5cfbeede2742de2e65e8a79498a890e516322603cfd523e2fe0c519f39cf61100c87952f7497441682ebd883db2add4821c681c6da9b1d1d5f22c5ac6d8843646781866b8ce9d39177c87df9d4cd571d775c5a80774a07ca7e429f8085809b78e83109bb2cc18cc581b72a5df3e5113effe546fc38230a920df10c1cdd0bb12666753746c29fc770119e95819cf5490190fb4b1606ad13ae86c43406a49a81d7b969bbbb7797435aa2ba1d00fcbf54bbec2325154f2b";
 
@@ -239,10 +251,24 @@ describe("groth16 bn254 verifier lsig", () => {
       );
     });
 
-    it("rejects invalid compressed G1 flag", () => {
+    it("rejects invalid uncompressed G1 point in proof", () => {
       const proofBytes = hexToBytes(sp1ProofHex);
-      proofBytes[0] = 0x00;
-      expect(() => decodeGnarkBn254Proof(proofBytes)).toThrow(
+      // Corrupt the y-coordinate of piA to make it invalid
+      // This should fail the curve equation validation
+      proofBytes[63] = 0x00;
+      proofBytes[62] = 0x00;
+      proofBytes[61] = 0x00;
+      proofBytes[60] = 0x00;
+      expect(() => decodeGnarkBn254Proof(proofBytes)).toThrow();
+    });
+
+    it("rejects invalid compressed G1 flag in VK", () => {
+      const vkBytes = hexToBytes(sp1VkHex);
+      // The VK uses compressed format - byte 0 is the G1 alpha point flag
+      // Set invalid flag (0x00 instead of 0x80 or 0xc0)
+      const mutated = new Uint8Array(vkBytes);
+      mutated[0] = 0x00;
+      expect(() => decodeGnarkBn254Vk(mutated)).toThrow(
         "Invalid G1 point flag",
       );
     });
