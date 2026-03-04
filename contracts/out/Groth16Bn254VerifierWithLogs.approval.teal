@@ -200,7 +200,7 @@ verify_after_for@4:
     extract 2 64
 
 verify_after_inlined_contracts/groth16_bn254.algo.ts::computeCpub@13:
-    // contracts/groth16_bn254.algo.ts:209
+    // contracts/groth16_bn254.algo.ts:208
     // debugLog("cpub", cpub);
     pushbytes "cpub"
     // contracts/bn254_common.algo.ts:52
@@ -210,7 +210,7 @@ verify_after_inlined_contracts/groth16_bn254.algo.ts::computeCpub@13:
     // log(value);
     dup
     log
-    // contracts/groth16_bn254.algo.ts:212
+    // contracts/groth16_bn254.algo.ts:211
     // debugLog("pi_a", proof.pi_a);
     pushbytes "pi_a"
     // contracts/bn254_common.algo.ts:52
@@ -221,7 +221,7 @@ verify_after_inlined_contracts/groth16_bn254.algo.ts::computeCpub@13:
     dig 4
     dup
     log
-    // contracts/groth16_bn254.algo.ts:213
+    // contracts/groth16_bn254.algo.ts:212
     // debugLog("pi_b", proof.pi_b);
     pushbytes "pi_b"
     // contracts/bn254_common.algo.ts:52
@@ -233,7 +233,7 @@ verify_after_inlined_contracts/groth16_bn254.algo.ts::computeCpub@13:
     dup
     cover 3
     log
-    // contracts/groth16_bn254.algo.ts:214
+    // contracts/groth16_bn254.algo.ts:213
     // debugLog("pi_c", proof.pi_c);
     pushbytes "pi_c"
     // contracts/bn254_common.algo.ts:52
@@ -260,38 +260,46 @@ verify_after_inlined_contracts/groth16_bn254.algo.ts::computeCpub@13:
     intc_2 // 64
     ==
     assert // Length must be 64
-    // contracts/groth16_bn254.algo.ts:218
-    // let g1Points = op.concat(negPiA, cpub);
+    // contracts/groth16_bn254.algo.ts:219
+    // const g1Points = negPiA.concat(cpub).concat(proof.pi_c).concat(vk.vk_alpha_1);
     uncover 2
     concat
-    // contracts/groth16_bn254.algo.ts:219
-    // g1Points = op.concat(g1Points, proof.pi_c);
     swap
     concat
-    // contracts/groth16_bn254.algo.ts:220
-    // g1Points = op.concat(g1Points, vk.vk_alpha_1);
     dig 6
     dup
     cover 2
     extract 0 64
     concat
     // contracts/groth16_bn254.algo.ts:223
-    // let g2Points = op.concat(proof.pi_b, vk.vk_gamma_2);
+    // .concat(vk.vk_gamma_2)
     dig 1
     extract 192 128
+    // contracts/groth16_bn254.algo.ts:222-223
+    // const g2Points = proof.pi_b
+    //   .concat(vk.vk_gamma_2)
     uncover 3
     swap
     concat
     // contracts/groth16_bn254.algo.ts:224
-    // g2Points = op.concat(g2Points, vk.vk_delta_2);
+    // .concat(vk.vk_delta_2)
     dig 2
     pushints 320 128 // 320, 128
     extract3
+    // contracts/groth16_bn254.algo.ts:222-224
+    // const g2Points = proof.pi_b
+    //   .concat(vk.vk_gamma_2)
+    //   .concat(vk.vk_delta_2)
     concat
     // contracts/groth16_bn254.algo.ts:225
-    // g2Points = op.concat(g2Points, vk.vk_beta_2);
+    // .concat(vk.vk_beta_2);
     uncover 2
     extract 64 128
+    // contracts/groth16_bn254.algo.ts:222-225
+    // const g2Points = proof.pi_b
+    //   .concat(vk.vk_gamma_2)
+    //   .concat(vk.vk_delta_2)
+    //   .concat(vk.vk_beta_2);
     concat
     // contracts/groth16_bn254.algo.ts:228
     // const res = op.EllipticCurve.pairingCheck(op.Ec.BN254g1, g1Points, g2Points);
@@ -334,7 +342,7 @@ verify_while_top@7:
     <=
     bz verify_after_while@9
     // contracts/groth16_bn254.algo.ts:136
-    // icPoints = op.concat(icPoints, vk.IC[i] as bytes<64>);
+    // icPoints = icPoints.concat(vk.IC.at(i)!);
     dig 4
     dup
     intc 4 // 456
@@ -405,7 +413,7 @@ verify_for_header@10:
     ==
     assert // Length must be 32
     // contracts/groth16_bn254.algo.ts:142
-    // scalars = op.concat(scalars, b32(frScalar(signal.asBigUint())));
+    // scalars = scalars.concat(b32(frScalar(signal.asBigUint())));
     dig 10
     swap
     concat
@@ -448,6 +456,6 @@ verify_after_for@12:
     intc_2 // 64
     ==
     assert // Length must be 64
-    // contracts/groth16_bn254.algo.ts:208
+    // contracts/groth16_bn254.algo.ts:207
     // const cpub = computeCpub(vk, signals);
     b verify_after_inlined_contracts/groth16_bn254.algo.ts::computeCpub@13
