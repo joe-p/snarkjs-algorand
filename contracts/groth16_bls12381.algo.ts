@@ -133,13 +133,13 @@ function computeCpub(
   // Concatenate IC[1..nPublic] for multi-scalar multiplication
   let icPoints = Bytes();
   for (let i: uint64 = 1; i <= signals.length; i++) {
-    icPoints = op.concat(icPoints, vk.IC[i] as bytes<96>);
+    icPoints = icPoints.concat(vk.IC.at(i)!);
   }
 
   // Build scalars array from public signals
   let scalars = Bytes();
   for (const signal of signals) {
-    scalars = op.concat(scalars, b32(frScalar(signal.asBigUint())));
+    scalars = scalars.concat(b32(frScalar(signal.asBigUint())));
   }
 
   // Compute Σ(publicSignals[i] * IC[i+1])
@@ -178,14 +178,13 @@ export function verify(
   // We use the multi-pairing check which is more efficient
   // Concatenate G1 points: -pi_a || cpub || pi_c || vk_alpha_1
   const negPiA = g1Neg(proof.pi_a);
-  let g1Points = op.concat(negPiA, cpub);
-  g1Points = op.concat(g1Points, proof.pi_c);
-  g1Points = op.concat(g1Points, vk.vk_alpha_1);
+  const g1Points = negPiA.concat(cpub).concat(proof.pi_c).concat(vk.vk_alpha_1);
 
   // Concatenate G2 points: pi_b || vk_gamma_2 || vk_delta_2 || vk_beta_2
-  let g2Points = op.concat(proof.pi_b, vk.vk_gamma_2);
-  g2Points = op.concat(g2Points, vk.vk_delta_2);
-  g2Points = op.concat(g2Points, vk.vk_beta_2);
+  const g2Points = proof.pi_b
+    .concat(vk.vk_gamma_2)
+    .concat(vk.vk_delta_2)
+    .concat(vk.vk_beta_2);
 
   // Final pairing check
   const res = op.EllipticCurve.pairingCheck(
@@ -217,16 +216,17 @@ export function verifyWithLogs(
   debugLog("pi_b", proof.pi_b);
   debugLog("pi_c", proof.pi_c);
 
+  // Perform pairing check: e(-pi_a, pi_b) * e(cpub, vk_gamma_2) * e(pi_c, vk_delta_2) * e(vk_alpha_1, vk_beta_2) = 1
+  // We use the multi-pairing check which is more efficient
   // Concatenate G1 points: -pi_a || cpub || pi_c || vk_alpha_1
   const negPiA = g1Neg(proof.pi_a);
-  let g1Points = op.concat(negPiA, cpub);
-  g1Points = op.concat(g1Points, proof.pi_c);
-  g1Points = op.concat(g1Points, vk.vk_alpha_1);
+  const g1Points = negPiA.concat(cpub).concat(proof.pi_c).concat(vk.vk_alpha_1);
 
   // Concatenate G2 points: pi_b || vk_gamma_2 || vk_delta_2 || vk_beta_2
-  let g2Points = op.concat(proof.pi_b, vk.vk_gamma_2);
-  g2Points = op.concat(g2Points, vk.vk_delta_2);
-  g2Points = op.concat(g2Points, vk.vk_beta_2);
+  const g2Points = proof.pi_b
+    .concat(vk.vk_gamma_2)
+    .concat(vk.vk_delta_2)
+    .concat(vk.vk_beta_2);
 
   // Final pairing check
   const res = op.EllipticCurve.pairingCheck(
