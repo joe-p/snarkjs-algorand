@@ -411,60 +411,58 @@ export function computeChallenges(
   // Challenge round 2: beta and gamma
   /////////////////////////////////////
   // Build transcript with verification key commitments and public inputs
-  let td = op.concat(vk.Qm, vk.Ql);
-  td = op.concat(td, vk.Qr);
-  td = op.concat(td, vk.Qo);
-  td = op.concat(td, vk.Qc);
-  td = op.concat(td, vk.S1);
-  td = op.concat(td, vk.S2);
-  td = op.concat(td, vk.S3);
+  let td = vk.Qm.concat(vk.Ql)
+    .concat(vk.Qr)
+    .concat(vk.Qo)
+    .concat(vk.Qc)
+    .concat(vk.S1)
+    .concat(vk.S2)
+    .concat(vk.S3);
 
   for (const signal of signals) {
-    td = op.concat(td, b32(frScalar(signal.asBigUint())));
+    td = td.concat(b32(frScalar(signal.asBigUint())));
   }
 
   // Add round 1 commitments
-  td = op.concat(td, proof.A);
-  td = op.concat(td, proof.B);
-  td = op.concat(td, proof.C);
+  td = td.concat(proof.A).concat(proof.B).concat(proof.C);
 
   const beta = getChallenge(td);
 
   // gamma challenge (chaining): gamma = H(beta)
   td = Bytes();
-  td = op.concat(td, beta.bytes);
+  td = td.concat(beta.bytes);
   const gamma = getChallenge(td);
 
   ////////////////////////////
   // Challenge round 3: alpha
   ////////////////////////////
   td = Bytes();
-  td = op.concat(td, beta.bytes);
-  td = op.concat(td, gamma.bytes);
-  td = op.concat(td, proof.Z);
+  td = td.concat(beta.bytes).concat(gamma.bytes).concat(proof.Z);
   const alpha = getChallenge(td);
 
   ////////////////////////////
   // Challenge round 4: xi
   ///////////////////////////
   td = Bytes();
-  td = op.concat(td, alpha.bytes);
-  td = op.concat(td, proof.T1);
-  td = op.concat(td, proof.T2);
-  td = op.concat(td, proof.T3);
+  td = td
+    .concat(alpha.bytes)
+    .concat(proof.T1)
+    .concat(proof.T2)
+    .concat(proof.T3);
   const xi = getChallenge(td);
 
   ////////////////////////////
   // Challenge round 5: v (powers of v1)
   //////////////////////////
   td = Bytes();
-  td = op.concat(td, xi.bytes);
-  td = op.concat(td, proof.eval_a.bytes);
-  td = op.concat(td, proof.eval_b.bytes);
-  td = op.concat(td, proof.eval_c.bytes);
-  td = op.concat(td, proof.eval_s1.bytes);
-  td = op.concat(td, proof.eval_s2.bytes);
-  td = op.concat(td, proof.eval_zw.bytes);
+  td = td
+    .concat(xi.bytes)
+    .concat(proof.eval_a.bytes)
+    .concat(proof.eval_b.bytes)
+    .concat(proof.eval_c.bytes)
+    .concat(proof.eval_s1.bytes)
+    .concat(proof.eval_s2.bytes)
+    .concat(proof.eval_zw.bytes);
 
   const v = new FixedArray<Uint256, 6>();
   v[1] = getChallenge(td); // v1
@@ -478,8 +476,7 @@ export function computeChallenges(
   // Challenge: u
   /////////////////////////////
   td = Bytes();
-  td = op.concat(td, proof.Wxi);
-  td = op.concat(td, proof.Wxiw);
+  td = td.concat(proof.Wxi).concat(proof.Wxiw);
   const u = getChallenge(td);
 
   return {
@@ -630,13 +627,13 @@ export function calculateF(
   // and v-weighted [A,B,C,S1,S2]. The S3 negation is handled via its scalar (−s3Scalar), not by
   // negating the S3 point itself.
   // Points (15): [Qm, Ql, Qr, Qo, T1, T2, T3, Qc, Z, S3, A, B, C, S1, S2]
-  let points = op.concat(vk.Qm, vk.Ql);
-  points = op.concat(points, vk.Qr);
-  points = op.concat(points, vk.Qo);
-  points = op.concat(points, proof.T1);
-  points = op.concat(points, proof.T2);
-  points = op.concat(points, proof.T3);
-  points = op.concat(points, vk.Qc);
+  let points = vk.Qm.concat(vk.Ql)
+    .concat(vk.Qr)
+    .concat(vk.Qo)
+    .concat(proof.T1)
+    .concat(proof.T2)
+    .concat(proof.T3)
+    .concat(vk.Qc);
 
   // Gate constraint scalars
   const gateScalar1 = frMul(proof.eval_a.asBigUint(), proof.eval_b.asBigUint()); // Qm coefficient
@@ -704,29 +701,31 @@ export function calculateF(
   const s3Scalar = frMul(frMul(d3a, d3b), d3c);
 
   // Append Z, S3 and v-weighted points
-  points = op.concat(points, proof.Z);
-  points = op.concat(points, vk.S3);
-  points = op.concat(points, proof.A);
-  points = op.concat(points, proof.B);
-  points = op.concat(points, proof.C);
-  points = op.concat(points, vk.S1);
-  points = op.concat(points, vk.S2);
+  points = points
+    .concat(proof.Z)
+    .concat(vk.S3)
+    .concat(proof.A)
+    .concat(proof.B)
+    .concat(proof.C)
+    .concat(vk.S1)
+    .concat(vk.S2);
 
   // Scalars: [gate scalars, quotient scalars, 1 (Qc), zScalar (Z), -s3Scalar (S3), v1..v5]
-  let scalars = op.concat(b32(gateScalar1), b32(gateScalar2));
-  scalars = op.concat(scalars, b32(gateScalar3));
-  scalars = op.concat(scalars, b32(gateScalar4));
-  scalars = op.concat(scalars, b32(quotientScalar1));
-  scalars = op.concat(scalars, b32(quotientScalar2));
-  scalars = op.concat(scalars, b32(quotientScalar3));
-  scalars = op.concat(scalars, b32(BigUint(1))); // Qc with scalar 1
-  scalars = op.concat(scalars, b32(zScalar)); // Z with zScalar
-  scalars = op.concat(scalars, b32(frSub(BigUint(0), s3Scalar))); // S3 with -s3Scalar
-  scalars = op.concat(scalars, (challenges.v[1] as Uint256).bytes);
-  scalars = op.concat(scalars, (challenges.v[2] as Uint256).bytes);
-  scalars = op.concat(scalars, (challenges.v[3] as Uint256).bytes);
-  scalars = op.concat(scalars, (challenges.v[4] as Uint256).bytes);
-  scalars = op.concat(scalars, (challenges.v[5] as Uint256).bytes);
+  let scalars = b32(gateScalar1)
+    .concat(b32(gateScalar2))
+    .concat(b32(gateScalar3))
+    .concat(b32(gateScalar4))
+    .concat(b32(quotientScalar1))
+    .concat(b32(quotientScalar2))
+    .concat(b32(quotientScalar3))
+    .concat(b32(BigUint(1))) // Qc with scalar 1
+    .concat(b32(zScalar)) // Z with zScalar
+    .concat(b32(frSub(BigUint(0), s3Scalar))) // S3 with -s3Scalar
+    .concat((challenges.v[1] as Uint256).bytes)
+    .concat((challenges.v[2] as Uint256).bytes)
+    .concat((challenges.v[3] as Uint256).bytes)
+    .concat((challenges.v[4] as Uint256).bytes)
+    .concat((challenges.v[5] as Uint256).bytes);
 
   // Single multi-scalar operation producing F directly
   const F = op.EllipticCurve.scalarMulMulti(
@@ -798,14 +797,14 @@ export function isValidPairing(
 
   // B1 = xi*Wxi + u*xi*ω*Wxiw + F - E
   // Concatenate points: Wxi || Wxiw
-  const pairingPoints = op.concat(proof.Wxi, proof.Wxiw);
+  const pairingPoints = proof.Wxi.concat(proof.Wxiw);
 
   // Concatenate scalars: xi || (u * xi * ω)
   const s = frMul(
     frMul(challenges.u.asBigUint(), challenges.xi.asBigUint()),
     ROOT_OF_UNITY,
   );
-  const pairingScalars = op.concat(challenges.xi.bytes, b32(s));
+  const pairingScalars = challenges.xi.bytes.concat(b32(s));
 
   let B1 = op.EllipticCurve.scalarMulMulti(
     op.Ec.BLS12_381g1,
@@ -818,8 +817,8 @@ export function isValidPairing(
   // Final pairing check: e(-A1, [x]_2) * e(B1, [1]_2) = 1
   const res = op.EllipticCurve.pairingCheck(
     op.Ec.BLS12_381g1,
-    op.concat(g1Neg(A1), B1), // G1 points
-    op.concat(vk.X_2, G2_ONE), // G2 points
+    g1Neg(A1).concat(B1), // G1 points
+    vk.X_2.concat(G2_ONE), // G2 points
   );
 
   return res;
