@@ -429,43 +429,33 @@ export function computeChallenges(
   const beta = getChallenge(td);
 
   // gamma challenge (chaining): gamma = H(beta)
-  td = Bytes();
-  td = td.concat(beta.bytes);
-  const gamma = getChallenge(td);
+  const gamma = getChallenge(beta.bytes);
 
   ////////////////////////////
   // Challenge round 3: alpha
   ////////////////////////////
-  td = Bytes();
-  td = td.concat(beta.bytes).concat(gamma.bytes).concat(proof.Z);
-  const alpha = getChallenge(td);
+  const alpha = getChallenge(beta.bytes.concat(gamma.bytes).concat(proof.Z));
 
   ////////////////////////////
   // Challenge round 4: xi
   ///////////////////////////
-  td = Bytes();
-  td = td
-    .concat(alpha.bytes)
-    .concat(proof.T1)
-    .concat(proof.T2)
-    .concat(proof.T3);
-  const xi = getChallenge(td);
+  const xi = getChallenge(
+    alpha.bytes.concat(proof.T1).concat(proof.T2).concat(proof.T3),
+  );
 
   ////////////////////////////
   // Challenge round 5: v (powers of v1)
   //////////////////////////
-  td = Bytes();
-  td = td
-    .concat(xi.bytes)
-    .concat(proof.eval_a.bytes)
-    .concat(proof.eval_b.bytes)
-    .concat(proof.eval_c.bytes)
-    .concat(proof.eval_s1.bytes)
-    .concat(proof.eval_s2.bytes)
-    .concat(proof.eval_zw.bytes);
-
   const v = new FixedArray<Uint256, 6>();
-  v[1] = getChallenge(td); // v1
+  v[1] = getChallenge(
+    xi.bytes
+      .concat(proof.eval_a.bytes)
+      .concat(proof.eval_b.bytes)
+      .concat(proof.eval_c.bytes)
+      .concat(proof.eval_s1.bytes)
+      .concat(proof.eval_s2.bytes)
+      .concat(proof.eval_zw.bytes),
+  ); // v1
   for (let i: uint64 = 2; i < 6; i++) {
     v[i] = new Uint256(
       frMul((v[i - 1] as Uint256).asBigUint(), v[1].asBigUint()),
@@ -475,9 +465,7 @@ export function computeChallenges(
   ////////////////////////////
   // Challenge: u
   /////////////////////////////
-  td = Bytes();
-  td = td.concat(proof.Wxi).concat(proof.Wxiw);
-  const u = getChallenge(td);
+  const u = getChallenge(proof.Wxi.concat(proof.Wxiw));
 
   return {
     beta,
