@@ -1171,7 +1171,7 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:820
+    // contracts/plonk_bls12381.algo.ts:822
     // const betaxi = frMul(challenges.beta.asBigUint(), challenges.xi.asBigUint());
     dig 11
     extract 96 32
@@ -1203,7 +1203,7 @@ main_after_while@22:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:826
+    // contracts/plonk_bls12381.algo.ts:828
     // frAdd(proof.eval_b.asBigUint(), frMul(betaxi, BigUint(vk.k1))),
     dig 38
     dup
@@ -1236,7 +1236,7 @@ main_after_while@22:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:830
+    // contracts/plonk_bls12381.algo.ts:832
     // frAdd(proof.eval_c.asBigUint(), frMul(betaxi, BigUint(vk.k2))),
     dig 3
     pushints 792 8
@@ -1294,7 +1294,7 @@ main_after_while@22:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:841
+    // contracts/plonk_bls12381.algo.ts:843
     // const sZ = frAdd(frAdd(d2a, d2b), challenges.u.asBigUint());
     dig 12
     pushint 320
@@ -1330,24 +1330,24 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:863
+    // contracts/plonk_bls12381.algo.ts:865
     // const sS3 = frSub(r, frMul(frMul(d3a, d3b), d3c));
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     swap
     callsub frSub
-    // contracts/plonk_bls12381.algo.ts:866
+    // contracts/plonk_bls12381.algo.ts:868
     // const xin = challenges.xin.asBigUint();
     dig 11
     pushint 352
     intc_0 // 32
     extract3
-    // contracts/plonk_bls12381.algo.ts:867
+    // contracts/plonk_bls12381.algo.ts:869
     // const zh = challenges.zh.asBigUint();
     dig 12
     intc 4 // 384
     intc_0 // 32
     extract3
-    // contracts/plonk_bls12381.algo.ts:868
+    // contracts/plonk_bls12381.algo.ts:870
     // const sT1 = frSub(r, zh); // T1 × (-zh)
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     dig 1
@@ -1359,7 +1359,7 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:869
+    // contracts/plonk_bls12381.algo.ts:871
     // const sT2 = frSub(r, frMul(xin, zh)); // T2 × (-xin×zh)
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     swap
@@ -1375,35 +1375,35 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:870
+    // contracts/plonk_bls12381.algo.ts:872
     // const sT3 = frSub(r, frMul(frMul(xin, xin), zh)); // T3 × (-xin²×zh)
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     swap
     callsub frSub
-    // contracts/plonk_bls12381.algo.ts:873
+    // contracts/plonk_bls12381.algo.ts:875
     // const sA = challenges.v[1]!.asBigUint();
     uncover 14
     extract 128 192
     dup
     extract 32 32 // on error: index access is out of bounds
-    // contracts/plonk_bls12381.algo.ts:873-874
+    // contracts/plonk_bls12381.algo.ts:875-876
     // const sA = challenges.v[1]!.asBigUint();
     // const sB = challenges.v[2]!.asBigUint();
     dig 1
     extract 64 32 // on error: index access is out of bounds
-    // contracts/plonk_bls12381.algo.ts:875
+    // contracts/plonk_bls12381.algo.ts:877
     // const sC = challenges.v[3]!.asBigUint();
     dig 2
     extract 96 32 // on error: index access is out of bounds
-    // contracts/plonk_bls12381.algo.ts:876
+    // contracts/plonk_bls12381.algo.ts:878
     // const sS1 = challenges.v[4]!.asBigUint();
     dig 3
     extract 128 32 // on error: index access is out of bounds
-    // contracts/plonk_bls12381.algo.ts:877
+    // contracts/plonk_bls12381.algo.ts:879
     // const sS2 = challenges.v[5]!.asBigUint();
     uncover 4
     extract 160 32 // on error: index access is out of bounds
-    // contracts/plonk_bls12381.algo.ts:880-884
+    // contracts/plonk_bls12381.algo.ts:882-886
     // const points = vk.Qm.concat(vk.Ql)
     //   .concat(vk.Qr)
     //   .concat(vk.Qo)
@@ -1412,7 +1412,7 @@ main_after_while@22:
     dig 52
     dig 39
     concat
-    // contracts/plonk_bls12381.algo.ts:880-885
+    // contracts/plonk_bls12381.algo.ts:882-887
     // const points = vk.Qm.concat(vk.Ql)
     //   .concat(vk.Qr)
     //   .concat(vk.Qo)
@@ -1421,7 +1421,7 @@ main_after_while@22:
     //   .concat(vk.S3)
     dig 65
     concat
-    // contracts/plonk_bls12381.algo.ts:880-886
+    // contracts/plonk_bls12381.algo.ts:882-888
     // const points = vk.Qm.concat(vk.Ql)
     //   .concat(vk.Qr)
     //   .concat(vk.Qo)
@@ -1431,7 +1431,7 @@ main_after_while@22:
     //   .concat(proof.T1)
     dig 38
     concat
-    // contracts/plonk_bls12381.algo.ts:880-887
+    // contracts/plonk_bls12381.algo.ts:882-889
     // const points = vk.Qm.concat(vk.Ql)
     //   .concat(vk.Qr)
     //   .concat(vk.Qo)
@@ -1442,7 +1442,7 @@ main_after_while@22:
     //   .concat(proof.T2)
     dig 37
     concat
-    // contracts/plonk_bls12381.algo.ts:880-888
+    // contracts/plonk_bls12381.algo.ts:882-890
     // const points = vk.Qm.concat(vk.Ql)
     //   .concat(vk.Qr)
     //   .concat(vk.Qo)
@@ -1454,7 +1454,7 @@ main_after_while@22:
     //   .concat(proof.T3)
     dig 36
     concat
-    // contracts/plonk_bls12381.algo.ts:880-889
+    // contracts/plonk_bls12381.algo.ts:882-891
     // const points = vk.Qm.concat(vk.Ql)
     //   .concat(vk.Qr)
     //   .concat(vk.Qo)
@@ -1467,7 +1467,7 @@ main_after_while@22:
     //   .concat(proof.A)
     dig 42
     concat
-    // contracts/plonk_bls12381.algo.ts:880-890
+    // contracts/plonk_bls12381.algo.ts:882-892
     // const points = vk.Qm.concat(vk.Ql)
     //   .concat(vk.Qr)
     //   .concat(vk.Qo)
@@ -1481,7 +1481,7 @@ main_after_while@22:
     //   .concat(proof.B)
     dig 41
     concat
-    // contracts/plonk_bls12381.algo.ts:880-891
+    // contracts/plonk_bls12381.algo.ts:882-893
     // const points = vk.Qm.concat(vk.Ql)
     //   .concat(vk.Qr)
     //   .concat(vk.Qo)
@@ -1496,7 +1496,7 @@ main_after_while@22:
     //   .concat(proof.C)
     dig 40
     concat
-    // contracts/plonk_bls12381.algo.ts:880-892
+    // contracts/plonk_bls12381.algo.ts:882-894
     // const points = vk.Qm.concat(vk.Ql)
     //   .concat(vk.Qr)
     //   .concat(vk.Qo)
@@ -1512,7 +1512,7 @@ main_after_while@22:
     //   .concat(vk.S1)
     dig 67
     concat
-    // contracts/plonk_bls12381.algo.ts:880-893
+    // contracts/plonk_bls12381.algo.ts:882-895
     // const points = vk.Qm.concat(vk.Ql)
     //   .concat(vk.Qr)
     //   .concat(vk.Qo)
@@ -1534,31 +1534,31 @@ main_after_while@22:
     uncover 14
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:896
+    // contracts/plonk_bls12381.algo.ts:898
     // const scalars = b32(frScalar(sQm))
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:897
+    // contracts/plonk_bls12381.algo.ts:899
     // .concat(b32(frScalar(sQl)))
     uncover 19
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-897
+    // contracts/plonk_bls12381.algo.ts:898-899
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     concat
-    // contracts/plonk_bls12381.algo.ts:898
+    // contracts/plonk_bls12381.algo.ts:900
     // .concat(b32(frScalar(sQr)))
     uncover 17
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-898
+    // contracts/plonk_bls12381.algo.ts:898-900
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
     concat
-    // contracts/plonk_bls12381.algo.ts:899
+    // contracts/plonk_bls12381.algo.ts:901
     // .concat(b32(frScalar(sQo)))
     uncover 16
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-899
+    // contracts/plonk_bls12381.algo.ts:898-901
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1567,10 +1567,10 @@ main_after_while@22:
     // contracts/bls12381_common.algo.ts:37
     // return a % BLS12_381_SCALAR_MODULUS;
     bytec_2 // 0x01
-    // contracts/plonk_bls12381.algo.ts:900
+    // contracts/plonk_bls12381.algo.ts:902
     // .concat(b32(frScalar(sQc)))
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-900
+    // contracts/plonk_bls12381.algo.ts:898-902
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1582,10 +1582,10 @@ main_after_while@22:
     uncover 11
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:901
+    // contracts/plonk_bls12381.algo.ts:903
     // .concat(b32(frScalar(sZ)))
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-901
+    // contracts/plonk_bls12381.algo.ts:898-903
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1598,10 +1598,10 @@ main_after_while@22:
     uncover 10
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:902
+    // contracts/plonk_bls12381.algo.ts:904
     // .concat(b32(frScalar(sS3)))
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-902
+    // contracts/plonk_bls12381.algo.ts:898-904
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1615,10 +1615,10 @@ main_after_while@22:
     uncover 9
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:903
+    // contracts/plonk_bls12381.algo.ts:905
     // .concat(b32(frScalar(sT1)))
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-903
+    // contracts/plonk_bls12381.algo.ts:898-905
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1633,10 +1633,10 @@ main_after_while@22:
     uncover 8
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:904
+    // contracts/plonk_bls12381.algo.ts:906
     // .concat(b32(frScalar(sT2)))
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-904
+    // contracts/plonk_bls12381.algo.ts:898-906
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1652,10 +1652,10 @@ main_after_while@22:
     uncover 7
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:905
+    // contracts/plonk_bls12381.algo.ts:907
     // .concat(b32(frScalar(sT3)))
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-905
+    // contracts/plonk_bls12381.algo.ts:898-907
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1672,10 +1672,10 @@ main_after_while@22:
     dig 6
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:906
+    // contracts/plonk_bls12381.algo.ts:908
     // .concat(b32(frScalar(sA)))
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-906
+    // contracts/plonk_bls12381.algo.ts:898-908
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1693,10 +1693,10 @@ main_after_while@22:
     dig 5
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:907
+    // contracts/plonk_bls12381.algo.ts:909
     // .concat(b32(frScalar(sB)))
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-907
+    // contracts/plonk_bls12381.algo.ts:898-909
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1715,10 +1715,10 @@ main_after_while@22:
     dig 4
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:908
+    // contracts/plonk_bls12381.algo.ts:910
     // .concat(b32(frScalar(sC)))
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-908
+    // contracts/plonk_bls12381.algo.ts:898-910
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1738,10 +1738,10 @@ main_after_while@22:
     dig 3
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:909
+    // contracts/plonk_bls12381.algo.ts:911
     // .concat(b32(frScalar(sS1)))
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-909
+    // contracts/plonk_bls12381.algo.ts:898-911
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1762,10 +1762,10 @@ main_after_while@22:
     dig 2
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:910
+    // contracts/plonk_bls12381.algo.ts:912
     // .concat(b32(frScalar(sS2)));
     callsub b32
-    // contracts/plonk_bls12381.algo.ts:896-910
+    // contracts/plonk_bls12381.algo.ts:898-912
     // const scalars = b32(frScalar(sQm))
     //   .concat(b32(frScalar(sQl)))
     //   .concat(b32(frScalar(sQr)))
@@ -1782,7 +1782,7 @@ main_after_while@22:
     //   .concat(b32(frScalar(sS1)))
     //   .concat(b32(frScalar(sS2)));
     concat
-    // contracts/plonk_bls12381.algo.ts:913-917
+    // contracts/plonk_bls12381.algo.ts:915-919
     // return op.EllipticCurve.scalarMulMulti(
     //   op.Ec.BLS12_381g1,
     //   points,
@@ -1801,7 +1801,7 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:928-931
+    // contracts/plonk_bls12381.algo.ts:930-933
     // let e = frSub(
     //   frMul((challenges.v[1] as Uint256).asBigUint(), proof.eval_a.asBigUint()),
     //   r0.asBigUint(),
@@ -1918,7 +1918,7 @@ main_after_while@22:
     b+
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:950
+    // contracts/plonk_bls12381.algo.ts:952
     // const res = g1TimesFr(G1_ONE.toFixed({ length: 96 }), e);
     pushbytes 0x17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1
     // contracts/bls12381_common.algo.ts:62
@@ -1986,7 +1986,7 @@ main_after_while@22:
     b*
     bytec_0 // 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
     b%
-    // contracts/plonk_bls12381.algo.ts:972
+    // contracts/plonk_bls12381.algo.ts:974
     // ROOT_OF_UNITY,
     bytec_3 // TMPL_ROOT_OF_UNITY
     // contracts/plonk_bls12381.algo.ts:75
@@ -2081,18 +2081,18 @@ main_after_while@22:
     intc_1 // 96
     ==
     assert // Length must be 96
-    // contracts/plonk_bls12381.algo.ts:981
+    // contracts/plonk_bls12381.algo.ts:983
     // g1Neg(a1).concat(b1),
     swap
     concat
-    // contracts/plonk_bls12381.algo.ts:982
+    // contracts/plonk_bls12381.algo.ts:984
     // vk.X_2.concat(G2_ONE),
     swap
     pushints 800 192
     extract3
     pushbytes 0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb813e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b828010606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be
     concat
-    // contracts/plonk_bls12381.algo.ts:979-983
+    // contracts/plonk_bls12381.algo.ts:981-985
     // const res = op.EllipticCurve.pairingCheck(
     //   op.Ec.BLS12_381g1,
     //   g1Neg(a1).concat(b1),

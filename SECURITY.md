@@ -1,6 +1,6 @@
 # Security
 
-The code in this repo has not been audited. The primary maintainer, @joe-p, is not a professional cryptropgrapher. Most of the client and contract code, however, is a translation of the [snarkjs](https://github.com/iden3/snarkjs) library and uses a testing strategy to ensure alignment with the original implementation. The only deviations in direct translations within the on-chain verification code is the usage of multi-scalar multiplications to significantly reduce opcode usage.
+The code in this repo has not been audited. The primary maintainer, @joe-p, is not a professional cryptographer. Most of the client and contract code, however, is a translation of the [snarkjs](https://github.com/iden3/snarkjs) library and uses a testing strategy to ensure alignment with the original implementation. The only deviations from direct translations within the on-chain verification code are the usage of multi-scalar multiplications to significantly reduce opcode usage.
 
 ## AI Disclosure
 

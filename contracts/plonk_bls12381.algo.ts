@@ -637,7 +637,7 @@ function calculateD1Msm(proof: PlonkProof, vk: PlonkVerificationKey) {
 /* A direct translation of the d4 calculation from snarkjs. This function is not used in favor of calculateD4Msm, but included for posterity
  * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L363-L367
  */
-function calculateD4(proof: PlonkProof, challenges: Challenges) {
+function calculateD4(proof: PlonkProof, challenges: Challenges): bytes<96> {
   const d4low = proof.T1;
   const d4Mid = g1TimesFr(proof.T2, challenges.xin.asBigUint());
   const d4High = g1TimesFr(
@@ -647,6 +647,8 @@ function calculateD4(proof: PlonkProof, challenges: Challenges) {
 
   let d4 = g1Add(d4low, g1Add(d4Mid, d4High));
   d4 = g1TimesFr(d4, challenges.zh.asBigUint());
+
+  return d4;
 }
 
 /* A translation of the d4 calculation from snarkjs using MSM
@@ -670,7 +672,7 @@ function calculateD4Msm(proof: PlonkProof, challenges: Challenges): bytes<96> {
 }
 
 /**
- * Translation of calculateD from snarkjs with MSM. This function is not used in favor of calculateDFCombinedMSM
+ * Translation of calculateD from snarkjs with MSM. This function is not used in favor of calculateDFCombinedMsm
  * but included for posterity
  * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L335-L335
  */
@@ -762,7 +764,7 @@ function calculateF(
 }
 
 /**
- * Translation of the snarkJS calculateF function with MSM. This function is not used in favor of calculateDFCombinedMSM
+ * Translation of the snarkJS calculateF function with MSM. This function is not used in favor of calculateDFCombinedMsm
  * but included for posterity
  *
  * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L374-L374
@@ -807,7 +809,7 @@ function calculateDFCombinedMsm(
 ): bytes<96> {
   const r = BLS12_381_SCALAR_MODULUS;
 
-  // Calculate all 14 scalars upfront
+  // Calculate all 15 scalars upfront
 
   // D1 scalars
   const sQm = frMul(proof.eval_a.asBigUint(), proof.eval_b.asBigUint());
@@ -876,7 +878,7 @@ function calculateDFCombinedMsm(
   const sS1 = challenges.v[4]!.asBigUint();
   const sS2 = challenges.v[5]!.asBigUint();
 
-  // Concatenate all 14 points
+  // Concatenate all 15 points
   const points = vk.Qm.concat(vk.Ql)
     .concat(vk.Qr)
     .concat(vk.Qo)
@@ -892,7 +894,7 @@ function calculateDFCombinedMsm(
     .concat(vk.S1)
     .concat(vk.S2);
 
-  // Concatenate all 14 scalars (32 bytes each)
+  // Concatenate all 15 scalars (32 bytes each)
   const scalars = b32(frScalar(sQm))
     .concat(b32(frScalar(sQl)))
     .concat(b32(frScalar(sQr)))
@@ -909,7 +911,7 @@ function calculateDFCombinedMsm(
     .concat(b32(frScalar(sS1)))
     .concat(b32(frScalar(sS2)));
 
-  // Single 14-point MSM computes F directly
+  // Single 15-point MSM computes F directly
   return op.EllipticCurve.scalarMulMulti(
     op.Ec.BLS12_381g1,
     points,
