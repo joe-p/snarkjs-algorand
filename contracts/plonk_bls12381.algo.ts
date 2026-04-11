@@ -332,7 +332,7 @@ export function verify(
 
   // 5) Linearization commitment D and batch opening commitment F (optimized)
   const d = calculateD(proof, challenges, vk, lw.L[1]!);
-  const f = calculateF(proof, challenges, vk, d);
+  const f = calculateFMsm(proof, challenges, vk, d);
 
   // 7) Batched evaluation commitment E (on [1]_1)
   const e = calculateE(proof, challenges, r0);
@@ -382,7 +382,7 @@ export function verifyWithLogs(
 
   // 5) Linearization commitment D and batch opening commitment F (optimized)
   const d = calculateD(proof, challenges, vk, lw.L[1]!);
-  const f = calculateF(proof, challenges, vk, d);
+  const f = calculateFMsm(proof, challenges, vk, d);
   debugLog("F", f);
 
   // 7) Batched evaluation commitment E (on [1]_1)
@@ -669,9 +669,11 @@ export function calculateD(
 }
 
 /**
+ * Direct translation of calculateF. This function is not used in favor of calculateFMsm, but included for posterity
+ *
  * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L374-L374
  */
-export function calculateF(
+function calculateF(
   proof: PlonkProof,
   challenges: Challenges,
   vk: PlonkVerificationKey,
@@ -684,6 +686,40 @@ export function calculateF(
   res = g1Add(res, g1TimesFr(vk.S2, challenges.v[5]!.asBigUint()));
 
   return res;
+}
+
+/**
+ * Translation of the snarkJS calculateF function with MSM
+ *
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L374-L374
+ */
+export function calculateFMsm(
+  proof: PlonkProof,
+  challenges: Challenges,
+  vk: PlonkVerificationKey,
+  D: bytes<96>,
+) {
+  // Concatenate all G1 points (6 points = 576 bytes)
+  const points = D.concat(proof.A)
+    .concat(proof.B)
+    .concat(proof.C)
+    .concat(vk.S1)
+    .concat(vk.S2);
+
+  // D gets scalar 1, others get their respective v values
+  const scalars = b32(frScalar(BigUint(1)))
+    .concat(b32(frScalar(challenges.v[1]!.asBigUint())))
+    .concat(b32(frScalar(challenges.v[2]!.asBigUint())))
+    .concat(b32(frScalar(challenges.v[3]!.asBigUint())))
+    .concat(b32(frScalar(challenges.v[4]!.asBigUint())))
+    .concat(b32(frScalar(challenges.v[5]!.asBigUint())));
+
+  // Single MSM computes: D*1 + A*v[1] + B*v[2] + C*v[3] + S1*v[4] + S2*v[5]
+  return op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    points,
+    scalars,
+  ).toFixed({ length: 96 });
 }
 
 /**
