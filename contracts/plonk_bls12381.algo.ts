@@ -630,6 +630,41 @@ function calculateD1Msm(proof: PlonkProof, vk: PlonkVerificationKey) {
   ).toFixed({ length: 96 });
 }
 
+/* A direct translation of the d4 calculation from snarkjs. This function is not used in favor of calculateD4Msm, but included for posterity
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L363-L367
+ */
+function calculateD4(proof: PlonkProof, challenges: Challenges) {
+  const d4low = proof.T1;
+  const d4Mid = g1TimesFr(proof.T2, challenges.xin.asBigUint());
+  const d4High = g1TimesFr(
+    proof.T3,
+    frMul(challenges.xin.asBigUint(), challenges.xin.asBigUint()),
+  );
+
+  let d4 = g1Add(d4low, g1Add(d4Mid, d4High));
+  d4 = g1TimesFr(d4, challenges.zh.asBigUint());
+}
+
+/* A translation of the d4 calculation from snarkjs using MSM
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L363-L367
+ */
+function calculateD4Msm(proof: PlonkProof, challenges: Challenges): bytes<96> {
+  const points = proof.T1.concat(proof.T2).concat(proof.T3);
+
+  const xin = challenges.xin.asBigUint();
+  const zh = challenges.zh.asBigUint();
+
+  const scalars = b32(frScalar(zh)) // T1 * zh
+    .concat(b32(frScalar(frMul(xin, zh)))) // T2 * (xin * zh)
+    .concat(b32(frScalar(frMul(frMul(xin, xin), zh)))); // T3 * (xin² * zh)
+
+  return op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    points,
+    scalars,
+  ).toFixed({ length: 96 });
+}
+
 /**
  * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L335-L335
  */
@@ -694,15 +729,7 @@ export function calculateD(
 
   const d3 = g1TimesFr(vk.S3, frMul(frMul(d3a, d3b), d3c));
 
-  const d4low = proof.T1;
-  const d4Mid = g1TimesFr(proof.T2, challenges.xin.asBigUint());
-  const d4High = g1TimesFr(
-    proof.T3,
-    frMul(challenges.xin.asBigUint(), challenges.xin.asBigUint()),
-  );
-
-  let d4 = g1Add(d4low, g1Add(d4Mid, d4High));
-  d4 = g1TimesFr(d4, challenges.zh.asBigUint());
+  const d4 = calculateD4Msm(proof, challenges);
   const d = g1Sub(g1Sub(g1Add(d1, d2), d3), d4);
 
   return d;
