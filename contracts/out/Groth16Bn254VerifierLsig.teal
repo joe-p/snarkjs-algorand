@@ -25,7 +25,7 @@ main:
     // contracts/groth16_bn254_verifier.algo.ts:52
     // const proof = decodeArc4<Groth16Bn254Proof>(GTxn.applicationArgs(idx, 2));
     dup
-    pushint 2 // 2
+    pushint 2
     gtxnsas ApplicationArgs
     // contracts/groth16_bn254_verifier.algo.ts:53
     // const signals = decodeArc4<PublicSignals>(GTxn.applicationArgs(idx, 1));
@@ -81,7 +81,7 @@ main:
     extract_uint16 // on error: invalid array length header
     dup
     uncover 2
-    pushint 448 // 448
+    pushint 448
     extract_uint64
     ==
     assert // Invalid number of public inputs
@@ -174,7 +174,7 @@ main_after_inlined_contracts/groth16_bn254.algo.ts::computeCpub@13:
     // contracts/groth16_bn254.algo.ts:186
     // .concat(vk.vk_delta_2)
     dig 2
-    pushints 320 128 // 320, 128
+    pushints 320 128
     extract3
     // contracts/groth16_bn254.algo.ts:184-186
     // const g2Points = proof.pi_b

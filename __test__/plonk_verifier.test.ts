@@ -263,7 +263,7 @@ describe("verifier lsig", () => {
   beforeAll(async () => {
     algorand = AlgorandClient.defaultLocalNet();
     verifier = new PlonkLsigVerifier({
-      totalLsigs: 6,
+      totalLsigs: 8,
       appOffset: 0,
       algorand,
       zKey: "circuit/plonk_circuit_final.zkey",

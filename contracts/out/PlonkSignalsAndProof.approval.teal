@@ -19,7 +19,7 @@ main_signalsAndProof_route@3:
     !
     txn ApplicationID
     &&
-    assert // OnCompletion must be NoOp && can only call when not creating
+    assert
     b signalsAndProof
 
 main___algots__.defaultCreate@5:
@@ -30,8 +30,6 @@ main___algots__.defaultCreate@5:
     txn ApplicationID
     !
     &&
-    assert // OnCompletion must be NoOp && can only call when creating
-    pushint 1 // 1
     return
 
 
@@ -41,11 +39,11 @@ signalsAndProof:
     // public signalsAndProof(signals: Uint256[], proof: PlonkProof): void {}
     txna ApplicationArgs 1
     dup
-    pushint 0 // 0
+    pushint 0
     extract_uint16 // on error: invalid array length header
-    pushint 32 // 32
+    pushint 32
     *
-    pushint 2 // 2
+    pushint 2
     +
     swap
     len
@@ -53,8 +51,8 @@ signalsAndProof:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     txna ApplicationArgs 2
     len
-    pushint 1056 // 1056
+    pushint 1056
     ==
     assert // invalid number of bytes for contracts/plonk_bls12381.algo.ts::PlonkProof
-    pushint 1 // 1
+    pushint 1
     return
