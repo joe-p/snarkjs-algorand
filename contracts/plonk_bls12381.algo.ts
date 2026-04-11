@@ -38,6 +38,11 @@ import {
  * 5) Single pairing check with (Wξ, Wξω) openings.
  *
  * Field operations are over BLS12-381 Fr; commitments are on G1; the SRS element [x]₂ is on G2.
+ *
+ * It should be noted that most of this code is a direct translation of the snarkjs verifier
+ *
+ * The only deviations are some MSMs to save on opcode cost. There is also an additional opportunity for an MSM across
+ * D, F, and the pairing check
  */
 
 /**
@@ -331,8 +336,7 @@ export function verify(
   const r0 = calculateR0(proof, challenges, pi, lw.L[1] as Uint256);
 
   // 5) Linearization commitment D and batch opening commitment F (optimized)
-  const d = calculateD(proof, challenges, vk, lw.L[1]!);
-  const f = calculateFMsm(proof, challenges, vk, d);
+  const f = calculateDFCombinedMsm(proof, challenges, vk, lw.L[1]!);
 
   // 7) Batched evaluation commitment E (on [1]_1)
   const e = calculateE(proof, challenges, r0);
@@ -381,8 +385,8 @@ export function verifyWithLogs(
   debugLog("r0", r0.bytes);
 
   // 5) Linearization commitment D and batch opening commitment F (optimized)
-  const d = calculateD(proof, challenges, vk, lw.L[1]!);
-  const f = calculateFMsm(proof, challenges, vk, d);
+  const f = calculateDFCombinedMsm(proof, challenges, vk, lw.L[1]!);
+
   debugLog("F", f);
 
   // 7) Batched evaluation commitment E (on [1]_1)
@@ -666,9 +670,11 @@ function calculateD4Msm(proof: PlonkProof, challenges: Challenges): bytes<96> {
 }
 
 /**
+ * Translation of calculateD from snarkjs with MSM. This function is not used in favor of calculateDFCombinedMSM
+ * but included for posterity
  * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L335-L335
  */
-export function calculateD(
+function calculateD(
   proof: PlonkProof,
   challenges: Challenges,
   vk: PlonkVerificationKey,
@@ -756,11 +762,12 @@ function calculateF(
 }
 
 /**
- * Translation of the snarkJS calculateF function with MSM
+ * Translation of the snarkJS calculateF function with MSM. This function is not used in favor of calculateDFCombinedMSM
+ * but included for posterity
  *
  * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L374-L374
  */
-export function calculateFMsm(
+function calculateFMsm(
   proof: PlonkProof,
   challenges: Challenges,
   vk: PlonkVerificationKey,
@@ -782,6 +789,127 @@ export function calculateFMsm(
     .concat(b32(frScalar(challenges.v[5]!.asBigUint())));
 
   // Single MSM computes: D*1 + A*v[1] + B*v[2] + C*v[3] + S1*v[4] + S2*v[5]
+  return op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    points,
+    scalars,
+  ).toFixed({ length: 96 });
+}
+
+/*
+ * A translation of calculateD and calculateF combined with a single MSM
+ */
+function calculateDFCombinedMsm(
+  proof: PlonkProof,
+  challenges: Challenges,
+  vk: PlonkVerificationKey,
+  l1: Uint256,
+): bytes<96> {
+  const r = BLS12_381_SCALAR_MODULUS;
+
+  // Calculate all 14 scalars upfront
+
+  // D1 scalars
+  const sQm = frMul(proof.eval_a.asBigUint(), proof.eval_b.asBigUint());
+  const sQl = proof.eval_a.asBigUint();
+  const sQr = proof.eval_b.asBigUint();
+  const sQo = proof.eval_c.asBigUint();
+  const sQc = BigUint(1);
+
+  // D2 scalar
+  const betaxi = frMul(challenges.beta.asBigUint(), challenges.xi.asBigUint());
+  const d2a1 = frAdd(
+    frAdd(proof.eval_a.asBigUint(), betaxi),
+    challenges.gamma.asBigUint(),
+  );
+  const d2a2 = frAdd(
+    frAdd(proof.eval_b.asBigUint(), frMul(betaxi, BigUint(vk.k1))),
+    challenges.gamma.asBigUint(),
+  );
+  const d2a3 = frAdd(
+    frAdd(proof.eval_c.asBigUint(), frMul(betaxi, BigUint(vk.k2))),
+    challenges.gamma.asBigUint(),
+  );
+  const d2a = frMul(
+    frMul(frMul(d2a1, d2a2), d2a3),
+    challenges.alpha.asBigUint(),
+  );
+  const d2b = frMul(
+    l1.asBigUint(),
+    frMul(challenges.alpha.asBigUint(), challenges.alpha.asBigUint()),
+  );
+  const sZ = frAdd(frAdd(d2a, d2b), challenges.u.asBigUint());
+
+  // D3 scalar
+  const d3a = frAdd(
+    frAdd(
+      proof.eval_a.asBigUint(),
+      frMul(challenges.beta.asBigUint(), proof.eval_s1.asBigUint()),
+    ),
+    challenges.gamma.asBigUint(),
+  );
+  const d3b = frAdd(
+    frAdd(
+      proof.eval_b.asBigUint(),
+      frMul(challenges.beta.asBigUint(), proof.eval_s2.asBigUint()),
+    ),
+    challenges.gamma.asBigUint(),
+  );
+  const d3c = frMul(
+    frMul(challenges.alpha.asBigUint(), challenges.beta.asBigUint()),
+    proof.eval_zw.asBigUint(),
+  );
+  // Negate by computing r - scalar
+  const sS3 = frSub(r, frMul(frMul(d3a, d3b), d3c));
+
+  // D4 scalars (all negative - quotient terms subtracted)
+  const xin = challenges.xin.asBigUint();
+  const zh = challenges.zh.asBigUint();
+  const sT1 = frSub(r, zh); // T1 × (-zh)
+  const sT2 = frSub(r, frMul(xin, zh)); // T2 × (-xin×zh)
+  const sT3 = frSub(r, frMul(frMul(xin, xin), zh)); // T3 × (-xin²×zh)
+
+  // F scalars (v values)
+  const sA = challenges.v[1]!.asBigUint();
+  const sB = challenges.v[2]!.asBigUint();
+  const sC = challenges.v[3]!.asBigUint();
+  const sS1 = challenges.v[4]!.asBigUint();
+  const sS2 = challenges.v[5]!.asBigUint();
+
+  // Concatenate all 14 points
+  const points = vk.Qm.concat(vk.Ql)
+    .concat(vk.Qr)
+    .concat(vk.Qo)
+    .concat(vk.Qc)
+    .concat(proof.Z)
+    .concat(vk.S3)
+    .concat(proof.T1)
+    .concat(proof.T2)
+    .concat(proof.T3)
+    .concat(proof.A)
+    .concat(proof.B)
+    .concat(proof.C)
+    .concat(vk.S1)
+    .concat(vk.S2);
+
+  // Concatenate all 14 scalars (32 bytes each)
+  const scalars = b32(frScalar(sQm))
+    .concat(b32(frScalar(sQl)))
+    .concat(b32(frScalar(sQr)))
+    .concat(b32(frScalar(sQo)))
+    .concat(b32(frScalar(sQc)))
+    .concat(b32(frScalar(sZ)))
+    .concat(b32(frScalar(sS3)))
+    .concat(b32(frScalar(sT1)))
+    .concat(b32(frScalar(sT2)))
+    .concat(b32(frScalar(sT3)))
+    .concat(b32(frScalar(sA)))
+    .concat(b32(frScalar(sB)))
+    .concat(b32(frScalar(sC)))
+    .concat(b32(frScalar(sS1)))
+    .concat(b32(frScalar(sS2)));
+
+  // Single 14-point MSM computes F directly
   return op.EllipticCurve.scalarMulMulti(
     op.Ec.BLS12_381g1,
     points,
