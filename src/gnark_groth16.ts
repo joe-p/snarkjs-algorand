@@ -1,6 +1,11 @@
 import * as nobleBn254 from "@noble/curves/bn254.js";
 import type { Groth16Bn254Proof, Groth16Bn254VerificationKey } from "./groth16";
 
+/*
+ * AI Disclosure
+ * A large portion of this code was written with generative AI. See SECURITY.md for more information.
+ */
+
 const bn254 = nobleBn254.bn254;
 const { Fp, Fp2, Fr } = bn254.fields;
 const G1Point = bn254.G1.Point;
