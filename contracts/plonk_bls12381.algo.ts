@@ -583,6 +583,53 @@ export function calculateR0(
   return new Uint256(r0);
 }
 
+/* A direct translation of the d1 calculation from snarkjs. This function is not used in favor of calculateD1Msm, but included for posterity
+ *
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L339-L343
+ */
+function calculateD1(proof: PlonkProof, vk: PlonkVerificationKey) {
+  let d1 = g1TimesFr(
+    vk.Qm,
+    frMul(proof.eval_a.asBigUint(), proof.eval_b.asBigUint()),
+  );
+  d1 = g1Add(d1, g1TimesFr(vk.Ql, proof.eval_a.asBigUint()));
+  d1 = g1Add(d1, g1TimesFr(vk.Qr, proof.eval_b.asBigUint()));
+  d1 = g1Add(d1, g1TimesFr(vk.Qo, proof.eval_c.asBigUint()));
+  d1 = g1Add(d1, vk.Qc);
+
+  return d1;
+}
+
+/* A translation of the d1 calculation from snarkjs using MSM
+ *
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L339-L343
+ */
+function calculateD1Msm(proof: PlonkProof, vk: PlonkVerificationKey) {
+  // Concatenate all G1 points (5 points = 480 bytes)
+  const points = vk.Qm.concat(vk.Ql).concat(vk.Qr).concat(vk.Qo).concat(vk.Qc);
+
+  // Calculate the 5 scalars
+  const scalarQm = frMul(proof.eval_a.asBigUint(), proof.eval_b.asBigUint());
+  const scalarQl = proof.eval_a.asBigUint();
+  const scalarQr = proof.eval_b.asBigUint();
+  const scalarQo = proof.eval_c.asBigUint();
+  const scalarQc = BigUint(1); // Qc is added directly (multiplied by 1)
+
+  // Concatenate all scalars (5 scalars = 160 bytes, 32 bytes each)
+  const scalars = b32(frScalar(scalarQm))
+    .concat(b32(frScalar(scalarQl)))
+    .concat(b32(frScalar(scalarQr)))
+    .concat(b32(frScalar(scalarQo)))
+    .concat(b32(frScalar(scalarQc)));
+
+  // Single MSM computes: Qm*(eval_a*eval_b) + Ql*eval_a + Qr*eval_b + Qo*eval_c + Qc*1
+  return op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    points,
+    scalars,
+  ).toFixed({ length: 96 });
+}
+
 /**
  * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L335-L335
  */
@@ -592,14 +639,7 @@ export function calculateD(
   vk: PlonkVerificationKey,
   l1: Uint256,
 ): bytes<96> {
-  let d1 = g1TimesFr(
-    vk.Qm,
-    frMul(proof.eval_a.asBigUint(), proof.eval_b.asBigUint()),
-  );
-  d1 = g1Add(d1, g1TimesFr(vk.Ql, proof.eval_a.asBigUint()));
-  d1 = g1Add(d1, g1TimesFr(vk.Qr, proof.eval_b.asBigUint()));
-  d1 = g1Add(d1, g1TimesFr(vk.Qo, proof.eval_c.asBigUint()));
-  d1 = g1Add(d1, vk.Qc);
+  const d1 = calculateD1Msm(proof, vk);
 
   const betaxi = frMul(challenges.beta.asBigUint(), challenges.xi.asBigUint());
 
