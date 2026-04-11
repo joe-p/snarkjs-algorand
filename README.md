@@ -11,7 +11,7 @@ Eventually there will be proper documentation, but for now use at your own risk!
 
 ## Security
 
-The code in this repo has not been audited. It is not recommended to use this code in production systems without a proper security review.
+The code in this repo has not been audited. Use at your own risk! See [SECURITY.md](./SECURITY.md) for more information.
 
 ## Why Not AlgoPlonk?
 

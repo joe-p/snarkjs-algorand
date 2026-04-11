@@ -38,6 +38,11 @@ import {
  * 5) Single pairing check with (Wξ, Wξω) openings.
  *
  * Field operations are over BLS12-381 Fr; commitments are on G1; the SRS element [x]₂ is on G2.
+ *
+ * It should be noted that most of this code is a direct translation of the snarkjs verifier
+ *
+ * The only deviations are some MSMs to save on opcode cost. There is also an additional opportunity for an MSM across
+ * D, F, and the pairing check
  */
 
 /**
@@ -331,7 +336,7 @@ export function verify(
   const r0 = calculateR0(proof, challenges, pi, lw.L[1] as Uint256);
 
   // 5) Linearization commitment D and batch opening commitment F (optimized)
-  const f = calculateF(proof, challenges, vk, lw.L[1] as Uint256);
+  const f = calculateDFCombinedMsm(proof, challenges, vk, lw.L[1]!);
 
   // 7) Batched evaluation commitment E (on [1]_1)
   const e = calculateE(proof, challenges, r0);
@@ -380,7 +385,8 @@ export function verifyWithLogs(
   debugLog("r0", r0.bytes);
 
   // 5) Linearization commitment D and batch opening commitment F (optimized)
-  const f = calculateF(proof, challenges, vk, lw.L[1] as Uint256);
+  const f = calculateDFCombinedMsm(proof, challenges, vk, lw.L[1]!);
+
   debugLog("F", f);
 
   // 7) Batched evaluation commitment E (on [1]_1)
@@ -393,6 +399,8 @@ export function verifyWithLogs(
 
 /**
  * Derive a challenge by hashing the current transcript chunk, reduced to Fr
+ *
+ * See https://github.com/iden3/snarkjs/blob/1de7c8a7470c4b10a04fca2cc1037c97767a8211/src/Keccak256Transcript.js#L46-L46
  */
 export function getChallenge(td: bytes): Uint256 {
   let hash = op.keccak256(td);
@@ -401,6 +409,8 @@ export function getChallenge(td: bytes): Uint256 {
 
 /**
  * Compute all Fiat–Shamir challenges following SNARKJS transcript chaining
+ *
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L208-L208
  */
 export function computeChallenges(
   vk: PlonkVerificationKey,
@@ -481,6 +491,8 @@ export function computeChallenges(
 
 /**
  * Evaluate Lagrange terms used by PI and boundary
+ *
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L275-L275
  */
 export function calculateLagrangeEvaluations(
   challengesInput: Challenges,
@@ -489,7 +501,6 @@ export function calculateLagrangeEvaluations(
   const challenges = clone(challengesInput);
   let xin = challenges.xi.asBigUint();
 
-  // Compute xi^n where n = 2^power (domain size)
   let domainSize: uint64 = 1;
   for (let i: uint64 = 0; i < vk.power; i++) {
     xin = frMul(xin, xin);
@@ -497,26 +508,14 @@ export function calculateLagrangeEvaluations(
   }
 
   challenges.xin = new Uint256(xin);
-  challenges.zh = new Uint256(frSub(xin, BigUint(1))); // Vanishing polynomial Z_H(ξ) = ξ^n - 1
+  challenges.zh = new Uint256(frSub(xin, BigUint(1)));
 
   const n = frScalar(BigUint(domainSize));
 
-  // Root-of-unity stepping: starts at ω^0 = 1, then steps through ω^1, ω^2, ...
-  // The constant Frw11 is specifically for power=11 (n=2048) circuits.
-  // IMPORTANT: For circuits with different domain sizes, this verifier would need
-  // the appropriate primitive root of unity for that domain size.
   let w = BigUint(1);
 
-  /*
-   * Lagrange basis polynomials (SNARKJS form used here):
-   *   With w enumerating ω^0, ω^1, ... , we use
-   *     L[i] = ( w * Z_H(ξ) ) / ( n * ( ξ - w ) )
-   * This matches how the terms are consumed in this verifier.
-   * Assumes ξ ≠ w and Z_H(ξ) ≠ 0 for valid proofs.
-   */
   const L: Uint256[] = [new Uint256()];
-  // When there are no public inputs (nPublic = 0), we still need L1(ξ) for the boundary constraint
-  // that enforces Z(1) = 1 in the permutation argument
+
   const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
   for (let i: uint64 = 1; i <= iterations; i++) {
     L.push(
@@ -527,13 +526,13 @@ export function calculateLagrangeEvaluations(
         ),
       ),
     );
-    w = frMul(w, ROOT_OF_UNITY); // Next root of unity step (ω^i)
+    w = frMul(w, ROOT_OF_UNITY);
   }
   return { L, challenges };
 }
 
 /**
- * Public input polynomial evaluation: PI(ξ) = -∑ public[i] * L[i]
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L300-L300
  */
 export function calculatePI(
   publicSignals: PublicSignals,
@@ -550,8 +549,7 @@ export function calculatePI(
 /**
  * Calculate linearization polynomial constant term r0.
  *
- * r0 is the constant term when evaluating the PLONK relation at ξ, folded as:
- *   r0 = PI(ξ) - L1(ξ)*α² - α*Z(ξ·ω)*(a+β*s1+γ)(b+β*s2+γ)(c+γ)
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L311-L311
  */
 export function calculateR0(
   proof: PlonkProof,
@@ -559,17 +557,13 @@ export function calculateR0(
   pi: Uint256,
   l1: Uint256,
 ): Uint256 {
-  // e1: Public input polynomial evaluation PI(ξ)
   const e1 = pi.asBigUint();
 
-  // e2: Boundary constraint L1(ξ) * α² (enforces Z(1) = 1)
   const e2 = frMul(
     l1.asBigUint(),
     frMul(challenges.alpha.asBigUint(), challenges.alpha.asBigUint()),
   );
 
-  // e3: Permutation check contribution (numerator part)
-  // α * Z(ξ·ω) * [(a + β*s1 + γ)(b + β*s2 + γ)(c + γ)]
   let e3a = frAdd(
     proof.eval_a.asBigUint(),
     frMul(challenges.beta.asBigUint(), proof.eval_s1.asBigUint()),
@@ -593,57 +587,238 @@ export function calculateR0(
   return new Uint256(r0);
 }
 
-/**
- * Calculate linearization polynomial commitment D and batch opening commitment F
- * with optimized multi-scalar operations.
+/* A direct translation of the d1 calculation from snarkjs. This function is not used in favor of calculateD1Msm, but included for posterity
  *
- * D = d1 + d2 - d3 - d4, where:
- * - d1: Gate constraints Qm*a*b + Ql*a + Qr*b + Qo*c + Qc
- * - d2: Permutation argument numerator folded into Z
- * - d3: Permutation argument denominator folded into S3
- * - d4: Quotient reconstruction T(ξ) * Z_H(ξ), where T(ξ)=T1 + ξ^n*T2 + ξ^{2n}*T3
- *
- * F = D + v1*A + v2*B + v3*C + v4*S1 + v5*S2, with v[i] = v1^i
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L339-L343
  */
-export function calculateF(
+function calculateD1(proof: PlonkProof, vk: PlonkVerificationKey) {
+  let d1 = g1TimesFr(
+    vk.Qm,
+    frMul(proof.eval_a.asBigUint(), proof.eval_b.asBigUint()),
+  );
+  d1 = g1Add(d1, g1TimesFr(vk.Ql, proof.eval_a.asBigUint()));
+  d1 = g1Add(d1, g1TimesFr(vk.Qr, proof.eval_b.asBigUint()));
+  d1 = g1Add(d1, g1TimesFr(vk.Qo, proof.eval_c.asBigUint()));
+  d1 = g1Add(d1, vk.Qc);
+
+  return d1;
+}
+
+/* A translation of the d1 calculation from snarkjs using MSM
+ *
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L339-L343
+ */
+function calculateD1Msm(proof: PlonkProof, vk: PlonkVerificationKey) {
+  // Concatenate all G1 points (5 points = 480 bytes)
+  const points = vk.Qm.concat(vk.Ql).concat(vk.Qr).concat(vk.Qo).concat(vk.Qc);
+
+  // Calculate the 5 scalars
+  const scalarQm = frMul(proof.eval_a.asBigUint(), proof.eval_b.asBigUint());
+  const scalarQl = proof.eval_a.asBigUint();
+  const scalarQr = proof.eval_b.asBigUint();
+  const scalarQo = proof.eval_c.asBigUint();
+  const scalarQc = BigUint(1); // Qc is added directly (multiplied by 1)
+
+  // Concatenate all scalars (5 scalars = 160 bytes, 32 bytes each)
+  const scalars = b32(frScalar(scalarQm))
+    .concat(b32(frScalar(scalarQl)))
+    .concat(b32(frScalar(scalarQr)))
+    .concat(b32(frScalar(scalarQo)))
+    .concat(b32(frScalar(scalarQc)));
+
+  // Single MSM computes: Qm*(eval_a*eval_b) + Ql*eval_a + Qr*eval_b + Qo*eval_c + Qc*1
+  return op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    points,
+    scalars,
+  ).toFixed({ length: 96 });
+}
+
+/* A direct translation of the d4 calculation from snarkjs. This function is not used in favor of calculateD4Msm, but included for posterity
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L363-L367
+ */
+function calculateD4(proof: PlonkProof, challenges: Challenges): bytes<96> {
+  const d4low = proof.T1;
+  const d4Mid = g1TimesFr(proof.T2, challenges.xin.asBigUint());
+  const d4High = g1TimesFr(
+    proof.T3,
+    frMul(challenges.xin.asBigUint(), challenges.xin.asBigUint()),
+  );
+
+  let d4 = g1Add(d4low, g1Add(d4Mid, d4High));
+  d4 = g1TimesFr(d4, challenges.zh.asBigUint());
+
+  return d4;
+}
+
+/* A translation of the d4 calculation from snarkjs using MSM
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L363-L367
+ */
+function calculateD4Msm(proof: PlonkProof, challenges: Challenges): bytes<96> {
+  const points = proof.T1.concat(proof.T2).concat(proof.T3);
+
+  const xin = challenges.xin.asBigUint();
+  const zh = challenges.zh.asBigUint();
+
+  const scalars = b32(frScalar(zh)) // T1 * zh
+    .concat(b32(frScalar(frMul(xin, zh)))) // T2 * (xin * zh)
+    .concat(b32(frScalar(frMul(frMul(xin, xin), zh)))); // T3 * (xin² * zh)
+
+  return op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    points,
+    scalars,
+  ).toFixed({ length: 96 });
+}
+
+/**
+ * Translation of calculateD from snarkjs with MSM. This function is not used in favor of calculateDFCombinedMsm
+ * but included for posterity
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L335-L335
+ */
+function calculateD(
   proof: PlonkProof,
   challenges: Challenges,
   vk: PlonkVerificationKey,
   l1: Uint256,
 ): bytes<96> {
-  // Prepare points for a single MSM that includes gate, quotient, Qc, Z, S3 (with a NEGATED SCALAR),
-  // and v-weighted [A,B,C,S1,S2]. The S3 negation is handled via its scalar (−s3Scalar), not by
-  // negating the S3 point itself.
-  // Points (15): [Qm, Ql, Qr, Qo, T1, T2, T3, Qc, Z, S3, A, B, C, S1, S2]
-  let points = vk.Qm.concat(vk.Ql)
-    .concat(vk.Qr)
-    .concat(vk.Qo)
-    .concat(proof.T1)
-    .concat(proof.T2)
-    .concat(proof.T3)
-    .concat(vk.Qc);
+  const d1 = calculateD1Msm(proof, vk);
 
-  // Gate constraint scalars
-  const gateScalar1 = frMul(proof.eval_a.asBigUint(), proof.eval_b.asBigUint()); // Qm coefficient
-  const gateScalar2 = proof.eval_a.asBigUint(); // Ql coefficient
-  const gateScalar3 = proof.eval_b.asBigUint(); // Qr coefficient
-  const gateScalar4 = proof.eval_c.asBigUint(); // Qo coefficient
+  const betaxi = frMul(challenges.beta.asBigUint(), challenges.xi.asBigUint());
 
-  // Quotient scalars for −T(ξ) · Z_H(ξ), with T(ξ) = T1 + xin·T2 + xin²·T3
-  const quotientScalar1 = frSub(BigUint(0), challenges.zh.asBigUint()); // −zh (applies to T1)
-  const quotientScalar2 = frSub(
-    BigUint(0),
-    frMul(challenges.xin.asBigUint(), challenges.zh.asBigUint()),
-  ); // −xin·zh (applies to T2)
-  const quotientScalar3 = frSub(
-    BigUint(0),
-    frMul(
-      frMul(challenges.xin.asBigUint(), challenges.xin.asBigUint()),
-      challenges.zh.asBigUint(),
+  const d2a1 = frAdd(
+    frAdd(proof.eval_a.asBigUint(), betaxi),
+    challenges.gamma.asBigUint(),
+  );
+  const d2a2 = frAdd(
+    frAdd(proof.eval_b.asBigUint(), frMul(betaxi, BigUint(vk.k1))),
+    challenges.gamma.asBigUint(),
+  );
+  const d2a3 = frAdd(
+    frAdd(proof.eval_c.asBigUint(), frMul(betaxi, BigUint(vk.k2))),
+    challenges.gamma.asBigUint(),
+  );
+
+  const d2a = frMul(
+    frMul(frMul(d2a1, d2a2), d2a3),
+    challenges.alpha.asBigUint(),
+  );
+
+  const d2b = frMul(
+    l1.asBigUint(),
+    frMul(challenges.alpha.asBigUint(), challenges.alpha.asBigUint()),
+  );
+
+  const d2 = g1TimesFr(
+    proof.Z,
+    frAdd(frAdd(d2a, d2b), challenges.u.asBigUint()),
+  );
+
+  const d3a = frAdd(
+    frAdd(
+      proof.eval_a.asBigUint(),
+      frMul(challenges.beta.asBigUint(), proof.eval_s1.asBigUint()),
     ),
-  ); // −xin²·zh (applies to T3)
+    challenges.gamma.asBigUint(),
+  );
 
-  // Z scalar (permutation numerator folded into Z)
+  const d3b = frAdd(
+    frAdd(
+      proof.eval_b.asBigUint(),
+      frMul(challenges.beta.asBigUint(), proof.eval_s2.asBigUint()),
+    ),
+    challenges.gamma.asBigUint(),
+  );
+
+  const d3c = frMul(
+    frMul(challenges.alpha.asBigUint(), challenges.beta.asBigUint()),
+    proof.eval_zw.asBigUint(),
+  );
+
+  const d3 = g1TimesFr(vk.S3, frMul(frMul(d3a, d3b), d3c));
+
+  const d4 = calculateD4Msm(proof, challenges);
+  const d = g1Sub(g1Sub(g1Add(d1, d2), d3), d4);
+
+  return d;
+}
+
+/**
+ * Direct translation of calculateF. This function is not used in favor of calculateFMsm, but included for posterity
+ *
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L374-L374
+ */
+function calculateF(
+  proof: PlonkProof,
+  challenges: Challenges,
+  vk: PlonkVerificationKey,
+  D: bytes<96>,
+): bytes<96> {
+  let res = g1Add(D, g1TimesFr(proof.A, challenges.v[1]!.asBigUint()));
+  res = g1Add(res, g1TimesFr(proof.B, challenges.v[2]!.asBigUint()));
+  res = g1Add(res, g1TimesFr(proof.C, challenges.v[3]!.asBigUint()));
+  res = g1Add(res, g1TimesFr(vk.S1, challenges.v[4]!.asBigUint()));
+  res = g1Add(res, g1TimesFr(vk.S2, challenges.v[5]!.asBigUint()));
+
+  return res;
+}
+
+/**
+ * Translation of the snarkJS calculateF function with MSM. This function is not used in favor of calculateDFCombinedMsm
+ * but included for posterity
+ *
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L374-L374
+ */
+function calculateFMsm(
+  proof: PlonkProof,
+  challenges: Challenges,
+  vk: PlonkVerificationKey,
+  D: bytes<96>,
+) {
+  // Concatenate all G1 points (6 points = 576 bytes)
+  const points = D.concat(proof.A)
+    .concat(proof.B)
+    .concat(proof.C)
+    .concat(vk.S1)
+    .concat(vk.S2);
+
+  // D gets scalar 1, others get their respective v values
+  const scalars = b32(frScalar(BigUint(1)))
+    .concat(b32(frScalar(challenges.v[1]!.asBigUint())))
+    .concat(b32(frScalar(challenges.v[2]!.asBigUint())))
+    .concat(b32(frScalar(challenges.v[3]!.asBigUint())))
+    .concat(b32(frScalar(challenges.v[4]!.asBigUint())))
+    .concat(b32(frScalar(challenges.v[5]!.asBigUint())));
+
+  // Single MSM computes: D*1 + A*v[1] + B*v[2] + C*v[3] + S1*v[4] + S2*v[5]
+  return op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    points,
+    scalars,
+  ).toFixed({ length: 96 });
+}
+
+/*
+ * A translation of calculateD and calculateF combined with a single MSM
+ */
+function calculateDFCombinedMsm(
+  proof: PlonkProof,
+  challenges: Challenges,
+  vk: PlonkVerificationKey,
+  l1: Uint256,
+): bytes<96> {
+  const r = BLS12_381_SCALAR_MODULUS;
+
+  // Calculate all 15 scalars upfront
+
+  // D1 scalars
+  const sQm = frMul(proof.eval_a.asBigUint(), proof.eval_b.asBigUint());
+  const sQl = proof.eval_a.asBigUint();
+  const sQr = proof.eval_b.asBigUint();
+  const sQo = proof.eval_c.asBigUint();
+  const sQc = BigUint(1);
+
+  // D2 scalar
   const betaxi = frMul(challenges.beta.asBigUint(), challenges.xi.asBigUint());
   const d2a1 = frAdd(
     frAdd(proof.eval_a.asBigUint(), betaxi),
@@ -665,9 +840,9 @@ export function calculateF(
     l1.asBigUint(),
     frMul(challenges.alpha.asBigUint(), challenges.alpha.asBigUint()),
   );
-  const zScalar = frAdd(frAdd(d2a, d2b), challenges.u.asBigUint());
+  const sZ = frAdd(frAdd(d2a, d2b), challenges.u.asBigUint());
 
-  // S3 scalar (permutation denominator)
+  // D3 scalar
   const d3a = frAdd(
     frAdd(
       proof.eval_a.asBigUint(),
@@ -686,50 +861,66 @@ export function calculateF(
     frMul(challenges.alpha.asBigUint(), challenges.beta.asBigUint()),
     proof.eval_zw.asBigUint(),
   );
-  const s3Scalar = frMul(frMul(d3a, d3b), d3c);
+  // Negate by computing r - scalar
+  const sS3 = frSub(r, frMul(frMul(d3a, d3b), d3c));
 
-  // Append Z, S3 and v-weighted points
-  points = points
+  // D4 scalars (all negative - quotient terms subtracted)
+  const xin = challenges.xin.asBigUint();
+  const zh = challenges.zh.asBigUint();
+  const sT1 = frSub(r, zh); // T1 × (-zh)
+  const sT2 = frSub(r, frMul(xin, zh)); // T2 × (-xin×zh)
+  const sT3 = frSub(r, frMul(frMul(xin, xin), zh)); // T3 × (-xin²×zh)
+
+  // F scalars (v values)
+  const sA = challenges.v[1]!.asBigUint();
+  const sB = challenges.v[2]!.asBigUint();
+  const sC = challenges.v[3]!.asBigUint();
+  const sS1 = challenges.v[4]!.asBigUint();
+  const sS2 = challenges.v[5]!.asBigUint();
+
+  // Concatenate all 15 points
+  const points = vk.Qm.concat(vk.Ql)
+    .concat(vk.Qr)
+    .concat(vk.Qo)
+    .concat(vk.Qc)
     .concat(proof.Z)
     .concat(vk.S3)
+    .concat(proof.T1)
+    .concat(proof.T2)
+    .concat(proof.T3)
     .concat(proof.A)
     .concat(proof.B)
     .concat(proof.C)
     .concat(vk.S1)
     .concat(vk.S2);
 
-  // Scalars: [gate scalars, quotient scalars, 1 (Qc), zScalar (Z), -s3Scalar (S3), v1..v5]
-  let scalars = b32(gateScalar1)
-    .concat(b32(gateScalar2))
-    .concat(b32(gateScalar3))
-    .concat(b32(gateScalar4))
-    .concat(b32(quotientScalar1))
-    .concat(b32(quotientScalar2))
-    .concat(b32(quotientScalar3))
-    .concat(b32(BigUint(1))) // Qc with scalar 1
-    .concat(b32(zScalar)) // Z with zScalar
-    .concat(b32(frSub(BigUint(0), s3Scalar))) // S3 with -s3Scalar
-    .concat((challenges.v[1] as Uint256).bytes)
-    .concat((challenges.v[2] as Uint256).bytes)
-    .concat((challenges.v[3] as Uint256).bytes)
-    .concat((challenges.v[4] as Uint256).bytes)
-    .concat((challenges.v[5] as Uint256).bytes);
+  // Concatenate all 15 scalars (32 bytes each)
+  const scalars = b32(frScalar(sQm))
+    .concat(b32(frScalar(sQl)))
+    .concat(b32(frScalar(sQr)))
+    .concat(b32(frScalar(sQo)))
+    .concat(b32(frScalar(sQc)))
+    .concat(b32(frScalar(sZ)))
+    .concat(b32(frScalar(sS3)))
+    .concat(b32(frScalar(sT1)))
+    .concat(b32(frScalar(sT2)))
+    .concat(b32(frScalar(sT3)))
+    .concat(b32(frScalar(sA)))
+    .concat(b32(frScalar(sB)))
+    .concat(b32(frScalar(sC)))
+    .concat(b32(frScalar(sS1)))
+    .concat(b32(frScalar(sS2)));
 
-  // Single multi-scalar operation producing F directly
-  const F = op.EllipticCurve.scalarMulMulti(
+  // Single 15-point MSM computes F directly
+  return op.EllipticCurve.scalarMulMulti(
     op.Ec.BLS12_381g1,
     points,
     scalars,
   ).toFixed({ length: 96 });
-
-  return F;
 }
 
 /**
- * Calculate batched evaluation commitment E on the base [1]_1.
- *
- * E = (v1*a + v2*b + v3*c + v4*s1 + v5*s2 + u*zw - r0) * [1]_1
- * All field scalars are 32-byte big-endian; [1]_1 is G1_ONE.
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L386-L386
  */
 export function calculateE(
   proof: PlonkProof,
@@ -763,14 +954,9 @@ export function calculateE(
 }
 
 /**
- * Final pairing check (SNARKJS batching):
+ * Final pairing check
  *
- * A1 = Wξ + u·Wξω
- * B1 = ξ·Wξ + u·ξ·ω·Wξω + F − E
- * Check: e(−A1, [x]_2) * e(B1, [1]_2) = 1
- *
- * Encoding: G1 points are 96B uncompressed; G2 are 192B uncompressed (BE).
- * Assumes inputs are valid subgroup points produced by SNARKJS; AVM enforces encoding.
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L402-L402
  */
 export function isValidPairing(
   proof: PlonkProof,
@@ -779,34 +965,23 @@ export function isValidPairing(
   E: bytes<96>,
   F: bytes<96>,
 ): boolean {
-  // A1 = Wxi + u * Wxiw (combined opening proofs for xi and xi*ω)
-  let A1 = proof.Wxi;
-  A1 = g1Add(A1, g1TimesFr(proof.Wxiw, challenges.u.asBigUint()));
+  let a1 = proof.Wxi;
+  a1 = g1Add(a1, g1TimesFr(proof.Wxiw, challenges.u.asBigUint()));
 
-  // B1 = xi*Wxi + u*xi*ω*Wxiw + F - E
-  // Concatenate points: Wxi || Wxiw
-  const pairingPoints = proof.Wxi.concat(proof.Wxiw);
-
-  // Concatenate scalars: xi || (u * xi * ω)
+  let b1 = g1TimesFr(proof.Wxi, challenges.xi.asBigUint());
   const s = frMul(
     frMul(challenges.u.asBigUint(), challenges.xi.asBigUint()),
     ROOT_OF_UNITY,
   );
-  const pairingScalars = challenges.xi.bytes.concat(b32(s));
 
-  let B1 = op.EllipticCurve.scalarMulMulti(
-    op.Ec.BLS12_381g1,
-    pairingPoints,
-    pairingScalars,
-  ).toFixed({ length: 96 });
-  B1 = g1Add(B1, F);
-  B1 = g1Sub(B1, E);
+  b1 = g1Add(b1, g1TimesFr(proof.Wxiw, s));
+  b1 = g1Add(b1, F);
+  b1 = g1Sub(b1, E);
 
-  // Final pairing check: e(-A1, [x]_2) * e(B1, [1]_2) = 1
   const res = op.EllipticCurve.pairingCheck(
     op.Ec.BLS12_381g1,
-    g1Neg(A1).concat(B1), // G1 points
-    vk.X_2.concat(G2_ONE), // G2 points
+    g1Neg(a1).concat(b1),
+    vk.X_2.concat(G2_ONE),
   );
 
   return res;

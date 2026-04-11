@@ -22,14 +22,10 @@ main:
     txn GroupIndex
     intc 5 // TMPL_APP_OFFSET
     +
-    // contracts/groth16_bls12381_verifier.algo.ts:52-54
-    // const proof = decodeArc4<Groth16Bls12381Proof>(
-    //   GTxn.applicationArgs(idx, 2),
-    // );
-    dup
     // contracts/groth16_bls12381_verifier.algo.ts:53
     // GTxn.applicationArgs(idx, 2),
-    pushint 2 // 2
+    dup
+    pushint 2
     gtxnsas ApplicationArgs
     // contracts/groth16_bls12381_verifier.algo.ts:55
     // const signals = decodeArc4<PublicSignals>(GTxn.applicationArgs(idx, 1));
@@ -70,7 +66,7 @@ main:
     assert // pi_b not in G2
     // contracts/groth16_bls12381.algo.ts:86
     // assert(g1GroupCheck(proof.pi_c), "pi_c not in G1");
-    pushint 288 // 288
+    pushint 288
     intc_2 // 96
     extract3
     dup
@@ -87,7 +83,7 @@ main:
     extract_uint16 // on error: invalid array length header
     dup
     uncover 2
-    pushint 672 // 672
+    pushint 672
     extract_uint64
     ==
     assert // Invalid number of public inputs
@@ -170,7 +166,7 @@ main_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     // contracts/groth16_bls12381.algo.ts:185
     // .concat(vk.vk_gamma_2)
     dig 1
-    pushints 288 192 // 288, 192
+    pushints 288 192
     extract3
     // contracts/groth16_bls12381.algo.ts:184-185
     // const g2Points = proof.pi_b
@@ -181,7 +177,7 @@ main_after_inlined_contracts/groth16_bls12381.algo.ts::computeCpub@13:
     // contracts/groth16_bls12381.algo.ts:186
     // .concat(vk.vk_delta_2)
     dig 2
-    pushints 480 192 // 480, 192
+    pushints 480 192
     extract3
     // contracts/groth16_bls12381.algo.ts:184-186
     // const g2Points = proof.pi_b
