@@ -326,6 +326,7 @@ export type LsigVerificationArgs<Witness extends Record<string, any>> = {
   paramsCallback: (params: {
     lsigParams: {
       sender: Address;
+      signer: TransactionSigner;
       staticFee: AlgoAmount;
     };
     args: { signals: Witness["signals"]; proof: Witness["proof"] };
