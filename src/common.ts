@@ -462,9 +462,12 @@ export abstract class LsigVerifier<
       signals = args.signals;
     }
 
+    const lsigAccount = await this.lsigAccount();
+
     const params = {
       lsigParams: {
-        sender: await this.lsigAccount(),
+        sender: lsigAccount.addr,
+        signer: lsigAccount.signer,
         staticFee: microAlgos(0),
       },
       args: { signals: signals, proof: proof },
@@ -483,7 +486,8 @@ export abstract class LsigVerifier<
 
     for (let i = 0; i < this.totalLsigs - 1; i++) {
       const lsigPay = await this.algorand.createTransaction.payment({
-        sender: extraLsig,
+        sender: extraLsig.addr,
+        signer: extraLsig.signer,
         amount: microAlgos(0),
         staticFee: microAlgos(0),
         receiver: extraLsig,
