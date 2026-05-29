@@ -1,5 +1,10 @@
 import type { AlgorandClient } from "@algorandfoundation/algokit-utils";
-import type { Address, Transaction } from "algosdk";
+import type {
+  Address,
+  Transaction,
+  TransactionSigner,
+  TransactionWithSigner,
+} from "algosdk";
 import type {
   Groth16Bls12381VerifierFactory,
   Groth16Bls12381VerificationKey,
@@ -315,7 +320,7 @@ export type LsigVerifierOptions<VerificationKey> =
 
 export type LsigVerificationArgs<Witness extends Record<string, any>> = {
   composer: {
-    addTransaction: (txn: Transaction) => unknown;
+    addTransaction: (txn: Transaction, signer?: TransactionSigner) => unknown;
   };
   addExtraLsigs?: boolean;
   paramsCallback: (params: {
@@ -325,7 +330,7 @@ export type LsigVerificationArgs<Witness extends Record<string, any>> = {
     };
     args: { signals: Witness["signals"]; proof: Witness["proof"] };
     lsigsFee: AlgoAmount;
-    extraLsigsTxns: Transaction[];
+    extraLsigsTxns: TransactionWithSigner[];
   }) => Promise<void>;
 } & (
   | { inputs: snarkjs.CircuitSignals }
@@ -472,7 +477,7 @@ export abstract class LsigVerifier<
       },
       args: { signals: signals, proof: proof },
       lsigsFee: microAlgos(1000 * this.totalLsigs),
-      extraLsigsTxns: [] as Transaction[],
+      extraLsigsTxns: [] as TransactionWithSigner[],
     };
 
     const compilation = await this.algorand.app.compileTeal(
@@ -487,17 +492,16 @@ export abstract class LsigVerifier<
     for (let i = 0; i < this.totalLsigs - 1; i++) {
       const lsigPay = await this.algorand.createTransaction.payment({
         sender: extraLsig.addr,
-        signer: extraLsig.signer,
         amount: microAlgos(0),
         staticFee: microAlgos(0),
         receiver: extraLsig,
         note: `Extra lsig ${i + 1} of ${this.totalLsigs - 1}`,
       });
 
-      params.extraLsigsTxns.push(lsigPay);
+      params.extraLsigsTxns.push({ txn: lsigPay, signer: lsigAccount.signer });
 
       if (args.addExtraLsigs ?? true) {
-        args.composer.addTransaction(lsigPay);
+        args.composer.addTransaction(lsigPay, extraLsig.signer);
       }
     }
   }

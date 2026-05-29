@@ -1,4 +1,8 @@
-# UNRELEASED 0.11.1
+# UNRELEASED 0.12.0
+
+## BREAKING CHANGES
+
+- `extraLsigsTxns` in `paramsCallback` has changed from `Transaction[]` to `TransactionWithSigner[]`
 
 ## Fixes
 
