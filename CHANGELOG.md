@@ -1,3 +1,13 @@
+# UNRELEASED 0.11.1
+
+## Fixes
+
+- Use explicit sender address and signer for lsigs in verification group
+
+## Notes
+
+- This release also includes some significant refactors to the verifiers. Please report any new bugs
+
 # 0.11.0
 
 ## BREAKING CHANGES
