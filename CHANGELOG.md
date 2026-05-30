@@ -1,3 +1,9 @@
+# 0.13.0
+
+## Features
+
+- Contract files are now exported under "snarkjs-algorand/contracts"
+
 # 0.12.0
 
 ## BREAKING CHANGES
