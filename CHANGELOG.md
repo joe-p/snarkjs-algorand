@@ -1,3 +1,17 @@
+# UNRELEASED 0.12.0
+
+## BREAKING CHANGES
+
+- `extraLsigsTxns` in `paramsCallback` has changed from `Transaction[]` to `TransactionWithSigner[]`
+
+## Fixes
+
+- Use explicit sender address and signer for lsigs in verification group
+
+## Notes
+
+- This release also includes some significant refactors to the verifiers. Please report any new bugs
+
 # 0.11.0
 
 ## BREAKING CHANGES
