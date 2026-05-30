@@ -499,7 +499,7 @@ export abstract class LsigVerifier<
         note: `Extra lsig ${i + 1} of ${this.totalLsigs - 1}`,
       });
 
-      params.extraLsigsTxns.push({ txn: lsigPay, signer: lsigAccount.signer });
+      params.extraLsigsTxns.push({ txn: lsigPay, signer: extraLsig.signer });
 
       if (args.addExtraLsigs ?? true) {
         args.composer.addTransaction(lsigPay, extraLsig.signer);
