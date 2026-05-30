@@ -1,6 +1,6 @@
 {
   "name": "snarkjs-algorand",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -10,10 +10,23 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./contracts/*": {
+      "types": "./contracts/*.ts",
+      "import": "./contracts/*.ts"
+    },
+    "./contracts/clients/*": {
+      "types": "./contracts/clients/*.ts",
+      "import": "./contracts/clients/*.ts"
+    },
+    "./contracts/out/*": {
+      "types": "./contracts/out/*.ts",
+      "import": "./contracts/out/*.ts"
     }
   },
   "files": [
     "dist",
+    "contracts",
     "README.md",
     "CHANGELOG.md"
   ],
