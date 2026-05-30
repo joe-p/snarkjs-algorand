@@ -11,7 +11,7 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
-    "./contracts": {
+    "./contracts/*": {
       "types": "./contracts/*.ts",
       "import": "./contracts/*.ts"
     },
