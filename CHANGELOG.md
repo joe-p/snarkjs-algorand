@@ -1,3 +1,9 @@
+# 0.14,0
+
+## BREAKING CHANGES
+
+- `algosdk` and `@algorandfoundation/algokit-utils` are now peer dependencies
+
 # 0.13.0
 
 ## Features
