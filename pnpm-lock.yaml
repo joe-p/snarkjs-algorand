@@ -8,19 +8,16 @@ importers:
 
   .:
     dependencies:
-      '@algorandfoundation/algokit-utils':
-        specifier: ^9.1.2
-        version: 9.1.2(algosdk@3.4.0)
       '@noble/curves':
         specifier: ^2.0.1
         version: 2.0.1
-      algosdk:
-        specifier: ^3.4.0
-        version: 3.4.0
       snarkjs:
         specifier: ^0.7.5
         version: 0.7.5
     devDependencies:
+      '@algorandfoundation/algokit-utils':
+        specifier: ^9.1.2
+        version: 9.1.2(algosdk@3.4.0)
       '@algorandfoundation/algorand-typescript':
         specifier: 1.2.0-beta.26
         version: 1.2.0-beta.26(tslib@2.8.1)
@@ -33,6 +30,9 @@ importers:
       '@types/snarkjs':
         specifier: ^0.7.9
         version: 0.7.9
+      algosdk:
+        specifier: ^3.4.0
+        version: 3.4.0
       prettier:
         specifier: ^3.8.1
         version: 3.8.1
@@ -313,56 +313,67 @@ packages:
     resolution: {integrity: sha512-JWnrj8qZgLWRNHr7NbpdnrQ8kcg09EBBq8jVOjmtlB3c8C6IrynAJSMhMVGME4YfTJzIkJqvSUSVJRqkDnu/aA==}
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-arm-musleabihf@4.48.0':
     resolution: {integrity: sha512-9xu92F0TxuMH0tD6tG3+GtngwdgSf8Bnz+YcsPG91/r5Vgh5LNofO48jV55priA95p3c92FLmPM7CvsVlnSbGQ==}
     cpu: [arm]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-arm64-gnu@4.48.0':
     resolution: {integrity: sha512-NLtvJB5YpWn7jlp1rJiY0s+G1Z1IVmkDuiywiqUhh96MIraC0n7XQc2SZ1CZz14shqkM+XN2UrfIo7JB6UufOA==}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-arm64-musl@4.48.0':
     resolution: {integrity: sha512-QJ4hCOnz2SXgCh+HmpvZkM+0NSGcZACyYS8DGbWn2PbmA0e5xUk4bIP8eqJyNXLtyB4gZ3/XyvKtQ1IFH671vQ==}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-loongarch64-gnu@4.48.0':
     resolution: {integrity: sha512-Pk0qlGJnhILdIC5zSKQnprFjrGmjfDM7TPZ0FKJxRkoo+kgMRAg4ps1VlTZf8u2vohSicLg7NP+cA5qE96PaFg==}
     cpu: [loong64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-ppc64-gnu@4.48.0':
     resolution: {integrity: sha512-/dNFc6rTpoOzgp5GKoYjT6uLo8okR/Chi2ECOmCZiS4oqh3mc95pThWma7Bgyk6/WTEvjDINpiBCuecPLOgBLQ==}
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-gnu@4.48.0':
     resolution: {integrity: sha512-YBwXsvsFI8CVA4ej+bJF2d9uAeIiSkqKSPQNn0Wyh4eMDY4wxuSp71BauPjQNCKK2tD2/ksJ7uhJ8X/PVY9bHQ==}
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-musl@4.48.0':
     resolution: {integrity: sha512-FI3Rr2aGAtl1aHzbkBIamsQyuauYtTF9SDUJ8n2wMXuuxwchC3QkumZa1TEXYIv/1AUp1a25Kwy6ONArvnyeVQ==}
     cpu: [riscv64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-s390x-gnu@4.48.0':
     resolution: {integrity: sha512-Dx7qH0/rvNNFmCcIRe1pyQ9/H0XO4v/f0SDoafwRYwc2J7bJZ5N4CHL/cdjamISZ5Cgnon6iazAVRFlxSoHQnQ==}
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-x64-gnu@4.48.0':
     resolution: {integrity: sha512-GUdZKTeKBq9WmEBzvFYuC88yk26vT66lQV8D5+9TgkfbewhLaTHRNATyzpQwwbHIfJvDJ3N9WJ90wK/uR3cy3Q==}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-x64-musl@4.48.0':
     resolution: {integrity: sha512-ao58Adz/v14MWpQgYAb4a4h3fdw73DrDGtaiF7Opds5wNyEQwtO6M9dBh89nke0yoZzzaegq6J/EXs7eBebG8A==}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-win32-arm64-msvc@4.48.0':
     resolution: {integrity: sha512-kpFno46bHtjZVdRIOxqaGeiABiToo2J+st7Yce+aiAoo1H0xPi2keyQIP04n2JjDVuxBN6bSz9R6RdTK5hIppw==}
@@ -695,6 +706,7 @@ packages:
 
   glob@10.4.5:
     resolution: {integrity: sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@13.0.6:

@@ -1,6 +1,6 @@
 {
   "name": "snarkjs-algorand",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -42,19 +42,21 @@
     "bt": "pnpm build && pnpm test"
   },
   "dependencies": {
-    "@algorandfoundation/algokit-utils": "^9.1.2",
     "@noble/curves": "^2.0.1",
-    "algosdk": "^3.4.0",
     "snarkjs": "^0.7.5"
   },
   "peerDependencies": {
+    "@algorandfoundation/algokit-utils": "^9.1.2",
+    "algosdk": "^3.4.0",
     "typescript": "^5"
   },
   "devDependencies": {
     "@algorandfoundation/algorand-typescript": "1.2.0-beta.26",
     "@algorandfoundation/puya-ts": "1.2.0-beta.26",
+    "@algorandfoundation/algokit-utils": "^9.1.2",
     "@types/node": "^24.10.0",
     "@types/snarkjs": "^0.7.9",
+    "algosdk": "^3.4.0",
     "prettier": "^3.8.1",
     "tsup": "^8.0.0",
     "tsx": "^4.20.6",
