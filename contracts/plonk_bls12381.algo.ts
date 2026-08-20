@@ -16,6 +16,7 @@ import {
 } from "@algorandfoundation/algorand-typescript/arc4";
 import {
   BLS12_381_SCALAR_MODULUS,
+  R_MINUS_1,
   frScalar,
   b32,
   debugLog,
@@ -41,8 +42,15 @@ import {
  *
  * It should be noted that most of this code is a direct translation of the snarkjs verifier
  *
- * The only deviations are some MSMs to save on opcode cost. There is also an additional opportunity for an MSM across
- * D, F, and the pairing check
+ * The only deviations are made to save on opcode cost:
+ * - D, F, E and the B1 accumulation of the pairing check collapse into a single 18-point MSM
+ *   (calculateB1CombinedMsm), and A1 is negated via its scalars in a 2-point MSM
+ *   (calculateNegA1Msm). The direct translations are kept below for posterity.
+ * - The Lagrange denominators are batch-inverted, so the number of modular
+ *   inversions is 1 rather than nPublic.
+ *
+ * verifyWithLogs() intentionally takes the unfolded route so that D/F/E can be logged
+ * and compared against snarkjs.
  */
 
 /**
@@ -113,18 +121,6 @@ function frInv(b: biguint): biguint {
   assert(x !== (0n as biguint), "Fr inverse of zero");
   const inv = modPow(x, BLS12_381_R_MINUS_2, r);
   return inv;
-}
-
-/**
- * Division in the scalar field Fr.
- * Computes a / b = a * b^(-1) mod r where r is the BLS12-381 scalar field modulus.
- * Requires b ≠ 0 (enforced by frInv).
- */
-function frDiv(a: biguint, b: biguint): biguint {
-  const r = BLS12_381_SCALAR_MODULUS;
-  const aN = frScalar(BigUint(a));
-  const bInv = BigUint(frInv(b));
-  return (aN * bInv) % r;
 }
 
 /**
@@ -335,18 +331,16 @@ export function verify(
   // 4) Linearization polynomial constant term r0
   const r0 = calculateR0(proof, challenges, pi, lw.L[1] as Uint256);
 
-  // 5) Linearization commitment D and batch opening commitment F (optimized)
-  const f = calculateDFCombinedMsm(proof, challenges, vk, lw.L[1]!);
-
-  // 7) Batched evaluation commitment E (on [1]_1)
-  const e = calculateE(proof, challenges, r0);
-
-  // 8) Final pairing check
-  return isValidPairing(proof, challenges, vk, e, f);
+  // 5) Final pairing check. D, F and E are all folded into the two MSMs that
+  //    build the pairing inputs, so they are never computed on their own.
+  return isValidPairingCombined(proof, challenges, vk, lw.L[1]!, r0);
 }
 
 /**
  * Main PLONK verification function with debug logging
+ *
+ * This path deliberately materializes F and E so they can be logged and diffed
+ * against snarkjs; verify() folds them into the pairing inputs instead.
  */
 export function verifyWithLogs(
   vk: PlonkVerificationKey,
@@ -511,23 +505,62 @@ export function calculateLagrangeEvaluations(
   challenges.zh = new Uint256(frSub(xin, BigUint(1)));
 
   const n = frScalar(BigUint(domainSize));
-
-  let w = BigUint(1);
-
-  const L: Uint256[] = [new Uint256()];
+  const zh = challenges.zh.asBigUint();
+  const xi = challenges.xi.asBigUint();
 
   const iterations: uint64 = vk.nPublic === 0 ? 1 : vk.nPublic;
-  for (let i: uint64 = 1; i <= iterations; i++) {
+
+  // Each Lᵢ is wᵢ·zh / (n·(ξ − wᵢ)). Rather than paying one modular inverse per
+  // term (each a ~255-iteration Fermat exponentiation), collect the denominators
+  // and invert them all with a single exponentiation using Montgomery's batch
+  // inversion trick. This is what the snarkjs Solidity template does via
+  // `inverseArray`, and it makes the cost of this step effectively independent
+  // of nPublic.
+  const nums: Uint256[] = []; // nums[i]     = wᵢ·zh
+  const denoms: Uint256[] = []; // denoms[i]   = n·(ξ − wᵢ)
+  const prefixes: Uint256[] = []; // prefixes[i] = denoms[0]·…·denoms[i−1] (prefixes[0] = 1)
+
+  let w = BigUint(1);
+  let acc = BigUint(1);
+  for (let i: uint64 = 0; i < iterations; i++) {
+    nums.push(new Uint256(frMul(w, zh)));
+
+    const d = frMul(n, frSub(xi, w));
+    denoms.push(new Uint256(d));
+
+    prefixes.push(new Uint256(acc));
+    acc = frMul(acc, d);
+
+    w = frMul(w, ROOT_OF_UNITY);
+  }
+
+  // The one and only inverse. If any denominator is zero (ξ is a domain element)
+  // the product is zero and frInv rejects, matching the per-term behavior.
+  let cur = frInv(acc);
+
+  // Walk backwards: denoms[i]⁻¹ = cur · prefixes[i], then fold denoms[i] into cur
+  // so the next iteration sees the product of denominators 0..i−1. Filled in
+  // reverse, so invs[iterations − 1 − i] is denoms[i]⁻¹.
+  const invs: Uint256[] = [];
+  for (let j: uint64 = 0; j < iterations; j++) {
+    const i: uint64 = iterations - 1 - j;
+    invs.push(new Uint256(frMul(cur, (prefixes[i] as Uint256).asBigUint())));
+    cur = frMul(cur, (denoms[i] as Uint256).asBigUint());
+  }
+
+  // L is 1-indexed to match snarkjs; L[0] is unused
+  const L: Uint256[] = [new Uint256()];
+  for (let i: uint64 = 0; i < iterations; i++) {
     L.push(
       new Uint256(
-        frDiv(
-          frMul(w, challenges.zh.asBigUint()),
-          frMul(n, frSub(challenges.xi.asBigUint(), w)),
+        frMul(
+          (nums[i] as Uint256).asBigUint(),
+          (invs[iterations - 1 - i] as Uint256).asBigUint(),
         ),
       ),
     );
-    w = frMul(w, ROOT_OF_UNITY);
   }
+
   return { L, challenges };
 }
 
@@ -798,15 +831,39 @@ function calculateFMsm(
   ).toFixed({ length: 96 });
 }
 
-/*
- * A translation of calculateD and calculateF combined with a single MSM
+/**
+ * The 15 G1 points of the combined D+F linear combination, concatenated
+ * (15 × 96 = 1440 bytes). Kept separate from the scalars so the same basis can
+ * be reused by both calculateDFCombinedMsm and calculateB1CombinedMsm.
  */
-function calculateDFCombinedMsm(
+function dfPoints(proof: PlonkProof, vk: PlonkVerificationKey): bytes {
+  return vk.Qm.concat(vk.Ql)
+    .concat(vk.Qr)
+    .concat(vk.Qo)
+    .concat(vk.Qc)
+    .concat(proof.Z)
+    .concat(vk.S3)
+    .concat(proof.T1)
+    .concat(proof.T2)
+    .concat(proof.T3)
+    .concat(proof.A)
+    .concat(proof.B)
+    .concat(proof.C)
+    .concat(vk.S1)
+    .concat(vk.S2);
+}
+
+/**
+ * The 15 scalars pairing with dfPoints (15 × 32 = 480 bytes), such that
+ * MSM(dfPoints, dfScalars) == F. The D3 and D4 terms are subtracted in snarkjs,
+ * so their scalars are negated here (r − s) instead.
+ */
+function dfScalars(
   proof: PlonkProof,
   challenges: Challenges,
   vk: PlonkVerificationKey,
   l1: Uint256,
-): bytes<96> {
+): bytes {
   const r = BLS12_381_SCALAR_MODULUS;
 
   // Calculate all 15 scalars upfront
@@ -878,24 +935,8 @@ function calculateDFCombinedMsm(
   const sS1 = challenges.v[4]!.asBigUint();
   const sS2 = challenges.v[5]!.asBigUint();
 
-  // Concatenate all 15 points
-  const points = vk.Qm.concat(vk.Ql)
-    .concat(vk.Qr)
-    .concat(vk.Qo)
-    .concat(vk.Qc)
-    .concat(proof.Z)
-    .concat(vk.S3)
-    .concat(proof.T1)
-    .concat(proof.T2)
-    .concat(proof.T3)
-    .concat(proof.A)
-    .concat(proof.B)
-    .concat(proof.C)
-    .concat(vk.S1)
-    .concat(vk.S2);
-
   // Concatenate all 15 scalars (32 bytes each)
-  const scalars = b32(frScalar(sQm))
+  return b32(frScalar(sQm))
     .concat(b32(frScalar(sQl)))
     .concat(b32(frScalar(sQr)))
     .concat(b32(frScalar(sQo)))
@@ -910,8 +951,64 @@ function calculateDFCombinedMsm(
     .concat(b32(frScalar(sC)))
     .concat(b32(frScalar(sS1)))
     .concat(b32(frScalar(sS2)));
+}
 
+/*
+ * A translation of calculateD and calculateF combined with a single MSM.
+ *
+ * Only used by the debug-logging path, which logs F so it can be diffed against
+ * snarkjs. The production path folds this into calculateB1CombinedMsm.
+ */
+function calculateDFCombinedMsm(
+  proof: PlonkProof,
+  challenges: Challenges,
+  vk: PlonkVerificationKey,
+  l1: Uint256,
+): bytes<96> {
   // Single 15-point MSM computes F directly
+  return op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    dfPoints(proof, vk),
+    dfScalars(proof, challenges, vk, l1),
+  ).toFixed({ length: 96 });
+}
+
+/**
+ * The second G1 input to the pairing check, computed in a single 18-point MSM:
+ *
+ *   B1 = F − E + ξ·Wξ + (u·ξ·ω)·Wξω
+ *
+ * F is a linear combination of 15 points and E is a multiple of [1]₁, and
+ * neither is needed anywhere else, so the whole of calculateD, calculateF,
+ * calculateE and the B1 accumulation in the pairing check collapse into one MSM
+ * over the D+F basis extended by Wξ, Wξω and [1]₁. Subtracting E becomes the
+ * negated scalar (r − e), so no point negation is needed either.
+ */
+function calculateB1CombinedMsm(
+  proof: PlonkProof,
+  challenges: Challenges,
+  vk: PlonkVerificationKey,
+  l1: Uint256,
+  r0: Uint256,
+): bytes<96> {
+  const r = BLS12_381_SCALAR_MODULUS;
+
+  const points = dfPoints(proof, vk)
+    .concat(proof.Wxi)
+    .concat(proof.Wxiw)
+    .concat(G1_ONE);
+
+  // Wξω is opened at ξ·ω, scaled by the batching challenge u
+  const sWxiw = frMul(
+    frMul(challenges.u.asBigUint(), challenges.xi.asBigUint()),
+    ROOT_OF_UNITY,
+  );
+
+  const scalars = dfScalars(proof, challenges, vk, l1)
+    .concat(b32(frScalar(challenges.xi.asBigUint())))
+    .concat(b32(frScalar(sWxiw)))
+    .concat(b32(frScalar(frSub(r, calculateEScalar(proof, challenges, r0)))));
+
   return op.EllipticCurve.scalarMulMulti(
     op.Ec.BLS12_381g1,
     points,
@@ -920,13 +1017,42 @@ function calculateDFCombinedMsm(
 }
 
 /**
+ * The first G1 input to the pairing check, already negated:
+ *
+ *   −A1 = −(Wξ + u·Wξω) = (r − 1)·Wξ + (r − u)·Wξω
+ *
+ * Folding the negation into the scalars turns three scalar multiplications, an
+ * addition and a negation into a single 2-point MSM.
+ */
+function calculateNegA1Msm(
+  proof: PlonkProof,
+  challenges: Challenges,
+): bytes<96> {
+  const r = BLS12_381_SCALAR_MODULUS;
+
+  const points = proof.Wxi.concat(proof.Wxiw);
+
+  const scalars = b32(R_MINUS_1).concat(
+    b32(frScalar(frSub(r, challenges.u.asBigUint()))),
+  );
+
+  return op.EllipticCurve.scalarMulMulti(
+    op.Ec.BLS12_381g1,
+    points,
+    scalars,
+  ).toFixed({ length: 96 });
+}
+
+/**
+ * The scalar e such that E = e·[1]₁, i.e. the batched evaluation of all openings.
+ *
  * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L386-L386
  */
-export function calculateE(
+function calculateEScalar(
   proof: PlonkProof,
   challenges: Challenges,
   r0: Uint256,
-): bytes<96> {
+): biguint {
   let e = frSub(
     frMul((challenges.v[1] as Uint256).asBigUint(), proof.eval_a.asBigUint()),
     r0.asBigUint(),
@@ -949,12 +1075,60 @@ export function calculateE(
   );
   e = frAdd(e, frMul(challenges.u.asBigUint(), proof.eval_zw.asBigUint()));
 
-  const res = g1TimesFr(G1_ONE.toFixed({ length: 96 }), e);
-  return res;
+  return e;
+}
+
+/**
+ * E = e·[1]₁
+ *
+ * Only used by the debug-logging path, which logs E so it can be diffed against
+ * snarkjs. The production path folds e into calculateB1CombinedMsm.
+ *
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L386-L386
+ */
+export function calculateE(
+  proof: PlonkProof,
+  challenges: Challenges,
+  r0: Uint256,
+): bytes<96> {
+  return g1TimesFr(
+    G1_ONE.toFixed({ length: 96 }),
+    calculateEScalar(proof, challenges, r0),
+  );
+}
+
+/**
+ * Final pairing check, with both G1 inputs built by MSM.
+ *
+ * Equivalent to isValidPairing(proof, challenges, vk, E, F) but never
+ * materializes D, F or E, so the entire tail of the verifier is two MSMs and one
+ * pairing instead of six scalar multiplications and five point additions on top
+ * of the D+F MSM.
+ *
+ * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L402-L402
+ */
+export function isValidPairingCombined(
+  proof: PlonkProof,
+  challenges: Challenges,
+  vk: PlonkVerificationKey,
+  l1: Uint256,
+  r0: Uint256,
+): boolean {
+  const a1Neg = calculateNegA1Msm(proof, challenges);
+  const b1 = calculateB1CombinedMsm(proof, challenges, vk, l1, r0);
+
+  return op.EllipticCurve.pairingCheck(
+    op.Ec.BLS12_381g1,
+    a1Neg.concat(b1),
+    vk.X_2.concat(G2_ONE),
+  );
 }
 
 /**
  * Final pairing check
+ *
+ * Only used by the debug-logging path; the production path uses
+ * isValidPairingCombined.
  *
  * See https://github.com/iden3/snarkjs/blob/8ea294c099c9c10e095cf078ac41342388894668/src/plonk_verify.js#L402-L402
  */

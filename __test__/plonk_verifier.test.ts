@@ -7,9 +7,9 @@ import {
   PlonkLsigVerifier,
 } from "../src/plonk";
 import {
-  PlonkBls12381SignalsAndProofClient,
-  PlonkBls12381SignalsAndProofFactory,
-} from "../contracts/clients/PlonkBls12381SignalsAndProof";
+  PlonkSignalsAndProofClient,
+  PlonkSignalsAndProofFactory,
+} from "../contracts/clients/PlonkSignalsAndProof.ts";
 
 const LSIG_BUDGET = 20_000; // Budget for each logicsig
 const APP_BUDGET = 700; // Budget for the app call
@@ -106,6 +106,23 @@ describe("verifier", () => {
     const signals = [1337n];
 
     const simResult = debugVerifier.simulateVerificationWithProofAndSignals(
+      { signals, proof },
+      {
+        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+        allowMoreLogging: true,
+      },
+    );
+
+    await expect(simResult).rejects.toThrow();
+  });
+
+  // The non-logging verifier folds D/F/E into the pairing MSMs, so it is a
+  // distinct code path from the logging one and needs its own negative test
+  it("fails with wrong signal without logging", async () => {
+    const proof = await getPlonkProof("circuit/plonk_proof.json", curve);
+    const signals = [1337n];
+
+    const simResult = verifier.simulateVerificationWithProofAndSignals(
       { signals, proof },
       {
         extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
@@ -258,7 +275,7 @@ describe("verifier", () => {
 describe("verifier lsig", () => {
   let verifier: PlonkLsigVerifier;
   let algorand: AlgorandClient;
-  let client: PlonkBls12381SignalsAndProofClient;
+  let client: PlonkSignalsAndProofClient;
 
   beforeAll(async () => {
     algorand = AlgorandClient.defaultLocalNet();
@@ -270,7 +287,7 @@ describe("verifier lsig", () => {
       wasmProver: "circuit/circuit_js/circuit.wasm",
     });
 
-    const signalsAndProofFactory = new PlonkBls12381SignalsAndProofFactory({
+    const signalsAndProofFactory = new PlonkSignalsAndProofFactory({
       algorand,
       defaultSender: await algorand.account.localNetDispenser(),
     });
