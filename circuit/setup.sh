@@ -57,6 +57,48 @@ snarkjs plonk fullprove input.json circuit_js/circuit.wasm plonk_circuit_final.z
 snarkjs plonk verify plonk_verification_key.json public.json plonk_proof.json
 fi
 
+######################
+# PLONK, nPublic == 2
+######################
+
+# Same circuit as above, but with `b` marked public so the verifier exercises the
+# multi-public-signal paths (PI(ξ), the Lagrange batch inversion, and the
+# transcript for beta/gamma).
+if [ ! -f plonk_2pub_proof.json ]; then
+cat <<EOT > circuit_2pub.circom
+pragma circom 2.0.0;
+
+template Multiplier(n) {
+    signal input a;
+    signal input b;
+    signal output c;
+
+    signal int[n];
+
+    int[0] <== a*a + b;
+    for (var i=1; i<n; i++) {
+        int[i] <== int[i-1]*int[i-1] + b;
+    }
+
+    c <== int[n-1];
+}
+
+component main {public [b]} = Multiplier(1000);
+EOT
+
+circom --r1cs --wasm --c --sym --inspect circuit_2pub.circom --prime bls12381
+
+snarkjs r1cs export json circuit_2pub.r1cs circuit_2pub.r1cs.json
+
+snarkjs plonk setup circuit_2pub.r1cs pot14_final.ptau plonk_2pub_circuit_final.zkey
+
+snarkjs zkey export verificationkey plonk_2pub_circuit_final.zkey plonk_2pub_verification_key.json
+
+snarkjs plonk fullprove input.json circuit_2pub_js/circuit_2pub.wasm plonk_2pub_circuit_final.zkey plonk_2pub_proof.json plonk_2pub_public.json
+
+snarkjs plonk verify plonk_2pub_verification_key.json plonk_2pub_public.json plonk_2pub_proof.json
+fi
+
 ##########
 # Groth16
 ##########
