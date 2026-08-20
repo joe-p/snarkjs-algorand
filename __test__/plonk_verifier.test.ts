@@ -272,6 +272,230 @@ describe("verifier", () => {
   });
 });
 
+// Same circuit as above, but with the input `b` also marked public, so the
+// verifier has to handle nPublic == 2: two terms in the beta/gamma transcript,
+// two Lagrange evaluations, and a two-term PI(xi).
+describe("verifier with 2 public signals", () => {
+  const ZKEY = "circuit/plonk_2pub_circuit_final.zkey";
+  const WASM_PROVER = "circuit/circuit_2pub_js/circuit_2pub.wasm";
+  const PROOF = "circuit/plonk_2pub_proof.json";
+
+  // [c, b] from circuit/plonk_2pub_public.json, for input {a: 3, b: 11}
+  const SIGNALS = [
+    15744006038856998268181219516291113434365469909648022488288672656450282844855n,
+    11n,
+  ];
+
+  let debugVerifier: PlonkAppVerifier;
+  let verifier: PlonkAppVerifier;
+  let curve: any;
+
+  beforeAll(async () => {
+    const defaultSender = await algorand.account.localNetDispenser();
+
+    // @ts-expect-error curves is not typed
+    curve = await snarkjs.curves.getCurveFromName("bls12381");
+
+    debugVerifier = new PlonkAppVerifier({
+      algorand,
+      zKey: ZKEY,
+      wasmProver: WASM_PROVER,
+    });
+    await debugVerifier.deploy({
+      appName: `plonk-2pub-verifier-${Date.now()}`,
+      debugLogging: true,
+      defaultSender,
+    });
+
+    verifier = new PlonkAppVerifier({
+      algorand,
+      zKey: ZKEY,
+      wasmProver: WASM_PROVER,
+    });
+    await verifier.deploy({
+      appName: `plonk-2pub-verifier-${Date.now()}`,
+      defaultSender,
+    });
+  });
+
+  afterAll(async () => {
+    await curve.terminate();
+  });
+
+  it("fails with wrong signal", async () => {
+    const proof = await getPlonkProof(PROOF, curve);
+    const signals = [1337n, 11n];
+
+    const simResult = debugVerifier.simulateVerificationWithProofAndSignals(
+      { signals, proof },
+      {
+        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+        allowMoreLogging: true,
+      },
+    );
+
+    await expect(simResult).rejects.toThrow();
+  });
+
+  // The non-logging verifier folds D/F/E into the pairing MSMs, so it is a
+  // distinct code path from the logging one and needs its own negative test
+  it("fails with wrong signal without logging", async () => {
+    const proof = await getPlonkProof(PROOF, curve);
+    const signals = [1337n, 11n];
+
+    const simResult = verifier.simulateVerificationWithProofAndSignals(
+      { signals, proof },
+      {
+        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+        allowMoreLogging: true,
+      },
+    );
+
+    await expect(simResult).rejects.toThrow();
+  });
+
+  // A proof for the single-public-signal circuit must not verify here, and vice
+  // versa, so the signal count is genuinely bound into the transcript
+  it("fails with too few signals", async () => {
+    const proof = await getPlonkProof(PROOF, curve);
+    const signals = [SIGNALS[0]!];
+
+    const simResult = verifier.simulateVerificationWithProofAndSignals(
+      { signals, proof },
+      {
+        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+        allowMoreLogging: true,
+      },
+    );
+
+    await expect(simResult).rejects.toThrow();
+  });
+
+  it("works", async () => {
+    const proof = await getPlonkProof(PROOF, curve);
+
+    const simResult = await verifier.simulateVerificationWithProofAndSignals(
+      { signals: SIGNALS, proof },
+      {
+        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+        allowMoreLogging: true,
+      },
+    );
+
+    const budgetUsed =
+      simResult.simulateResponse.txnGroups[0]!.appBudgetConsumed!;
+
+    expect(budgetUsed).toMatchSnapshot("budget used");
+    expect(Math.ceil(budgetUsed / LSIG_BUDGET)).toMatchSnapshot(
+      "number of lsig txns required for budget",
+    );
+    expect(Math.ceil(budgetUsed / APP_BUDGET)).toMatchSnapshot(
+      "number of app calls required for budget",
+    );
+  });
+
+  it("works with logging", async () => {
+    const proof = await getPlonkProof(PROOF, curve);
+
+    const simResult =
+      await debugVerifier.simulateVerificationWithProofAndSignals(
+        { signals: SIGNALS, proof },
+        {
+          extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+          allowMoreLogging: true,
+        },
+      );
+    const logs = simResult.confirmations[0]!.logs!;
+
+    // [INFO]  snarkJS: PLONK VERIFIER STARTED
+    // [DEBUG] snarkJS: beta: 3e88978c3fa80eaf3876e6c6502101401ae724226c3551cd30081375401b9965
+    // [DEBUG] snarkJS: gamma: 3c7867236fd42c76f6bdd0aa3ad8c89ce9042ab7f98ff345e7c0a4fcd5223e17
+    // [DEBUG] snarkJS: alpha: 6972da6af8335e3e66455bd473353e09ed7f6e697e185159054f76cabe1967a4
+    // [DEBUG] snarkJS: xi: cff26d3dc53c5b3bb366eaaf9b1f44d3c982539f24b665ac8446dfad582a11
+    // [DEBUG] snarkJS: v: 52e3ec47d69ef16d508ee6e1fdc8beede4b2f4fd2e8d2391d2a1c31dba5c79a6
+    // [DEBUG] snarkJS: v: 3a2cccf6723f266723662583b48767d38d0e034f909d60145fb80becd2fa56e0
+    // [DEBUG] snarkJS: v: 39d3044b894f8a9f2cb6b14a4bcde78508571b3bed28a7730e55cf293f427d4f
+    // [DEBUG] snarkJS: v: 19921058429991920e4fd4090abe7157b3945877ec4148c774eea7698e4d9e00
+    // [DEBUG] snarkJS: v: 386193ecf13f8d7d75f57cd5478d64fa16a52b3841e8fa33f96dc68abcc8e02e
+    // [DEBUG] snarkJS: u: 676888ed1738999aeef65724cd97209c8a5039dd59c41e1bfbd132c7e7883481
+    // [DEBUG] snarkJS: L1(xi)=673de404143e19be2b422e7d30b5c7fc84665647e1fe84eddb286f8f88561567
+    // [DEBUG] snarkJS: L2(xi)=64176c3c3fd19269e5421b71ef434b7decb5c8d9ebfd0a3a9b6b2594312cc108
+    // [DEBUG] snarkJS: PI(xi): 1de2e5dd7064c5d871a699f3c9b34a0b844cc46f764d2cb06d6a03c4f4b84fa8
+    // [DEBUG] snarkJS: r0: 894c3c9f38524b77c6ad14c71108ba6c9c6d129440a0869d156ce4ad3e9e55
+    // [DEBUG] snarkJS: D: [ b7d7a06edcc8e07e1952582ff26df8bb78e7a4277a263735968eb02dd1a4d39deb2860aaef730a5f76d84adac7297f9, a2cb07be8c1ce5afe58035dd71fa3ae2abcfa1da108fb34fe60cc5b9585d9ec05bed2763b9d63ca4653ceafbbd1864a ]
+    // [DEBUG] snarkJS: F: [ 19f2221b0775a3e14dee98fba3d94915df196b9981861725dd569e10ab2cfab617bab9562e5c616ee966fb0322b683d0, 1556e22e8d1848020632fb76c907ec24a7072a8842d10502e3d938ae851770a4ff828bcb47578173aa6a305182356503 ]
+    // [DEBUG] snarkJS: E: [ 620d4d502b3070ddc7ac8c56d8c425163d242668b3726e8de0e064beff61f34fbcd1c1ca212c7e53e821af5942e6bed, 17ef2fd2c5bf6bcf01247196964594638285edd6f2449ba1a28551c268a74c03c7ccc6e75e0a7d15b06315af2c0f6219 ]
+    // [INFO]  snarkJS: OK!
+
+    const logValues = parseLogs(logs);
+
+    expect(logValues.beta).toBe(
+      "3e88978c3fa80eaf3876e6c6502101401ae724226c3551cd30081375401b9965",
+    );
+    expect(logValues.gamma).toBe(
+      "3c7867236fd42c76f6bdd0aa3ad8c89ce9042ab7f98ff345e7c0a4fcd5223e17",
+    );
+    expect(logValues.alpha).toBe(
+      "6972da6af8335e3e66455bd473353e09ed7f6e697e185159054f76cabe1967a4",
+    );
+    expect(logValues.xi).toBe(
+      "cff26d3dc53c5b3bb366eaaf9b1f44d3c982539f24b665ac8446dfad582a11",
+    );
+    expect(logValues.u).toBe(
+      "676888ed1738999aeef65724cd97209c8a5039dd59c41e1bfbd132c7e7883481",
+    );
+
+    expect(logValues["v[1]"]).toBe(
+      "52e3ec47d69ef16d508ee6e1fdc8beede4b2f4fd2e8d2391d2a1c31dba5c79a6",
+    );
+    expect(logValues["v[2]"]).toBe(
+      "3a2cccf6723f266723662583b48767d38d0e034f909d60145fb80becd2fa56e0",
+    );
+    expect(logValues["v[3]"]).toBe(
+      "39d3044b894f8a9f2cb6b14a4bcde78508571b3bed28a7730e55cf293f427d4f",
+    );
+    expect(logValues["v[4]"]).toBe(
+      "19921058429991920e4fd4090abe7157b3945877ec4148c774eea7698e4d9e00",
+    );
+    expect(logValues["v[5]"]).toBe(
+      "386193ecf13f8d7d75f57cd5478d64fa16a52b3841e8fa33f96dc68abcc8e02e",
+    );
+    expect(logValues["L1(xi)"]).toBe(
+      "673de404143e19be2b422e7d30b5c7fc84665647e1fe84eddb286f8f88561567",
+    );
+
+    // The contract does not log L2(xi), but PI(xi) is
+    // -(signals[0]*L1 + signals[1]*L2), so it covers the second Lagrange term
+    expect(logValues["PI(xi)"]).toBe(
+      "1de2e5dd7064c5d871a699f3c9b34a0b844cc46f764d2cb06d6a03c4f4b84fa8",
+    );
+
+    expect(logValues.r0).toBe(
+      "894c3c9f38524b77c6ad14c71108ba6c9c6d129440a0869d156ce4ad3e9e55",
+    );
+
+    expect(logValues.F).toBe(
+      "19f2221b0775a3e14dee98fba3d94915df196b9981861725dd569e10ab2cfab617bab9562e5c616ee966fb0322b683d01556e22e8d1848020632fb76c907ec24a7072a8842d10502e3d938ae851770a4ff828bcb47578173aa6a305182356503",
+    );
+
+    expect(logValues.E).toBe(
+      "620d4d502b3070ddc7ac8c56d8c425163d242668b3726e8de0e064beff61f34fbcd1c1ca212c7e53e821af5942e6bed17ef2fd2c5bf6bcf01247196964594638285edd6f2449ba1a28551c268a74c03c7ccc6e75e0a7d15b06315af2c0f6219",
+    );
+  });
+
+  it("works with fullProve", async () => {
+    const simResult = await verifier.simulateVerification(
+      { a: 10, b: 21 },
+      {
+        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+        allowMoreLogging: true,
+      },
+    );
+
+    expect(simResult.simulateResponse.txnGroups[0]?.failedAt).toBeUndefined();
+  });
+});
+
 describe("verifier lsig", () => {
   let verifier: PlonkLsigVerifier;
   let algorand: AlgorandClient;
@@ -285,6 +509,64 @@ describe("verifier lsig", () => {
       algorand,
       zKey: "circuit/plonk_circuit_final.zkey",
       wasmProver: "circuit/circuit_js/circuit.wasm",
+    });
+
+    const signalsAndProofFactory = new PlonkSignalsAndProofFactory({
+      algorand,
+      defaultSender: await algorand.account.localNetDispenser(),
+    });
+
+    const { appClient } = await signalsAndProofFactory.deploy({
+      onUpdate: "append",
+    });
+
+    client = appClient;
+  });
+
+  it("works", async () => {
+    const group = client.newGroup();
+
+    await verifier.verificationParams({
+      inputs: { a: 10, b: 21 },
+      composer: group,
+      paramsCallback: async (params) => {
+        const { lsigParams, lsigsFee, args } = params;
+
+        // Call app with signals and proof via lsig
+        group.signalsAndProof({ ...lsigParams, args });
+
+        // Pay the required fees
+        const feePayer = await algorand.account.localNetDispenser();
+        group.addTransaction(
+          await algorand.createTransaction.payment({
+            sender: feePayer,
+            amount: microAlgos(0),
+            receiver: feePayer,
+            extraFee: lsigsFee,
+          }),
+        );
+      },
+    });
+
+    await group.send();
+  });
+});
+
+// The extra public signal costs opcode budget, so the lsig path needs its own
+// coverage to show the work still fits in the same number of logicsigs
+describe("verifier lsig with 2 public signals", () => {
+  let verifier: PlonkLsigVerifier;
+  let algorand: AlgorandClient;
+  let client: PlonkSignalsAndProofClient;
+
+  beforeAll(async () => {
+    algorand = AlgorandClient.defaultLocalNet();
+    verifier = new PlonkLsigVerifier({
+      totalLsigs: 7,
+      appOffset: 0,
+      algorand,
+      zKey: "circuit/plonk_2pub_circuit_final.zkey",
+      wasmProver: "circuit/circuit_2pub_js/circuit_2pub.wasm",
     });
 
     const signalsAndProofFactory = new PlonkSignalsAndProofFactory({
