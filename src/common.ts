@@ -325,7 +325,6 @@ export abstract class AppVerifier<
   /** A composer for this verifier's algod, to build a group around a `verify` call */
   composer(): Composer {
     return new Composer({
-      algod: this.algod,
       getSuggestedParams:
         this.getSuggestedParams ??
         (() => this.algod.getTransactionParams().do()),
@@ -350,7 +349,7 @@ export abstract class AppVerifier<
     const group = await this.verifyComposer(
       proofAndSignals,
       callParams,
-    ).buildGroup();
+    ).buildGroup(this.algod);
 
     return group[0]!.txn;
   }
