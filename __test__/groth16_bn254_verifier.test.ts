@@ -1,17 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { AlgorandClient, microAlgos } from "@algorandfoundation/algokit-utils";
+import algosdk from "algosdk";
+import { BASE_USAGE, Localnet } from "algokit-lite";
 import * as snarkjs from "snarkjs";
 import {
   getGroth16Bn254Proof,
   Groth16Bn254AppVerifier,
   Groth16Bn254LsigVerifier,
-  type Groth16Bn254VerificationKey,
 } from "../src/groth16";
-import {
-  Groth16Bn254SignalsAndProofClient,
-  Groth16Bn254SignalsAndProofFactory,
-} from "../contracts/clients/Groth16Bn254SignalsAndProof";
-import type { Groth16Bn254Proof } from "../src/groth16";
+import { Groth16Bn254SignalsAndProofClient } from "../contracts/clients/Groth16Bn254SignalsAndProof";
 import {
   decodeGnarkGroth16Bn254Proof,
   decodeGnarkGroth16Bn254Vk,
@@ -21,7 +17,23 @@ const LSIG_BUDGET = 20_000; // Budget for each logicsig
 const APP_BUDGET = 700; // Budget for the app call
 const GROUP_TXN_SIZE = 16;
 const EXTRA_OPCODE_BUDGET = LSIG_BUDGET * GROUP_TXN_SIZE - APP_BUDGET; // Max budget possible with a group of 16 lsigs
-const algorand = AlgorandClient.defaultLocalNet();
+const localnet = new Localnet();
+
+function maxBudgetSimulateRequest() {
+  return new algosdk.modelsv2.SimulateRequest({
+    txnGroups: [],
+    extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+    allowMoreLogging: true,
+  });
+}
+
+function groupResult(
+  simulateResponse: algosdk.modelsv2.SimulateResponse,
+): algosdk.modelsv2.SimulateTransactionGroupResult {
+  const group = simulateResponse.txnGroups[0];
+  if (!group) throw new Error("Expected a simulated transaction group");
+  return group;
+}
 
 describe("groth16 bn254 verifier", () => {
   let debugVerifier: Groth16Bn254AppVerifier;
@@ -29,31 +41,25 @@ describe("groth16 bn254 verifier", () => {
   let curve: any;
 
   beforeAll(async () => {
-    const defaultSender = await algorand.account.localNetDispenser();
+    const sender = await localnet.dispenser();
 
     // @ts-expect-error curves is not typed
     curve = await snarkjs.curves.getCurveFromName("bn128");
     debugVerifier = new Groth16Bn254AppVerifier({
-      algorand,
+      algod: localnet.algod,
+      sender,
       zKey: "circuit/groth16_bn254_circuit_final.zkey",
       wasmProver: "circuit/circuit_bn254_js/circuit_bn254.wasm",
     });
-    await debugVerifier.deploy({
-      appName: `groth16-bn254-verifier-${Date.now()}`,
-      debugLogging: true,
-      defaultSender,
-    });
+    await debugVerifier.create({ debugLogging: true });
 
     verifier = new Groth16Bn254AppVerifier({
-      algorand,
+      algod: localnet.algod,
+      sender,
       zKey: "circuit/groth16_bn254_circuit_final.zkey",
       wasmProver: "circuit/circuit_bn254_js/circuit_bn254.wasm",
     });
-
-    await verifier.deploy({
-      appName: `groth16-bn254-verifier-${Date.now()}`,
-      defaultSender,
-    });
+    await verifier.create();
   });
 
   afterAll(async () => {
@@ -67,15 +73,13 @@ describe("groth16 bn254 verifier", () => {
     );
     const signals = [1337n];
 
-    const simResult = debugVerifier.simulateVerificationWithProofAndSignals(
-      { signals, proof },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
-    );
+    const { simulateResponse } =
+      await debugVerifier.simulateVerificationWithProofAndSignals(
+        { signals, proof },
+        maxBudgetSimulateRequest(),
+      );
 
-    await expect(simResult).rejects.toThrow();
+    expect(groupResult(simulateResponse).failureMessage).toBeTruthy();
   });
 
   it("works", async () => {
@@ -90,18 +94,13 @@ describe("groth16 bn254 verifier", () => {
     ];
 
     // We are testing using an app so we can log, so we need to increase the opcode budget
-    const simResult = await verifier.simulateVerificationWithProofAndSignals(
-      { signals, proof },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
-    );
+    const { simulateResponse } =
+      await verifier.simulateVerificationWithProofAndSignals(
+        { signals, proof },
+        maxBudgetSimulateRequest(),
+      );
 
-    simResult.simulateResponse.txnGroups[0]?.appBudgetConsumed;
-
-    const budgetUsed =
-      simResult.simulateResponse.txnGroups[0]!.appBudgetConsumed!;
+    const budgetUsed = groupResult(simulateResponse).appBudgetConsumed!;
 
     expect(budgetUsed).toMatchSnapshot("budget used");
     expect(Math.ceil(budgetUsed / LSIG_BUDGET)).toMatchSnapshot(
@@ -113,71 +112,65 @@ describe("groth16 bn254 verifier", () => {
   });
 
   it("works with fullProve", async () => {
-    const simResult = await verifier.simulateVerification(
+    const { simulateResponse } = await verifier.simulateVerification(
       { a: 10, b: 21 },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
+      maxBudgetSimulateRequest(),
     );
 
-    expect(simResult.simulateResponse.txnGroups[0]?.failedAt).toBeUndefined();
+    expect(groupResult(simulateResponse).failedAt).toBeUndefined();
   });
 });
 
 describe("groth16 bn254 verifier lsig", () => {
   let verifier: Groth16Bn254LsigVerifier;
-  let algorand: AlgorandClient;
   let client: Groth16Bn254SignalsAndProofClient;
+  let feePayer: algosdk.AddressWithTransactionSigner;
 
   beforeAll(async () => {
-    algorand = AlgorandClient.defaultLocalNet();
+    feePayer = await localnet.dispenser();
+
     verifier = new Groth16Bn254LsigVerifier({
       appOffset: 0,
       totalLsigs: 6,
-      algorand,
+      algod: localnet.algod,
       zKey: "circuit/groth16_bn254_circuit_final.zkey",
       wasmProver: "circuit/circuit_bn254_js/circuit_bn254.wasm",
     });
 
-    const signalsAndProofFactory = new Groth16Bn254SignalsAndProofFactory({
-      algorand,
-      defaultSender: await algorand.account.localNetDispenser(),
+    const created = await Groth16Bn254SignalsAndProofClient.create.bare({
+      algod: localnet.algod,
+      sender: feePayer,
     });
 
-    const { appClient } = await signalsAndProofFactory.deploy({
-      onUpdate: "append",
-    });
-
-    client = appClient;
+    client = created.appClient;
   });
 
   it("works", async () => {
-    const group = client.newGroup();
+    const composer = localnet.composer();
 
     await verifier.verificationParams({
       inputs: { a: 10, b: 21 },
-      composer: group,
+      composer,
       paramsCallback: async (params) => {
-        const { lsigParams, args, lsigsFee } = params;
+        const { lsigParams, args, lsigsUsage } = params;
 
         // Call app with signals and proof via lsig
-        group.signalsAndProof({ ...lsigParams, args });
+        composer.addMethodCall(
+          client.params.signalsAndProof({ ...lsigParams, args }),
+        );
 
         // Pay the required fees
-        const feePayer = await algorand.account.localNetDispenser();
-        group.addTransaction(
-          await algorand.createTransaction.payment({
-            sender: feePayer,
-            amount: microAlgos(0),
-            receiver: feePayer,
-            extraFee: lsigsFee,
-          }),
-        );
+        composer.addPayment({
+          sender: feePayer,
+          receiver: feePayer.address,
+          amount: 0n,
+          // Its own usage plus the usage the lsigs do not pay for
+          maxUsage: BASE_USAGE + lsigsUsage,
+        });
       },
     });
 
-    await group.send();
+    await composer.execute(localnet.algod);
   });
 
   describe("with sp1 proof", () => {
@@ -231,31 +224,25 @@ describe("groth16 bn254 verifier lsig", () => {
 
     it("works with app verifier", async () => {
       const sp1App = new Groth16Bn254AppVerifier({
-        algorand,
+        algod: localnet.algod,
+        sender: feePayer,
         vk,
       });
 
-      await sp1App.deploy({
-        appName: `groth16-bn254-verifier-sp1-${Date.now()}`,
-        defaultSender: await algorand.account.localNetDispenser(),
-        debugLogging: true,
-      });
+      await sp1App.create({ debugLogging: true });
 
-      await sp1App.simulateVerificationWithProofAndSignals(
-        {
-          signals,
-          proof,
-        },
-        {
-          extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-          allowMoreLogging: true,
-        },
-      );
+      const { simulateResponse } =
+        await sp1App.simulateVerificationWithProofAndSignals(
+          { signals, proof },
+          maxBudgetSimulateRequest(),
+        );
+
+      expect(groupResult(simulateResponse).failureMessage).toBeFalsy();
     });
 
     it("rejects invalid uncompressed G1 point in proof", () => {
       const proofBytes = hexToBytes(sp1ProofHex);
-      // Corrupt the y-coordinate of piA to make it invalid
+      // Corrupt the y-coordinate of pi_a to make it invalid
       // This should fail the curve equation validation
       proofBytes[63] = 0x00;
       proofBytes[62] = 0x00;
@@ -279,36 +266,36 @@ describe("groth16 bn254 verifier lsig", () => {
       const sp1Lsig = new Groth16Bn254LsigVerifier({
         totalLsigs: 6,
         appOffset: 0,
-        algorand,
+        algod: localnet.algod,
         vk,
       });
 
-      const group = client.newGroup();
+      const composer = localnet.composer();
 
       await sp1Lsig.verificationParams({
         proof,
         signals,
-        composer: group,
+        composer,
         paramsCallback: async (params) => {
-          const { lsigParams, lsigsFee, args } = params;
+          const { lsigParams, args, lsigsUsage } = params;
 
           // Call app with signals and proof via lsig
-          group.signalsAndProof({ ...lsigParams, args });
+          composer.addMethodCall(
+            client.params.signalsAndProof({ ...lsigParams, args }),
+          );
 
           // Pay the required fees
-          const feePayer = await algorand.account.localNetDispenser();
-          group.addTransaction(
-            await algorand.createTransaction.payment({
-              sender: feePayer,
-              amount: microAlgos(0),
-              receiver: feePayer,
-              extraFee: lsigsFee,
-            }),
-          );
+          composer.addPayment({
+            sender: feePayer,
+            receiver: feePayer.address,
+            amount: 0n,
+            // Its own usage plus the usage the lsigs do not pay for
+            maxUsage: BASE_USAGE + lsigsUsage,
+          });
         },
       });
 
-      await group.send();
+      await composer.execute(localnet.algod);
     });
   });
 });

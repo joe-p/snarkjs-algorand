@@ -8,6 +8,7 @@ export function stringValuesToBigints(obj: any): any {
   }
 }
 
+export * from "./common";
 export * from "./plonk";
 export * from "./groth16";
 export * from "./gnark_groth16";
