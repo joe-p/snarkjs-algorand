@@ -33,8 +33,8 @@
   "scripts": {
     "generate:bn254": "tsx scripts/generate-bn254.ts",
     "build:contracts": "pnpm generate:bn254 && algokit compile ts contracts",
-    "build:clients": "algokit generate client contracts/out --output contracts/clients/{contract_name}.ts",
-    "build:lib": "tsx scripts/ts_ignore.ts && tsx scripts/lsig_source.ts && tsup src/index.ts --dts --format esm,cjs --out-dir dist --clean",
+    "build:clients": "tsx scripts/generate-clients.ts",
+    "build:lib": "tsx scripts/lsig_source.ts && tsup src/index.ts --dts --format esm,cjs --out-dir dist --clean",
     "build": "pnpm build:contracts && pnpm build:clients && pnpm build:lib",
     "prepublishOnly": "pnpm run build",
     "verify": "cd circuit && node ~/git/other/snarkjs/cli.js plonk verify verification_key.json public.json proof.json -v",
@@ -46,17 +46,17 @@
     "snarkjs": "^0.7.5"
   },
   "peerDependencies": {
-    "@algorandfoundation/algokit-utils": "^9.1.2",
-    "algosdk": "^3.4.0",
+    "@joe-p/algokit-lite": "*",
+    "algosdk": "^3.7.0",
     "typescript": "^5"
   },
   "devDependencies": {
     "@algorandfoundation/algorand-typescript": "1.2.0-beta.26",
     "@algorandfoundation/puya-ts": "1.2.0-beta.26",
-    "@algorandfoundation/algokit-utils": "^9.1.2",
     "@types/node": "^24.10.0",
     "@types/snarkjs": "^0.7.9",
-    "algosdk": "^3.4.0",
+    "@joe-p/algokit-lite": "^0.1.2",
+    "algosdk": "^3.7.0",
     "prettier": "^3.8.1",
     "tsup": "^8.0.0",
     "tsx": "^4.20.6",

@@ -1,3 +1,39 @@
+# 0.15.0 (unreleased)
+
+## BREAKING CHANGES
+
+This release replaces `@algorandfoundation/algokit-utils` with
+[AlgoKit Lite](https://github.com/joe-p/algokit-lite-ts). The SDK interfaces now
+follow AlgoKit Lite's, so nearly every call site needs updating.
+
+- `@algorandfoundation/algokit-utils` is no longer a peer dependency; `algokit-lite` is
+- `algosdk` peer dependency raised to `^3.7.0`
+- Verifiers take `algod` (an `Algodv2`) instead of `algorand` (an `AlgorandClient`)
+- `AppVerifier` takes a `sender` at construction, which every call defaults to,
+  instead of a `defaultSender` at deploy time
+- `AppVerifier.deploy()` is replaced by `AppVerifier.create()`. AlgoKit Lite has no
+  idempotent deployer, so creation always creates a new app and `appName` is gone
+- Simulate options are now an `algosdk.modelsv2.SimulateRequest` instead of
+  AlgoKit Utils' `RawSimulateOptions`. A failed simulation no longer throws;
+  inspect `simulateResponse.txnGroups[0].failureMessage`
+- `LsigVerificationArgs.composer` is an AlgoKit Lite `Composer`
+- Generated clients are produced by AlgoKit Lite's generator: the `*Factory`
+  classes are gone, `*Client` classes gain a static `create.bare`, and each
+  client exports `APP_SPEC`
+- Struct fields keep the names the ARC56 contract declares rather than being
+  camel cased. `Groth16*Proof` fields are now `pi_a`/`pi_b`/`pi_c`, verification
+  key fields are `vk_alpha_1`/`vk_beta_2`/`vk_gamma_2`/`vk_delta_2`/`IC`, and
+  `PlonkProof`/`PlonkVerificationKey` fields are `A`/`B`/`C`/`Z`/`T1`/`Wxi`/
+  `eval_a`/`Ql`/`X_2` and so on. This also changes what
+  `decodeGnarkGroth16Bn254Proof` and `decodeGnarkGroth16Bn254Vk` return
+- Byte array fields are typed `Uint8Array` (and `Uint8Array[]` for `IC`), so the
+  generated clients no longer need `@ts-nocheck`
+
+## Features
+
+- `AppVerifier.verifyParams()` returns the params for a `verify` call so it can be
+  composed into a larger transaction group
+
 # 0.14.0
 
 ## BREAKING CHANGES
@@ -33,8 +69,8 @@
 - Lsig verifiers now require `totalLsigs` parameter
   - To preserve previous behavior, use `totalLsigs: 6`
 - `paramsCallback` API changed: `appParams` renamed to `lsigParams`, `args` moved to separate property
-  - Old: `paramsCallback: ({ appParams: { sender, staticFee, args }, lsigsFee })`
-  - New: `paramsCallback: ({ lsigParams: { sender, staticFee }, args, lsigsFee })`
+  - Old: `paramsCallback: ({ appParams: { sender, staticFee, args } })`
+  - New: `paramsCallback: ({ lsigParams: { sender, staticFee }, args })`
 
 ## Features
 

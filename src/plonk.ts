@@ -1,44 +1,38 @@
-import { AlgorandClient, microAlgos } from "@algorandfoundation/algokit-utils";
+import type { Algodv2, SuggestedParams } from "algosdk";
+import type { ARC56Contract, BareCreateParams } from "@joe-p/algokit-lite";
 import {
   PlonkVerifierClient,
-  PlonkVerifierFactory,
-  type PlonkVerifierDeployParams,
+  APP_SPEC,
   type PlonkProof,
   type PlonkVerificationKey,
-  APP_SPEC,
 } from "../contracts/clients/PlonkVerifier";
-import { PlonkVerifierWithLogsFactory } from "../contracts/clients/PlonkVerifierWithLogs";
-import * as snarkjs from "snarkjs";
 import {
-  getABIEncodedValue,
-  type Arc56Contract,
-} from "@algorandfoundation/algokit-utils/types/app-arc56";
-import type { Transaction } from "algosdk";
-import { type Address } from "algosdk";
+  PlonkVerifierWithLogsClient,
+  APP_SPEC as APP_SPEC_WITH_LOGS,
+} from "../contracts/clients/PlonkVerifierWithLogs";
+import * as snarkjs from "snarkjs";
 import { PLONK_LSIG_SOURCE } from "../contracts/out/lsig_source";
-import type { AlgoAmount } from "@algorandfoundation/algokit-utils/types/amount";
 import { stringValuesToBigints } from "./index.ts";
 import {
   AppVerifier,
   LsigVerifier,
   encodeSignals,
+  getABIEncodedValue,
   reorderG2Uncompressed,
   getProofFromFile,
   type AppVerifierOptions,
   type LsigVerifierOptions,
 } from "./common";
 
-export {
-  PlonkSignalsAndProofFactory,
-  PlonkSignalsAndProofClient,
-} from "../contracts/clients/PlonkSignalsAndProof.ts";
+export { PlonkSignalsAndProofClient } from "../contracts/clients/PlonkSignalsAndProof.ts";
 
 export {
   PlonkVerifierClient,
   type PlonkProof,
   type PlonkVerificationKey,
-  type PlonkVerifierDeployParams,
 } from "../contracts/clients/PlonkVerifier";
+
+export { PlonkVerifierWithLogsClient } from "../contracts/clients/PlonkVerifierWithLogs";
 
 export async function getPlonkVkey(
   zKey: snarkjs.ZKArtifact,
@@ -60,25 +54,25 @@ export async function getPlonkVkey(
   return {
     power: vkey.power,
     nPublic: vkey.nPublic,
-    ql: vkey.QlBytes,
-    qr: vkey.QrBytes,
-    qo: vkey.QoBytes,
-    qm: vkey.QmBytes,
-    qc: vkey.QcBytes,
-    s1: vkey.S1Bytes,
-    s2: vkey.S2Bytes,
-    s3: vkey.S3Bytes,
+    Ql: vkey.QlBytes,
+    Qr: vkey.QrBytes,
+    Qo: vkey.QoBytes,
+    Qm: vkey.QmBytes,
+    Qc: vkey.QcBytes,
+    S1: vkey.S1Bytes,
+    S2: vkey.S2Bytes,
+    S3: vkey.S3Bytes,
     k1: BigInt(vkey.k1),
     k2: BigInt(vkey.k2),
-    x_2: x2Bytes,
+    X_2: x2Bytes,
   };
 }
 
 export function encodePlonkVk(
   vkey: PlonkVerificationKey,
-  appSpec: Arc56Contract,
+  appSpec: ARC56Contract,
 ): Uint8Array {
-  return getABIEncodedValue(vkey, "PlonkVerificationKey", appSpec.structs);
+  return getABIEncodedValue(appSpec, "PlonkVerificationKey", vkey);
 }
 
 export async function getPlonkProof(
@@ -103,21 +97,21 @@ export function encodePlonkProof(proof: any, curve: any): PlonkProof {
   );
 
   return {
-    a: proof.ABytes,
-    b: proof.BBytes,
-    c: proof.CBytes,
-    z: proof.ZBytes,
-    t1: proof.T1Bytes,
-    t2: proof.T2Bytes,
-    t3: proof.T3Bytes,
-    wxi: proof.WxiBytes,
-    wxiw: proof.WxiwBytes,
-    evalA: proof.eval_aBigInt,
-    evalB: proof.eval_bBigInt,
-    evalC: proof.eval_cBigInt,
-    evalS1: proof.eval_s1BigInt,
-    evalS2: proof.eval_s2BigInt,
-    evalZw: proof.eval_zwBigInt,
+    A: proof.ABytes,
+    B: proof.BBytes,
+    C: proof.CBytes,
+    Z: proof.ZBytes,
+    T1: proof.T1Bytes,
+    T2: proof.T2Bytes,
+    T3: proof.T3Bytes,
+    Wxi: proof.WxiBytes,
+    Wxiw: proof.WxiwBytes,
+    eval_a: proof.eval_aBigInt,
+    eval_b: proof.eval_bBigInt,
+    eval_c: proof.eval_cBigInt,
+    eval_s1: proof.eval_s1BigInt,
+    eval_s2: proof.eval_s2BigInt,
+    eval_zw: proof.eval_zwBigInt,
   };
 }
 
@@ -130,6 +124,21 @@ export type PlonkWitness = {
   signals: bigint[];
 };
 
+/**
+ * The root of unity for the circuit's domain size, which the verifier needs
+ * alongside the verification key.
+ */
+function rootOfUnity(vk: PlonkVerificationKey, curve: any): Uint8Array {
+  return new Uint8Array(
+    Buffer.from(
+      curve.Fr.toObject(curve.Fr.w[Number(vk.power)])
+        .toString(16)
+        .padStart(64, "0"),
+      "hex",
+    ),
+  );
+}
+
 export class PlonkLsigVerifier extends LsigVerifier<
   PlonkVerificationKey,
   PlonkWitness
@@ -141,6 +150,7 @@ export class PlonkLsigVerifier extends LsigVerifier<
     };
     super("bls12381", options);
   }
+
   protected async getVkey(
     zKey: snarkjs.ZKArtifact,
     curve: any,
@@ -150,7 +160,7 @@ export class PlonkLsigVerifier extends LsigVerifier<
 
   protected encodeVkey(
     vk: PlonkVerificationKey,
-    appSpec: Arc56Contract,
+    appSpec: ARC56Contract,
   ): Uint8Array {
     return encodePlonkVk(vk, appSpec);
   }
@@ -175,51 +185,60 @@ export class PlonkLsigVerifier extends LsigVerifier<
     return PLONK_LSIG_SOURCE;
   }
 
-  protected getAppSpec(): Arc56Contract {
+  protected getAppSpec(): ARC56Contract {
     return APP_SPEC;
   }
 
-  protected override getAdditionalTemplateParams(
+  protected override getAdditionalTemplateVariables(
     vk: PlonkVerificationKey,
     curve: any,
-  ): Record<string, any> {
-    const rootOfUnity = Buffer.from(
-      curve.Fr.toObject(curve.Fr.w[Number(vk.power)])
-        .toString(16)
-        .padStart(64, "0"),
-      "hex",
-    );
-
-    return {
-      ROOT_OF_UNITY: rootOfUnity,
-    };
+  ): Record<string, Uint8Array> {
+    return { ROOT_OF_UNITY: rootOfUnity(vk, curve) };
   }
 }
 
 export class PlonkAppVerifier extends AppVerifier<
-  PlonkVerifierFactory,
-  PlonkVerifierWithLogsFactory,
   PlonkVerifierClient,
   PlonkWitness,
-  PlonkVerifierDeployParams,
   PlonkVerificationKey
 > {
   constructor(o: AppVerifierOptions<PlonkVerificationKey>) {
     super("bls12381", o);
   }
 
-  protected newFactory(o: {
-    algorand: AlgorandClient;
-    defaultSender: Address;
-  }): PlonkVerifierFactory {
-    return new PlonkVerifierFactory(o);
+  protected async createApp(params: {
+    bareParams: Omit<BareCreateParams, "templateVariables">;
+    algod: Algodv2;
+    getSuggestedParams?: () => Promise<SuggestedParams>;
+    vk: PlonkVerificationKey;
+    vkBytes: Uint8Array;
+    curve: any;
+    debugLogging: boolean;
+  }): Promise<PlonkVerifierClient> {
+    const createParams = {
+      ...params.bareParams,
+      algod: params.algod,
+      getSuggestedParams: params.getSuggestedParams,
+      templateVariables: {
+        VERIFICATION_KEY: params.vkBytes,
+        ROOT_OF_UNITY: rootOfUnity(params.vk, params.curve),
+      },
+    };
+
+    if (params.debugLogging) {
+      const { appClient } =
+        await PlonkVerifierWithLogsClient.create.bare(createParams);
+      // The logging variant exposes the same verify method, so it stands in
+      // for the regular client
+      return appClient as unknown as PlonkVerifierClient;
+    }
+
+    const { appClient } = await PlonkVerifierClient.create.bare(createParams);
+    return appClient;
   }
 
-  protected newLogsFactory(o: {
-    algorand: AlgorandClient;
-    defaultSender: Address;
-  }): PlonkVerifierWithLogsFactory {
-    return new PlonkVerifierWithLogsFactory(o);
+  protected getAppSpec(debugLogging: boolean): ARC56Contract {
+    return debugLogging ? APP_SPEC_WITH_LOGS : APP_SPEC;
   }
 
   protected async getVkey(
@@ -231,7 +250,7 @@ export class PlonkAppVerifier extends AppVerifier<
 
   protected encodeVkey(
     vk: PlonkVerificationKey,
-    appSpec: Arc56Contract,
+    appSpec: ARC56Contract,
   ): Uint8Array {
     return encodePlonkVk(vk, appSpec);
   }
@@ -246,21 +265,5 @@ export class PlonkAppVerifier extends AppVerifier<
     zKey: snarkjs.ZKArtifact,
   ): Promise<{ proof: any; publicSignals: any }> {
     return snarkjs.plonk.fullProve(inputs, wasmProver, zKey);
-  }
-
-  protected override getAdditionalDeployParams(
-    vk: PlonkVerificationKey,
-    curve: any,
-  ): Record<string, any> {
-    const rootOfUnity = Buffer.from(
-      curve.Fr.toObject(curve.Fr.w[Number(vk.power)])
-        .toString(16)
-        .padStart(64, "0"),
-      "hex",
-    );
-
-    return {
-      ROOT_OF_UNITY: rootOfUnity,
-    };
   }
 }

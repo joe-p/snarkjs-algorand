@@ -9,10 +9,21 @@ This repo also contains an SDK for interacting with these verifiers on the Algor
 
 Eventually there will be proper documentation, but for now use at your own risk!
 
+## Dependencies
+
+The SDK is built on [AlgoKit Lite](https://github.com/joe-p/algokit-lite-ts) and
+`algosdk`, both of which are peer dependencies. AlgoKit Lite is not published to
+npm yet, so it is currently linked from a sibling checkout:
+
+```
+git clone https://github.com/joe-p/algokit-lite-ts ../algokit-lite-ts
+pnpm install
+```
+
 ## Security
 
 The code in this repo has not been audited. Use at your own risk! See [SECURITY.md](./SECURITY.md) for more information.
 
 ## Why Not AlgoPlonk?
 
-The main reason is because AlgoPlonk uses gnark for circuit compilation and proof generation. The problem with gnark is that it [does not support WASM](https://github.com/Consensys/gnark/issues/74), thus one cannot simply generate a proof client-side in the browser. Additionally, because snarkjs is written in TypeScript, we can leverage algokit-utils for a much better developer experience.
+The main reason is because AlgoPlonk uses gnark for circuit compilation and proof generation. The problem with gnark is that it [does not support WASM](https://github.com/Consensys/gnark/issues/74), thus one cannot simply generate a proof client-side in the browser. Additionally, because snarkjs is written in TypeScript, we can leverage the Algorand TypeScript tooling for a much better developer experience.

@@ -229,11 +229,11 @@ export function decodeGnarkGroth16Bn254Proof(
     throw new Error(`Expected 256 proof bytes, got ${encodedProof.length}`);
   }
 
-  const piA = parseG1Uncompressed(encodedProof.slice(0, 64), "proof.piA");
-  const piB = parseG2Uncompressed(encodedProof.slice(64, 192), "proof.piB");
-  const piC = parseG1Uncompressed(encodedProof.slice(192, 256), "proof.piC");
+  const pi_a = parseG1Uncompressed(encodedProof.slice(0, 64), "proof.pi_a");
+  const pi_b = parseG2Uncompressed(encodedProof.slice(64, 192), "proof.pi_b");
+  const pi_c = parseG1Uncompressed(encodedProof.slice(192, 256), "proof.pi_c");
 
-  return { piA, piB, piC };
+  return { pi_a, pi_b, pi_c };
 }
 
 export function decodeGnarkGroth16Bn254Vk(
@@ -290,11 +290,11 @@ export function decodeGnarkGroth16Bn254Vk(
   }
 
   return {
-    vkAlpha_1: vk_alpha_1,
-    vkBeta_2: vk_beta_2,
-    vkGamma_2: vk_gamma_2,
-    vkDelta_2: vk_delta_2,
+    vk_alpha_1,
+    vk_beta_2,
+    vk_gamma_2,
+    vk_delta_2,
     nPublic: BigInt(num_k - 1),
-    ic: IC,
+    IC,
   };
 }

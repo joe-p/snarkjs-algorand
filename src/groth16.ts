@@ -1,28 +1,26 @@
-import { AlgorandClient } from "@algorandfoundation/algokit-utils";
+import type { Algodv2, SuggestedParams } from "algosdk";
+import type { ARC56Contract, BareCreateParams } from "@joe-p/algokit-lite";
 import {
   Groth16Bls12381VerifierClient,
-  Groth16Bls12381VerifierFactory,
-  type Groth16Bls12381VerifierDeployParams,
+  APP_SPEC,
   type Groth16Bls12381Proof,
   type Groth16Bls12381VerificationKey,
-  APP_SPEC,
 } from "../contracts/clients/Groth16Bls12381Verifier";
-import { Groth16Bls12381VerifierWithLogsFactory } from "../contracts/clients/Groth16Bls12381VerifierWithLogs";
+import {
+  Groth16Bls12381VerifierWithLogsClient,
+  APP_SPEC as APP_SPEC_WITH_LOGS,
+} from "../contracts/clients/Groth16Bls12381VerifierWithLogs";
 import {
   Groth16Bn254VerifierClient,
-  Groth16Bn254VerifierFactory,
-  type Groth16Bn254VerifierDeployParams,
+  APP_SPEC as APP_SPEC_BN254,
   type Groth16Bn254Proof,
   type Groth16Bn254VerificationKey,
-  APP_SPEC as APP_SPEC_BN254,
 } from "../contracts/clients/Groth16Bn254Verifier";
-import { Groth16Bn254VerifierWithLogsFactory } from "../contracts/clients/Groth16Bn254VerifierWithLogs";
-import * as snarkjs from "snarkjs";
 import {
-  getABIEncodedValue,
-  type Arc56Contract,
-} from "@algorandfoundation/algokit-utils/types/app-arc56";
-import type { Address } from "algosdk";
+  Groth16Bn254VerifierWithLogsClient,
+  APP_SPEC as APP_SPEC_BN254_WITH_LOGS,
+} from "../contracts/clients/Groth16Bn254VerifierWithLogs";
+import * as snarkjs from "snarkjs";
 import {
   GROTH16_LSIG_SOURCE,
   GROTH16_BN254_LSIG_SOURCE,
@@ -31,6 +29,7 @@ import { stringValuesToBigints } from "./index.ts";
 import {
   AppVerifier,
   LsigVerifier,
+  getABIEncodedValue,
   reorderG2Uncompressed,
   reorderG2UncompressedBN254,
   getProofFromFile,
@@ -42,29 +41,25 @@ import {
 // Exports
 // ============================================================================
 
-export {
-  Groth16Bls12381SignalsAndProofFactory,
-  Groth16Bls12381SignalsAndProofClient,
-} from "../contracts/clients/Groth16Bls12381SignalsAndProof";
+export { Groth16Bls12381SignalsAndProofClient } from "../contracts/clients/Groth16Bls12381SignalsAndProof";
 
 export {
   Groth16Bls12381VerifierClient,
   type Groth16Bls12381Proof,
   type Groth16Bls12381VerificationKey,
-  type Groth16Bls12381VerifierDeployParams,
 } from "../contracts/clients/Groth16Bls12381Verifier";
 
-export {
-  Groth16Bn254SignalsAndProofFactory,
-  Groth16Bn254SignalsAndProofClient,
-} from "../contracts/clients/Groth16Bn254SignalsAndProof";
+export { Groth16Bls12381VerifierWithLogsClient } from "../contracts/clients/Groth16Bls12381VerifierWithLogs";
+
+export { Groth16Bn254SignalsAndProofClient } from "../contracts/clients/Groth16Bn254SignalsAndProof";
 
 export {
   Groth16Bn254VerifierClient,
   type Groth16Bn254Proof,
   type Groth16Bn254VerificationKey,
-  type Groth16Bn254VerifierDeployParams,
 } from "../contracts/clients/Groth16Bn254Verifier";
+
+export { Groth16Bn254VerifierWithLogsClient } from "../contracts/clients/Groth16Bn254VerifierWithLogs";
 
 // ============================================================================
 // Generic Groth16 Helper Functions
@@ -108,12 +103,12 @@ async function getGroth16VkeyGeneric<T>(
   }
 
   return {
-    vkAlpha_1: vk_alpha_1,
-    vkBeta_2: g2Bytes.vk_beta_2!,
-    vkGamma_2: g2Bytes.vk_gamma_2!,
-    vkDelta_2: g2Bytes.vk_delta_2!,
+    vk_alpha_1,
+    vk_beta_2: g2Bytes.vk_beta_2!,
+    vk_gamma_2: g2Bytes.vk_gamma_2!,
+    vk_delta_2: g2Bytes.vk_delta_2!,
     nPublic: vkey.nPublic,
-    ic: IC,
+    IC,
   } as T;
 }
 
@@ -140,9 +135,9 @@ function encodeGroth16ProofGeneric<T>(
   const piBBytes = reorderG2(piBUncompressed);
 
   return {
-    piA: proof.pi_aBytes,
-    piB: piBBytes,
-    piC: proof.pi_cBytes,
+    pi_a: proof.pi_aBytes,
+    pi_b: piBBytes,
+    pi_c: proof.pi_cBytes,
   } as T;
 }
 
@@ -163,13 +158,9 @@ export async function getGroth16Bls12381Vkey(
 
 export function encodeGroth16Bls12381Vk(
   vkey: Groth16Bls12381VerificationKey,
-  appSpec: Arc56Contract,
+  appSpec: ARC56Contract,
 ): Uint8Array {
-  return getABIEncodedValue(
-    vkey,
-    "Groth16Bls12381VerificationKey",
-    appSpec.structs,
-  );
+  return getABIEncodedValue(appSpec, "Groth16Bls12381VerificationKey", vkey);
 }
 
 export async function getGroth16Bls12381Proof(
@@ -213,7 +204,7 @@ export class Groth16Bls12381LsigVerifier extends LsigVerifier<
 
   protected encodeVkey(
     vk: Groth16Bls12381VerificationKey,
-    appSpec: Arc56Contract,
+    appSpec: ARC56Contract,
   ): Uint8Array {
     return encodeGroth16Bls12381Vk(vk, appSpec);
   }
@@ -234,35 +225,49 @@ export class Groth16Bls12381LsigVerifier extends LsigVerifier<
     return GROTH16_LSIG_SOURCE;
   }
 
-  protected getAppSpec(): Arc56Contract {
+  protected getAppSpec(): ARC56Contract {
     return APP_SPEC;
   }
 }
 
 export class Groth16Bls12381AppVerifier extends AppVerifier<
-  Groth16Bls12381VerifierFactory,
-  Groth16Bls12381VerifierWithLogsFactory,
   Groth16Bls12381VerifierClient,
   Groth16Bls12381Witness,
-  Groth16Bls12381VerifierDeployParams,
   Groth16Bls12381VerificationKey
 > {
   constructor(options: AppVerifierOptions<Groth16Bls12381VerificationKey>) {
     super("bls12381", options);
   }
 
-  protected newFactory(o: {
-    algorand: AlgorandClient;
-    defaultSender: Address;
-  }): Groth16Bls12381VerifierFactory {
-    return new Groth16Bls12381VerifierFactory(o);
+  protected async createApp(params: {
+    bareParams: Omit<BareCreateParams, "templateVariables">;
+    algod: Algodv2;
+    getSuggestedParams?: () => Promise<SuggestedParams>;
+    vkBytes: Uint8Array;
+    debugLogging: boolean;
+  }): Promise<Groth16Bls12381VerifierClient> {
+    const createParams = {
+      ...params.bareParams,
+      algod: params.algod,
+      getSuggestedParams: params.getSuggestedParams,
+      templateVariables: { VERIFICATION_KEY: params.vkBytes },
+    };
+
+    if (params.debugLogging) {
+      const { appClient } =
+        await Groth16Bls12381VerifierWithLogsClient.create.bare(createParams);
+      // The logging variant exposes the same verify method, so it stands in
+      // for the regular client
+      return appClient as unknown as Groth16Bls12381VerifierClient;
+    }
+
+    const { appClient } =
+      await Groth16Bls12381VerifierClient.create.bare(createParams);
+    return appClient;
   }
 
-  protected newLogsFactory(o: {
-    algorand: AlgorandClient;
-    defaultSender: Address;
-  }): Groth16Bls12381VerifierWithLogsFactory {
-    return new Groth16Bls12381VerifierWithLogsFactory(o);
+  protected getAppSpec(debugLogging: boolean): ARC56Contract {
+    return debugLogging ? APP_SPEC_WITH_LOGS : APP_SPEC;
   }
 
   protected async getVkey(
@@ -274,7 +279,7 @@ export class Groth16Bls12381AppVerifier extends AppVerifier<
 
   protected encodeVkey(
     vk: Groth16Bls12381VerificationKey,
-    appSpec: Arc56Contract,
+    appSpec: ARC56Contract,
   ): Uint8Array {
     return encodeGroth16Bls12381Vk(vk, appSpec);
   }
@@ -309,13 +314,9 @@ export async function getGroth16Bn254Vkey(
 
 export function encodeGroth16Bn254Vk(
   vkey: Groth16Bn254VerificationKey,
-  appSpec: Arc56Contract,
+  appSpec: ARC56Contract,
 ): Uint8Array {
-  return getABIEncodedValue(
-    vkey,
-    "Groth16Bn254VerificationKey",
-    appSpec.structs,
-  );
+  return getABIEncodedValue(appSpec, "Groth16Bn254VerificationKey", vkey);
 }
 
 export async function getGroth16Bn254Proof(
@@ -359,7 +360,7 @@ export class Groth16Bn254LsigVerifier extends LsigVerifier<
 
   protected encodeVkey(
     vk: Groth16Bn254VerificationKey,
-    appSpec: Arc56Contract,
+    appSpec: ARC56Contract,
   ): Uint8Array {
     return encodeGroth16Bn254Vk(vk, appSpec);
   }
@@ -380,35 +381,49 @@ export class Groth16Bn254LsigVerifier extends LsigVerifier<
     return GROTH16_BN254_LSIG_SOURCE;
   }
 
-  protected getAppSpec(): Arc56Contract {
+  protected getAppSpec(): ARC56Contract {
     return APP_SPEC_BN254;
   }
 }
 
 export class Groth16Bn254AppVerifier extends AppVerifier<
-  Groth16Bn254VerifierFactory,
-  Groth16Bn254VerifierWithLogsFactory,
   Groth16Bn254VerifierClient,
   Groth16Bn254Witness,
-  Groth16Bn254VerifierDeployParams,
   Groth16Bn254VerificationKey
 > {
   constructor(options: AppVerifierOptions<Groth16Bn254VerificationKey>) {
     super("bn254", options);
   }
 
-  protected newFactory(o: {
-    algorand: AlgorandClient;
-    defaultSender: Address;
-  }): Groth16Bn254VerifierFactory {
-    return new Groth16Bn254VerifierFactory(o);
+  protected async createApp(params: {
+    bareParams: Omit<BareCreateParams, "templateVariables">;
+    algod: Algodv2;
+    getSuggestedParams?: () => Promise<SuggestedParams>;
+    vkBytes: Uint8Array;
+    debugLogging: boolean;
+  }): Promise<Groth16Bn254VerifierClient> {
+    const createParams = {
+      ...params.bareParams,
+      algod: params.algod,
+      getSuggestedParams: params.getSuggestedParams,
+      templateVariables: { VERIFICATION_KEY: params.vkBytes },
+    };
+
+    if (params.debugLogging) {
+      const { appClient } =
+        await Groth16Bn254VerifierWithLogsClient.create.bare(createParams);
+      // The logging variant exposes the same verify method, so it stands in
+      // for the regular client
+      return appClient as unknown as Groth16Bn254VerifierClient;
+    }
+
+    const { appClient } =
+      await Groth16Bn254VerifierClient.create.bare(createParams);
+    return appClient;
   }
 
-  protected newLogsFactory(o: {
-    algorand: AlgorandClient;
-    defaultSender: Address;
-  }): Groth16Bn254VerifierWithLogsFactory {
-    return new Groth16Bn254VerifierWithLogsFactory(o);
+  protected getAppSpec(debugLogging: boolean): ARC56Contract {
+    return debugLogging ? APP_SPEC_BN254_WITH_LOGS : APP_SPEC_BN254;
   }
 
   protected async getVkey(
@@ -420,7 +435,7 @@ export class Groth16Bn254AppVerifier extends AppVerifier<
 
   protected encodeVkey(
     vk: Groth16Bn254VerificationKey,
-    appSpec: Arc56Contract,
+    appSpec: ARC56Contract,
   ): Uint8Array {
     return encodeGroth16Bn254Vk(vk, appSpec);
   }

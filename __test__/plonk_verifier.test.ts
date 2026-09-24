@@ -1,21 +1,43 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { AlgorandClient, microAlgos } from "@algorandfoundation/algokit-utils";
+import algosdk from "algosdk";
+import { BASE_USAGE, Localnet } from "@joe-p/algokit-lite";
 import * as snarkjs from "snarkjs";
 import {
   getPlonkProof,
   PlonkAppVerifier,
   PlonkLsigVerifier,
 } from "../src/plonk";
-import {
-  PlonkSignalsAndProofClient,
-  PlonkSignalsAndProofFactory,
-} from "../contracts/clients/PlonkSignalsAndProof.ts";
+import { PlonkSignalsAndProofClient } from "../contracts/clients/PlonkSignalsAndProof.ts";
 
 const LSIG_BUDGET = 20_000; // Budget for each logicsig
 const APP_BUDGET = 700; // Budget for the app call
 const GROUP_TXN_SIZE = 16;
 const EXTRA_OPCODE_BUDGET = LSIG_BUDGET * GROUP_TXN_SIZE - APP_BUDGET; // Max budget possible with a group of 16 lsigs
-const algorand = AlgorandClient.defaultLocalNet();
+const localnet = new Localnet();
+
+function maxBudgetSimulateRequest() {
+  return new algosdk.modelsv2.SimulateRequest({
+    txnGroups: [],
+    extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
+    allowMoreLogging: true,
+  });
+}
+
+function groupResult(
+  simulateResponse: algosdk.modelsv2.SimulateResponse,
+): algosdk.modelsv2.SimulateTransactionGroupResult {
+  const group = simulateResponse.txnGroups[0];
+  if (!group) throw new Error("Expected a simulated transaction group");
+  return group;
+}
+
+function appCallLogs(
+  simulateResponse: algosdk.modelsv2.SimulateResponse,
+): Uint8Array[] {
+  const logs = groupResult(simulateResponse).txnResults[0]?.txnResult.logs;
+  if (!logs) throw new Error("Expected the app call to have logs");
+  return logs;
+}
 
 type LogValues = {
   beta?: string;
@@ -71,30 +93,25 @@ describe("verifier", () => {
   let curve: any;
 
   beforeAll(async () => {
-    const defaultSender = await algorand.account.localNetDispenser();
+    const sender = await localnet.dispenser();
 
     // @ts-expect-error curves is not typed
     curve = await snarkjs.curves.getCurveFromName("bls12381");
     debugVerifier = new PlonkAppVerifier({
-      algorand,
+      algod: localnet.algod,
+      sender,
       zKey: "circuit/plonk_circuit_final.zkey",
       wasmProver: "circuit/circuit_js/circuit.wasm",
     });
-    await debugVerifier.deploy({
-      appName: `plonk-verifier-${Date.now()}`,
-      debugLogging: true,
-      defaultSender,
-    });
+    await debugVerifier.create({ debugLogging: true });
 
     verifier = new PlonkAppVerifier({
-      algorand,
+      algod: localnet.algod,
+      sender,
       zKey: "circuit/plonk_circuit_final.zkey",
       wasmProver: "circuit/circuit_js/circuit.wasm",
     });
-    await verifier.deploy({
-      appName: `plonk-verifier-${Date.now()}`,
-      defaultSender,
-    });
+    await verifier.create();
   });
 
   afterAll(async () => {
@@ -105,15 +122,13 @@ describe("verifier", () => {
     const proof = await getPlonkProof("circuit/plonk_proof.json", curve);
     const signals = [1337n];
 
-    const simResult = debugVerifier.simulateVerificationWithProofAndSignals(
-      { signals, proof },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
-    );
+    const { simulateResponse } =
+      await debugVerifier.simulateVerificationWithProofAndSignals(
+        { signals, proof },
+        maxBudgetSimulateRequest(),
+      );
 
-    await expect(simResult).rejects.toThrow();
+    expect(groupResult(simulateResponse).failureMessage).toBeTruthy();
   });
 
   // The non-logging verifier folds D/F/E into the pairing MSMs, so it is a
@@ -122,15 +137,13 @@ describe("verifier", () => {
     const proof = await getPlonkProof("circuit/plonk_proof.json", curve);
     const signals = [1337n];
 
-    const simResult = verifier.simulateVerificationWithProofAndSignals(
-      { signals, proof },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
-    );
+    const { simulateResponse } =
+      await verifier.simulateVerificationWithProofAndSignals(
+        { signals, proof },
+        maxBudgetSimulateRequest(),
+      );
 
-    await expect(simResult).rejects.toThrow();
+    expect(groupResult(simulateResponse).failureMessage).toBeTruthy();
   });
 
   it("works", async () => {
@@ -140,18 +153,13 @@ describe("verifier", () => {
     ];
 
     // We are testing using an app so we can log, so we need to increase the opcode budget
-    const simResult = await verifier.simulateVerificationWithProofAndSignals(
-      { signals, proof },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
-    );
+    const { simulateResponse } =
+      await verifier.simulateVerificationWithProofAndSignals(
+        { signals, proof },
+        maxBudgetSimulateRequest(),
+      );
 
-    simResult.simulateResponse.txnGroups[0]?.appBudgetConsumed;
-
-    const budgetUsed =
-      simResult.simulateResponse.txnGroups[0]!.appBudgetConsumed!;
+    const budgetUsed = groupResult(simulateResponse).appBudgetConsumed!;
 
     expect(budgetUsed).toMatchSnapshot("budget used");
     expect(Math.ceil(budgetUsed / LSIG_BUDGET)).toMatchSnapshot(
@@ -169,17 +177,11 @@ describe("verifier", () => {
     ];
 
     // We are testing using an app so we can log, so we need to increase the opcode budget
-    const simResult =
+    const { simulateResponse } =
       await debugVerifier.simulateVerificationWithProofAndSignals(
         { signals, proof },
-        {
-          extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-          allowMoreLogging: true,
-        },
+        maxBudgetSimulateRequest(),
       );
-    const logs = simResult.confirmations[0]!.logs!;
-
-    simResult.simulateResponse.txnGroups[0]?.appBudgetConsumed;
 
     // [INFO]  snarkJS: PLONK VERIFIER STARTED
     // [DEBUG] snarkJS: beta: 2dcf3fb1a062e6a514fac1ceda05eb7216c0232888eb5ca21a2325ad39ba0ee3
@@ -200,7 +202,7 @@ describe("verifier", () => {
     // [DEBUG] snarkJS: E: [ 10be434db7820f39ab40a95a54bbc57d673fffd3bdadbef08de0e5f8bc5e206a82f63d1fb3e12892601c220b51a8ef5f, 90f264a0a62778fccb84713818c856cf1156b61c90ae5968632b902b3101c51243629cab527a6cf23fa491e8478f35d ]
     // [INFO]  snarkJS: OK!
 
-    const logValues = parseLogs(logs);
+    const logValues = parseLogs(appCallLogs(simulateResponse));
 
     expect(logValues.beta).toBe(
       "2dcf3fb1a062e6a514fac1ceda05eb7216c0232888eb5ca21a2325ad39ba0ee3",
@@ -260,15 +262,12 @@ describe("verifier", () => {
   });
 
   it("works with fullProve", async () => {
-    const simResult = await verifier.simulateVerification(
+    const { simulateResponse } = await verifier.simulateVerification(
       { a: 10, b: 21 },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
+      maxBudgetSimulateRequest(),
     );
 
-    expect(simResult.simulateResponse.txnGroups[0]?.failedAt).toBeUndefined();
+    expect(groupResult(simulateResponse).failedAt).toBeUndefined();
   });
 });
 
@@ -291,31 +290,26 @@ describe("verifier with 2 public signals", () => {
   let curve: any;
 
   beforeAll(async () => {
-    const defaultSender = await algorand.account.localNetDispenser();
+    const sender = await localnet.dispenser();
 
     // @ts-expect-error curves is not typed
     curve = await snarkjs.curves.getCurveFromName("bls12381");
 
     debugVerifier = new PlonkAppVerifier({
-      algorand,
+      algod: localnet.algod,
+      sender,
       zKey: ZKEY,
       wasmProver: WASM_PROVER,
     });
-    await debugVerifier.deploy({
-      appName: `plonk-2pub-verifier-${Date.now()}`,
-      debugLogging: true,
-      defaultSender,
-    });
+    await debugVerifier.create({ debugLogging: true });
 
     verifier = new PlonkAppVerifier({
-      algorand,
+      algod: localnet.algod,
+      sender,
       zKey: ZKEY,
       wasmProver: WASM_PROVER,
     });
-    await verifier.deploy({
-      appName: `plonk-2pub-verifier-${Date.now()}`,
-      defaultSender,
-    });
+    await verifier.create();
   });
 
   afterAll(async () => {
@@ -326,15 +320,13 @@ describe("verifier with 2 public signals", () => {
     const proof = await getPlonkProof(PROOF, curve);
     const signals = [1337n, 11n];
 
-    const simResult = debugVerifier.simulateVerificationWithProofAndSignals(
-      { signals, proof },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
-    );
+    const { simulateResponse } =
+      await debugVerifier.simulateVerificationWithProofAndSignals(
+        { signals, proof },
+        maxBudgetSimulateRequest(),
+      );
 
-    await expect(simResult).rejects.toThrow();
+    expect(groupResult(simulateResponse).failureMessage).toBeTruthy();
   });
 
   // The non-logging verifier folds D/F/E into the pairing MSMs, so it is a
@@ -343,15 +335,13 @@ describe("verifier with 2 public signals", () => {
     const proof = await getPlonkProof(PROOF, curve);
     const signals = [1337n, 11n];
 
-    const simResult = verifier.simulateVerificationWithProofAndSignals(
-      { signals, proof },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
-    );
+    const { simulateResponse } =
+      await verifier.simulateVerificationWithProofAndSignals(
+        { signals, proof },
+        maxBudgetSimulateRequest(),
+      );
 
-    await expect(simResult).rejects.toThrow();
+    expect(groupResult(simulateResponse).failureMessage).toBeTruthy();
   });
 
   // A proof for the single-public-signal circuit must not verify here, and vice
@@ -360,30 +350,25 @@ describe("verifier with 2 public signals", () => {
     const proof = await getPlonkProof(PROOF, curve);
     const signals = [SIGNALS[0]!];
 
-    const simResult = verifier.simulateVerificationWithProofAndSignals(
-      { signals, proof },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
-    );
+    const { simulateResponse } =
+      await verifier.simulateVerificationWithProofAndSignals(
+        { signals, proof },
+        maxBudgetSimulateRequest(),
+      );
 
-    await expect(simResult).rejects.toThrow();
+    expect(groupResult(simulateResponse).failureMessage).toBeTruthy();
   });
 
   it("works", async () => {
     const proof = await getPlonkProof(PROOF, curve);
 
-    const simResult = await verifier.simulateVerificationWithProofAndSignals(
-      { signals: SIGNALS, proof },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
-    );
+    const { simulateResponse } =
+      await verifier.simulateVerificationWithProofAndSignals(
+        { signals: SIGNALS, proof },
+        maxBudgetSimulateRequest(),
+      );
 
-    const budgetUsed =
-      simResult.simulateResponse.txnGroups[0]!.appBudgetConsumed!;
+    const budgetUsed = groupResult(simulateResponse).appBudgetConsumed!;
 
     expect(budgetUsed).toMatchSnapshot("budget used");
     expect(Math.ceil(budgetUsed / LSIG_BUDGET)).toMatchSnapshot(
@@ -397,15 +382,11 @@ describe("verifier with 2 public signals", () => {
   it("works with logging", async () => {
     const proof = await getPlonkProof(PROOF, curve);
 
-    const simResult =
+    const { simulateResponse } =
       await debugVerifier.simulateVerificationWithProofAndSignals(
         { signals: SIGNALS, proof },
-        {
-          extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-          allowMoreLogging: true,
-        },
+        maxBudgetSimulateRequest(),
       );
-    const logs = simResult.confirmations[0]!.logs!;
 
     // [INFO]  snarkJS: PLONK VERIFIER STARTED
     // [DEBUG] snarkJS: beta: 3e88978c3fa80eaf3876e6c6502101401ae724226c3551cd30081375401b9965
@@ -427,7 +408,7 @@ describe("verifier with 2 public signals", () => {
     // [DEBUG] snarkJS: E: [ 620d4d502b3070ddc7ac8c56d8c425163d242668b3726e8de0e064beff61f34fbcd1c1ca212c7e53e821af5942e6bed, 17ef2fd2c5bf6bcf01247196964594638285edd6f2449ba1a28551c268a74c03c7ccc6e75e0a7d15b06315af2c0f6219 ]
     // [INFO]  snarkJS: OK!
 
-    const logValues = parseLogs(logs);
+    const logValues = parseLogs(appCallLogs(simulateResponse));
 
     expect(logValues.beta).toBe(
       "3e88978c3fa80eaf3876e6c6502101401ae724226c3551cd30081375401b9965",
@@ -484,71 +465,64 @@ describe("verifier with 2 public signals", () => {
   });
 
   it("works with fullProve", async () => {
-    const simResult = await verifier.simulateVerification(
+    const { simulateResponse } = await verifier.simulateVerification(
       { a: 10, b: 21 },
-      {
-        extraOpcodeBudget: EXTRA_OPCODE_BUDGET,
-        allowMoreLogging: true,
-      },
+      maxBudgetSimulateRequest(),
     );
 
-    expect(simResult.simulateResponse.txnGroups[0]?.failedAt).toBeUndefined();
+    expect(groupResult(simulateResponse).failedAt).toBeUndefined();
   });
 });
 
 describe("verifier lsig", () => {
   let verifier: PlonkLsigVerifier;
-  let algorand: AlgorandClient;
   let client: PlonkSignalsAndProofClient;
+  let feePayer: algosdk.AddressWithTransactionSigner;
 
   beforeAll(async () => {
-    algorand = AlgorandClient.defaultLocalNet();
+    feePayer = await localnet.dispenser();
+
     verifier = new PlonkLsigVerifier({
       totalLsigs: 7,
       appOffset: 0,
-      algorand,
+      algod: localnet.algod,
       zKey: "circuit/plonk_circuit_final.zkey",
       wasmProver: "circuit/circuit_js/circuit.wasm",
     });
 
-    const signalsAndProofFactory = new PlonkSignalsAndProofFactory({
-      algorand,
-      defaultSender: await algorand.account.localNetDispenser(),
+    const created = await PlonkSignalsAndProofClient.create.bare({
+      algod: localnet.algod,
+      sender: feePayer,
     });
 
-    const { appClient } = await signalsAndProofFactory.deploy({
-      onUpdate: "append",
-    });
-
-    client = appClient;
+    client = created.appClient;
   });
 
   it("works", async () => {
-    const group = client.newGroup();
+    const composer = localnet.composer();
 
     await verifier.verificationParams({
       inputs: { a: 10, b: 21 },
-      composer: group,
+      composer,
       paramsCallback: async (params) => {
-        const { lsigParams, lsigsFee, args } = params;
+        const { lsigParams, args } = params;
 
         // Call app with signals and proof via lsig
-        group.signalsAndProof({ ...lsigParams, args });
+        composer.addMethodCall(
+          client.params.signalsAndProof({ ...lsigParams, args }),
+        );
 
         // Pay the required fees
-        const feePayer = await algorand.account.localNetDispenser();
-        group.addTransaction(
-          await algorand.createTransaction.payment({
-            sender: feePayer,
-            amount: microAlgos(0),
-            receiver: feePayer,
-            extraFee: lsigsFee,
-          }),
-        );
+        composer.addPayment({
+          sender: feePayer,
+          receiver: feePayer.address,
+          amount: 0n,
+          feePercent: 1,
+        });
       },
     });
 
-    await group.send();
+    await composer.execute(localnet.algod);
   });
 });
 
@@ -556,56 +530,52 @@ describe("verifier lsig", () => {
 // coverage to show the work still fits in the same number of logicsigs
 describe("verifier lsig with 2 public signals", () => {
   let verifier: PlonkLsigVerifier;
-  let algorand: AlgorandClient;
   let client: PlonkSignalsAndProofClient;
+  let feePayer: algosdk.AddressWithTransactionSigner;
 
   beforeAll(async () => {
-    algorand = AlgorandClient.defaultLocalNet();
+    feePayer = await localnet.dispenser();
+
     verifier = new PlonkLsigVerifier({
       totalLsigs: 7,
       appOffset: 0,
-      algorand,
+      algod: localnet.algod,
       zKey: "circuit/plonk_2pub_circuit_final.zkey",
       wasmProver: "circuit/circuit_2pub_js/circuit_2pub.wasm",
     });
 
-    const signalsAndProofFactory = new PlonkSignalsAndProofFactory({
-      algorand,
-      defaultSender: await algorand.account.localNetDispenser(),
+    const created = await PlonkSignalsAndProofClient.create.bare({
+      algod: localnet.algod,
+      sender: feePayer,
     });
 
-    const { appClient } = await signalsAndProofFactory.deploy({
-      onUpdate: "append",
-    });
-
-    client = appClient;
+    client = created.appClient;
   });
 
   it("works", async () => {
-    const group = client.newGroup();
+    const composer = localnet.composer();
 
     await verifier.verificationParams({
       inputs: { a: 10, b: 21 },
-      composer: group,
+      composer,
       paramsCallback: async (params) => {
-        const { lsigParams, lsigsFee, args } = params;
+        const { lsigParams, args } = params;
 
         // Call app with signals and proof via lsig
-        group.signalsAndProof({ ...lsigParams, args });
+        composer.addMethodCall(
+          client.params.signalsAndProof({ ...lsigParams, args }),
+        );
 
         // Pay the required fees
-        const feePayer = await algorand.account.localNetDispenser();
-        group.addTransaction(
-          await algorand.createTransaction.payment({
-            sender: feePayer,
-            amount: microAlgos(0),
-            receiver: feePayer,
-            extraFee: lsigsFee,
-          }),
-        );
+        composer.addPayment({
+          sender: feePayer,
+          receiver: feePayer.address,
+          amount: 0n,
+          feePercent: 1,
+        });
       },
     });
 
-    await group.send();
+    await composer.execute(localnet.algod);
   });
 });
