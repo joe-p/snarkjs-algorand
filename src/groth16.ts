@@ -1,5 +1,5 @@
 import type { Algodv2, SuggestedParams } from "algosdk";
-import type { ARC56Contract, BareCreateParams } from "algokit-lite";
+import type { ARC56Contract, BareCreateParams } from "@joe-p/algokit-lite";
 import {
   Groth16Bls12381VerifierClient,
   APP_SPEC,

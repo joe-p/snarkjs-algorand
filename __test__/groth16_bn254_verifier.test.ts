@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import algosdk from "algosdk";
-import { BASE_USAGE, Localnet } from "algokit-lite";
+import { BASE_USAGE, Localnet } from "@joe-p/algokit-lite";
 import * as snarkjs from "snarkjs";
 import {
   getGroth16Bn254Proof,
@@ -164,8 +164,7 @@ describe("groth16 bn254 verifier lsig", () => {
           sender: feePayer,
           receiver: feePayer.address,
           amount: 0n,
-          // Its own usage plus the usage the lsigs do not pay for
-          maxUsage: BASE_USAGE + lsigsUsage,
+          feePercent: 1,
         });
       },
     });
@@ -289,8 +288,7 @@ describe("groth16 bn254 verifier lsig", () => {
             sender: feePayer,
             receiver: feePayer.address,
             amount: 0n,
-            // Its own usage plus the usage the lsigs do not pay for
-            maxUsage: BASE_USAGE + lsigsUsage,
+            feePercent: 1,
           });
         },
       });

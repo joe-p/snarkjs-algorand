@@ -21,15 +21,15 @@ importers:
       '@algorandfoundation/puya-ts':
         specifier: 1.2.0-beta.26
         version: 1.2.0-beta.26
+      '@joe-p/algokit-lite':
+        specifier: ^0.1.2
+        version: 0.1.2(algosdk@3.7.0)
       '@types/node':
         specifier: ^24.10.0
         version: 24.10.0
       '@types/snarkjs':
         specifier: ^0.7.9
         version: 0.7.9
-      algokit-lite:
-        specifier: link:../algokit-lite-ts
-        version: link:../algokit-lite-ts
       algosdk:
         specifier: ^3.7.0
         version: 3.7.0
@@ -240,6 +240,12 @@ packages:
   '@isaacs/fs-minipass@4.0.1':
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
+
+  '@joe-p/algokit-lite@0.1.2':
+    resolution: {integrity: sha512-V4BCCInoEGocPxRzqHm4dfv7ZzWrR/OV3isK9+vuxkjYt5hfM6PDwbziG0OwNmhog+n6Bsc617Ls2cszhETZTA==}
+    hasBin: true
+    peerDependencies:
+      algosdk: ^3.7.0
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1367,6 +1373,11 @@ snapshots:
   '@isaacs/fs-minipass@4.0.1':
     dependencies:
       minipass: 7.1.2
+
+  '@joe-p/algokit-lite@0.1.2(algosdk@3.7.0)':
+    dependencies:
+      algosdk: 3.7.0
+      tweetnacl: 1.0.3
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:

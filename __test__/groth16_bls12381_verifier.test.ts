@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import algosdk from "algosdk";
-import { BASE_USAGE, Localnet } from "algokit-lite";
+import { BASE_USAGE, Localnet } from "@joe-p/algokit-lite";
 import * as snarkjs from "snarkjs";
 import {
   getGroth16Bls12381Proof,
@@ -146,7 +146,7 @@ describe("groth16 verifier lsig", () => {
       inputs: { a: 10, b: 21 },
       composer,
       paramsCallback: async (params) => {
-        const { lsigParams, args, lsigsUsage } = params;
+        const { lsigParams, args } = params;
 
         // Call app with signals and proof via lsig
         composer.addMethodCall(
@@ -159,7 +159,7 @@ describe("groth16 verifier lsig", () => {
           receiver: feePayer.address,
           amount: 0n,
           // Its own usage plus the usage the lsigs do not pay for
-          maxUsage: BASE_USAGE + lsigsUsage,
+          feePercent: 1,
         });
       },
     });

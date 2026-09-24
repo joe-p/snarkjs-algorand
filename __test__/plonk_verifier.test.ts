@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import algosdk from "algosdk";
-import { BASE_USAGE, Localnet } from "algokit-lite";
+import { BASE_USAGE, Localnet } from "@joe-p/algokit-lite";
 import * as snarkjs from "snarkjs";
 import {
   getPlonkProof,
@@ -505,7 +505,7 @@ describe("verifier lsig", () => {
       inputs: { a: 10, b: 21 },
       composer,
       paramsCallback: async (params) => {
-        const { lsigParams, args, lsigsUsage } = params;
+        const { lsigParams, args } = params;
 
         // Call app with signals and proof via lsig
         composer.addMethodCall(
@@ -517,8 +517,7 @@ describe("verifier lsig", () => {
           sender: feePayer,
           receiver: feePayer.address,
           amount: 0n,
-          // Its own usage plus the usage the lsigs do not pay for
-          maxUsage: BASE_USAGE + lsigsUsage,
+          feePercent: 1,
         });
       },
     });
@@ -560,7 +559,7 @@ describe("verifier lsig with 2 public signals", () => {
       inputs: { a: 10, b: 21 },
       composer,
       paramsCallback: async (params) => {
-        const { lsigParams, args, lsigsUsage } = params;
+        const { lsigParams, args } = params;
 
         // Call app with signals and proof via lsig
         composer.addMethodCall(
@@ -572,8 +571,7 @@ describe("verifier lsig with 2 public signals", () => {
           sender: feePayer,
           receiver: feePayer.address,
           amount: 0n,
-          // Its own usage plus the usage the lsigs do not pay for
-          maxUsage: BASE_USAGE + lsigsUsage,
+          feePercent: 1,
         });
       },
     });

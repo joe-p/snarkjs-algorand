@@ -14,7 +14,7 @@ import {
   type ARC56Contract,
   type BareCreateParams,
   type MethodParams,
-} from "algokit-lite";
+} from "@joe-p/algokit-lite";
 import * as snarkjs from "snarkjs";
 import { readFileSync } from "fs";
 

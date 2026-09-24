@@ -19,14 +19,6 @@ jobs:
         with:
           path: snarkjs-algorand
 
-      # algokit-lite is not published to npm yet, so it is linked from a
-      # sibling checkout. Remove this once it is available as a package.
-      - name: Checkout algokit-lite
-        uses: actions/checkout@v4
-        with:
-          repository: joe-p/algokit-lite-ts
-          path: algokit-lite-ts
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
